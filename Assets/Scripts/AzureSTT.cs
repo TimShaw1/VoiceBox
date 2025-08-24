@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace VoiceBox
 {
-    class AzureSTT
+    static class AzureSTT
     {
         public static bool is_init = false;
         public static SpeechRecognizer speechRecognizer;

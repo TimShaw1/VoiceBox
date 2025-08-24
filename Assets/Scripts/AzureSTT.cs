@@ -5,7 +5,7 @@ using Microsoft.CognitiveServices.Speech.Audio;
 using NAudio.CoreAudioApi;
 using UnityEngine;
 
-namespace VoiceBox
+namespace TimShaw.VoiceBox.STT
 {
     static class AzureSTT
     {

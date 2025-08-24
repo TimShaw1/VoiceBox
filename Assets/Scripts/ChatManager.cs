@@ -7,7 +7,7 @@ using UnityEngine;
 
 
 
-namespace VoiceBox
+namespace TimShaw.VoiceBox.LLM
 {
     [Serializable]
     public class ChatCompletionResponse

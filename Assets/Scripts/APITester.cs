@@ -4,19 +4,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
-using VoiceBox;
+using TimShaw.VoiceBox.STT;
+using TimShaw.VoiceBox.TTS;
+using TimShaw.VoiceBox.LLM;
 
 public class APITester : MonoBehaviour
 {
 
     [SerializeField]
-    public bool azure = false;
+    public bool testAzure = false;
 
     [SerializeField]
-    public bool elevenlabs = false;
+    public bool testElevenlabs = false;
 
     [SerializeField]
-    public bool chatgpt = false;
+    public bool testChatgpt = false;
 
     TaskFactory t = new TaskFactory();
     CancellationTokenSource tokenSource = new CancellationTokenSource();
@@ -24,13 +26,13 @@ public class APITester : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (azure)
+        if (testAzure)
         {
             AzureSTT.Init("G6Z3xV8VNTTB2M3n6qLvLDLi6sSkhhXHg59T9fsSnrufHRXg3rDCJQQJ99BFACBsN54XJ3w3AAAYACOGeYHU", "canadacentral", "en-CA");
             t.StartNew(() => AzureSTT.Main(tokenSource.Token), tokenSource.Token);   
         }
 
-        if (elevenlabs)
+        if (testElevenlabs)
         {
             ElevenLabs.Init("sk_fd1e422979c6cb05d645432c832029429fdba5d326ae5788", "Se2Vw1WbHmGbBbyWTuu4", 0f);
         }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace VoiceBox
+namespace TimShaw.VoiceBox.TTS
 {
     using NAudio.Wave;
     using System.IO;

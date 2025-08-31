@@ -36,6 +36,19 @@ public class APITester : MonoBehaviour
         {
             ElevenLabs.Init("sk_fd1e422979c6cb05d645432c832029429fdba5d326ae5788", "Se2Vw1WbHmGbBbyWTuu4", 0f);
         }
+
+        if (testChatgpt)
+        {
+            var chats = new List<TimShaw.VoiceBox.Core.ChatMessage>();
+            var systemPrompt = new TimShaw.VoiceBox.Core.ChatMessage(TimShaw.VoiceBox.Core.MessageRole.System, "You are an AI assistant that answers a user's questions.");
+            var chat = new TimShaw.VoiceBox.Core.ChatMessage(TimShaw.VoiceBox.Core.MessageRole.User, "What is 2 + 2?");
+            chats.Add(chat);
+            AIManager.Instance.SendChatMessage(
+                chats, 
+                response => Debug.Log(response.Content), 
+                error => Debug.Log(error) 
+            );
+        }
     }
 
     private void OnDestroy()

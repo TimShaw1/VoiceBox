@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Core;
 using UnityEngine;
 
 
@@ -64,22 +65,25 @@ namespace TimShaw.VoiceBox.LLM
         public int accepted_prediction_tokens;
         public int rejected_prediction_tokens;
     }
-    public static class ChatManager
+    public class ChatGPTServiceManager : IChatService
     {
         static HttpClient client;
         public static bool init_success = false;
-        private static string gpt_model;
-        public static void Init(string api_key, string modelToUse)
+        private string modelName;
+        private string serviceEndpoint;
+        public void Initialize(ScriptableObject config)
         {
             try
             {
-                if (api_key.Length == 0)
+                var chatServiceObjectDerived = config as ChatServiceConfig;
+                if (chatServiceObjectDerived.apiKey.Length == 0)
                 {
-                    throw new ArgumentException("No ChatGPT API key!");
+                    throw new ArgumentException("No Chat API key!");
                 }
                 client = new HttpClient();
-                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {api_key}");
-                gpt_model = modelToUse;
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {chatServiceObjectDerived.apiKey}");
+                modelName = chatServiceObjectDerived.modelName;
+                serviceEndpoint = chatServiceObjectDerived.serviceEndpoint;
                 Debug.Log("CHATGPT INIT SUCCESS");
                 init_success = true;
             }
@@ -90,40 +94,36 @@ namespace TimShaw.VoiceBox.LLM
             }
         }
 
-        public static string SendPromptToChatGPT(string prompt)
+        public async void SendMessage(List<ChatMessage> messageHistory,
+            Action<ChatMessage> onSuccess,
+            Action<string> onError)
         {
             try
             {
                 var requestBody = new
                 {
-                    model = gpt_model,
-                    messages = new[]
-                    {
-                        new { role = "user", content = prompt }
-                    },
+                    model = modelName,
+                    messages = messageHistory,
                     max_tokens = 200
                 };
 
                 var content = new StringContent(JsonUtility.ToJson(requestBody), Encoding.UTF8, "application/json");
 
-                var task = client.PostAsync("https://api.openai.com/v1/chat/completions", content);
-                task.Wait();
-                var response = task.Result;
+                HttpResponseMessage response = await client.PostAsync(serviceEndpoint, content);
                 response.EnsureSuccessStatusCode();
 
-                var task2 = response.Content.ReadAsStringAsync();
-                task2.Wait();
-                var responseContent = task2.Result;
+                var responseContent = await response.Content.ReadAsStringAsync();
                 var jsonResponse = JsonUtility.FromJson<ChatCompletionResponse>(responseContent);
 
                 Debug.Log("MESSAGE RECIEVED");
-                return jsonResponse.choices[0].message.content;
+                onSuccess.Invoke(new ChatMessage(MessageRole.Model, jsonResponse.choices[0].message.content));
+                return;
             }
             catch (Exception ex)
             {
-                Debug.Log("CHAT BROKE");
-                Debug.Log(ex.ToString()); 
-                return ""; 
+                Debug.Log("CHATTING BROKE");
+                onError.Invoke(ex.ToString());
+                return; 
             }
         }
     }

@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: ChatServiceConfig
   m_EditorClassIdentifier: 
   serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/models/
-  apiKey: AIzaSyBiJNUJyRUR4dBYG5nGFqoyeWEX9AtQaUs
-  modelName: gemini-2.5-flash
+  apiKey: 
+  modelName: gemini-2.0-flash

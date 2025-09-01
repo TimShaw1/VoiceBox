@@ -154,7 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testAzure: 0
   testElevenlabs: 0
-  testChatgpt: 1
+  testChatgpt: 0
 --- !u!4 &897424585
 Transform:
   m_ObjectHideFlags: 0

@@ -154,7 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testAzure: 0
   testElevenlabs: 0
-  testChatgpt: 0
+  testChat: 0
 --- !u!4 &897424585
 Transform:
   m_ObjectHideFlags: 0
@@ -386,6 +386,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chatServiceConfig: {fileID: 11400000, guid: 53d397a345776c445ab503c0ebbe61d2, type: 2}
+  speechToTextConfig: {fileID: 11400000, guid: 3f9f42a6f9997884db1b63609ed2ba55, type: 2}
 --- !u!4 &1681442662
 Transform:
   m_ObjectHideFlags: 0

@@ -1,6 +1,7 @@
 using UnityEngine;
 using TimShaw.VoiceBox.Core;
-using TimShaw.VoiceBox.LLM; // Your interfaces
+using TimShaw.VoiceBox.LLM;
+using TimShaw.VoiceBox.STT; // Your interfaces
 
 public static class ServiceFactory
 {
@@ -29,6 +30,26 @@ public static class ServiceFactory
         }
     }
 
-    // You would have similar methods for your other services
-    // public static ISpeechToTextService CreateSttService(ScriptableObject config) { ... }
+    public static ISpeechToTextService CreateSttService(ScriptableObject config)
+    {
+        if (config is AzureSTTServiceConfig)
+        {
+            ISpeechToTextService service = new AzureSTTServiceManager();
+            service.Initialize(config);
+            return service;
+        }
+        else
+        {
+            // If no valid config is provided, log an error.
+            if (config != null)
+            {
+                Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+            }
+            else
+            {
+                Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+            }
+            return null;
+        }
+    }
 }

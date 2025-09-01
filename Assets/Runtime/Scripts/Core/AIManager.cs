@@ -1,13 +1,19 @@
+using Microsoft.CognitiveServices.Speech;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Threading;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.STT;
+using UnityEngine;
 
 public class AIManager : MonoBehaviour
 {
     // --- Singleton Pattern ---
     // This makes the manager globally accessible via AIManager.Instance
     public static AIManager Instance { get; private set; }
+    public SpeechRecognizer speechRecognizer;
+
+    private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
     // --- Configuration ---
     // The user will drag their ScriptableObject configuration assets here in the Inspector.
@@ -15,13 +21,14 @@ public class AIManager : MonoBehaviour
     [Tooltip("Configuration asset for the chat service (e.g., GeminiConfig, ChatGPTConfig).")]
     [SerializeField] private ScriptableObject chatServiceConfig;
 
-    // [SerializeField] private ScriptableObject speechToTextConfig;
+    [Tooltip("Configuration asset for the STT service (e.g., AzureConfig).")]
+    [SerializeField] private ScriptableObject speechToTextConfig;
     // [SerializeField] private ScriptableObject textToSpeechConfig;
 
     // --- Private Service References ---
     // These hold the actual instances of the service classes.
     private IChatService _chatService;
-    // private ISpeechToTextService _sttService;
+    private ISpeechToTextService _sttService;
     // private ITextToSpeechService _ttsService;
 
     private void Awake()
@@ -38,7 +45,8 @@ public class AIManager : MonoBehaviour
         // --- Initialization ---
         // Use a "Factory" to create the correct service instance based on the config file.
         _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
-        // _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
+        _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
+        speechRecognizer = (_sttService as AzureSTTServiceManager).speechRecognizer;
         // _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
     }
 
@@ -62,5 +70,28 @@ public class AIManager : MonoBehaviour
 
         // The manager delegates the call to the actual service instance it's holding.
         _chatService.SendMessage(messageHistory, onSuccess, onError);
+    }
+
+    public async void StartSpeechTranscription()
+    {
+        if (_sttService == null)
+        {
+            Debug.Log("STT Service not initialized. Check AIManager configuration.");
+            return;
+        }
+
+        Debug.Log("VoiceBox: Starting speech recognition.");
+
+        await _sttService.TranscribeAudioFromMic(cancellationTokenSource.Token);
+    }
+
+    public void StopSpeechTranscription()
+    {
+        cancellationTokenSource.Cancel();
+    }
+
+    private void OnDestroy()
+    {
+        cancellationTokenSource.Cancel();
     }
 }

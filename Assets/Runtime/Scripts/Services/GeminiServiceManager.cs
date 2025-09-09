@@ -68,7 +68,7 @@ public class GeminiServiceManager : IChatService
     /// <summary>
     /// Sends a message to the Gemini API asynchronously.
     /// </summary>
-    public async void SendMessage(
+    public async Task SendMessage(
         List<ChatMessage> messageHistory,
         Action<ChatMessage> onSuccess,
         Action<string> onError)

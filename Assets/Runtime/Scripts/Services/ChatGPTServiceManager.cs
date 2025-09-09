@@ -94,7 +94,7 @@ namespace TimShaw.VoiceBox.LLM
             }
         }
 
-        public async void SendMessage(List<ChatMessage> messageHistory,
+        public async Task SendMessage(List<ChatMessage> messageHistory,
             Action<ChatMessage> onSuccess,
             Action<string> onError)
         {

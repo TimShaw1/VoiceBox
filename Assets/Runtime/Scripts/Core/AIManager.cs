@@ -23,13 +23,15 @@ public class AIManager : MonoBehaviour
 
     [Tooltip("Configuration asset for the STT service (e.g., AzureConfig).")]
     [SerializeField] private ScriptableObject speechToTextConfig;
-    // [SerializeField] private ScriptableObject textToSpeechConfig;
+
+    [Tooltip("Configuration asset for the TTS service (e.g., ElevenlabsConfig).")]
+    [SerializeField] private ScriptableObject textToSpeechConfig;
 
     // --- Private Service References ---
     // These hold the actual instances of the service classes.
     private IChatService _chatService;
     private ISpeechToTextService _sttService;
-    // private ITextToSpeechService _ttsService;
+    private ITextToSpeechService _ttsService;
 
     private void Awake()
     {
@@ -47,7 +49,7 @@ public class AIManager : MonoBehaviour
         _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
         _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
         speechRecognizer = (_sttService as AzureSTTServiceManager).speechRecognizer;
-        // _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
+        _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
     }
 
     // --- Public Methods (The API for game developers) ---
@@ -70,6 +72,11 @@ public class AIManager : MonoBehaviour
 
         // The manager delegates the call to the actual service instance it's holding.
         _chatService.SendMessage(messageHistory, onSuccess, onError);
+    }
+
+    public void GenerateSpeechFromText(string prompt, string fileName, string dir)
+    {
+        _ttsService.RequestAudio(prompt, fileName, dir);
     }
 
     public async void StartSpeechTranscription()

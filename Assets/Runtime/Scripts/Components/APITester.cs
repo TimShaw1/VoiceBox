@@ -40,7 +40,8 @@ public class APITester : MonoBehaviour
 
         if (testElevenlabs)
         {
-            ElevenLabs.Init("sk_fd1e422979c6cb05d645432c832029429fdba5d326ae5788", "Se2Vw1WbHmGbBbyWTuu4", 0f);
+            Debug.Log(Application.dataPath);
+            AIManager.Instance.GenerateSpeechFromText("Hello World!", "test", Application.dataPath + "/");
         }
 
         if (testChat)

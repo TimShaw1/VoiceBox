@@ -4,10 +4,9 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
 {
-    public interface ISpeechToTextService
+    public interface ITextToSpeechService
     {
         void Initialize(ScriptableObject config);
-
-        Task TranscribeAudioFromMic(CancellationToken token);
+        public Task RequestAudio(string prompt, string fileName, string dir);
     }
 }

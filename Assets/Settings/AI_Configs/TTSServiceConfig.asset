@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 219ef87eb1f65a6469b192d049befe4a, type: 3}
+  m_Name: TTSServiceConfig
+  m_EditorClassIdentifier: 
+  serviceEndpoint: https://api.elevenlabs.io/v1/text-to-speech/
+  apiKey: 
+  voiceID: Se2Vw1WbHmGbBbyWTuu4
+  modelID: eleven_multilingual_v2
+  voiceSettings:
+    stability: 0
+    similarity_boost: 0
+    style: 0
+    use_speaker_boost: 0
+  output_format: mp3_44100_128
+  language_code: 
+  enable_logging: 1
+  pronunciation_dictionary_locators: []
+  previous_text: 
+  next_text: 
+  previous_request_ids: []
+  next_request_ids: []
+  apply_text_normalization: auto
+  apply_language_text_normalization: 0

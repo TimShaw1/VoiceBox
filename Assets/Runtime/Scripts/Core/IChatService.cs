@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -64,7 +65,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="messageHistory">The list of messages representing the conversation so far.</param>
         /// <param name="onSuccess">Callback invoked when a successful response is received. The ChatMessage will have the 'Model' role.</param>
         /// <param name="onError">Callback invoked when an error occurs, providing an error message.</param>
-        void SendMessage(
+        Task SendMessage(
             List<ChatMessage> messageHistory,
             Action<ChatMessage> onSuccess,
             Action<string> onError
@@ -87,7 +88,7 @@ namespace TimShaw.VoiceBox.Core
             Action<string> onError
         )
         {
-
+            
         }
     }
 }

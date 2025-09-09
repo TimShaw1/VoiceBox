@@ -1,7 +1,8 @@
 using UnityEngine;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.LLM;
-using TimShaw.VoiceBox.STT; // Your interfaces
+using TimShaw.VoiceBox.STT;
+using TimShaw.VoiceBox.TTS; // Your interfaces
 
 public static class ServiceFactory
 {
@@ -35,6 +36,29 @@ public static class ServiceFactory
         if (config is AzureSTTServiceConfig)
         {
             ISpeechToTextService service = new AzureSTTServiceManager();
+            service.Initialize(config);
+            return service;
+        }
+        else
+        {
+            // If no valid config is provided, log an error.
+            if (config != null)
+            {
+                Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+            }
+            else
+            {
+                Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+            }
+            return null;
+        }
+    }
+
+    public static ITextToSpeechService CreateTtsService(ScriptableObject config)
+    {
+        if (config is ElevenlabsTTSServiceConfig)
+        {
+            ITextToSpeechService service = new ElevenLabsTTSServiceManager();
             service.Initialize(config);
             return service;
         }

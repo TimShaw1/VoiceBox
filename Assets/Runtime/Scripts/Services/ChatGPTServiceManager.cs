@@ -75,7 +75,7 @@ namespace TimShaw.VoiceBox.LLM
         {
             try
             {
-                var chatServiceObjectDerived = config as ChatServiceConfig;
+                var chatServiceObjectDerived = config as GeminiServiceConfig;
                 if (chatServiceObjectDerived.apiKey.Length == 0)
                 {
                     throw new ArgumentException("No Chat API key!");

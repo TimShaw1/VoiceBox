@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ChatServiceConfig", menuName = "VoiceBox/ChatService Configuration")]
-public class ChatServiceConfig : ScriptableObject
+public class GeminiServiceConfig : ScriptableObject
 {
     public string serviceEndpoint;
     public string apiKey;

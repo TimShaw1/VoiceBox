@@ -9,7 +9,7 @@ public static class ServiceFactory
     public static IChatService CreateChatService(ScriptableObject config)
     {
         // Check the type of the ScriptableObject config file.
-        if (config is ChatServiceConfig)
+        if (config is GeminiServiceConfig)
         {
             // If it's a GeminiConfig, create a GeminiChatService.
             IChatService service = new GeminiServiceManager();

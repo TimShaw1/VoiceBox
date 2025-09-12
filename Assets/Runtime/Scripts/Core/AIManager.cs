@@ -1,10 +1,14 @@
 using Microsoft.CognitiveServices.Speech;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.STT;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 public class AIManager : MonoBehaviour
 {
@@ -33,6 +37,30 @@ public class AIManager : MonoBehaviour
     private ISpeechToTextService _sttService;
     private ITextToSpeechService _ttsService;
 
+    private void LoadAPIKeys(string keysFile)
+    {
+        string jsonContent = File.ReadAllText(keysFile);
+
+        // Deserialize the JSON content directly into a Dictionary<string, string>.
+        // The JSON structure "KEYNAME": "KEY" maps perfectly to this.
+        var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
+
+        if (chatServiceConfig != null && chatServiceConfig is GeminiServiceConfig) 
+            (chatServiceConfig as GeminiServiceConfig).apiKey = apiKeys["GEMINI_API_KEY"];
+
+        if (speechToTextConfig != null && speechToTextConfig is AzureSTTServiceConfig)
+            (speechToTextConfig as AzureSTTServiceConfig).apiKey = apiKeys["AZURE_API_KEY"];
+
+        if (textToSpeechConfig != null && textToSpeechConfig is ElevenlabsTTSServiceConfig)
+            (textToSpeechConfig as ElevenlabsTTSServiceConfig).apiKey = apiKeys["ELEVENLABS_API_KEY"];
+    }
+
+    // --- Internal Methods ---
+
+    
+    /// <summary>
+    /// Initializes each service from attached configs
+    /// </summary>
     private void Awake()
     {
         // Standard singleton setup to ensure only one instance exists.
@@ -44,6 +72,8 @@ public class AIManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject); // Optional: keeps the manager alive between scenes
 
+        LoadAPIKeys(Application.dataPath + "/keys.json");
+
         // --- Initialization ---
         // Use a "Factory" to create the correct service instance based on the config file.
         _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
@@ -52,8 +82,16 @@ public class AIManager : MonoBehaviour
         _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
     }
 
-    // --- Public Methods (The API for game developers) ---
-    // These methods are the clean, public functions that other scripts will call.
+
+    /// <summary>
+    /// Cancels all running tasks when the game closes
+    /// </summary>
+    private void OnDestroy()
+    {
+        cancellationTokenSource.Cancel();
+    }
+
+    // --- LLM Public Methods ---
 
     /// <summary>
     /// Sends a conversation history to the configured chat service.
@@ -74,10 +112,7 @@ public class AIManager : MonoBehaviour
         _chatService.SendMessage(messageHistory, onSuccess, onError);
     }
 
-    public void GenerateSpeechFromText(string prompt, string fileName, string dir)
-    {
-        _ttsService.RequestAudio(prompt, fileName, dir);
-    }
+    // --- STT Public Methods ---
 
     public async void StartSpeechTranscription()
     {
@@ -97,8 +132,10 @@ public class AIManager : MonoBehaviour
         cancellationTokenSource.Cancel();
     }
 
-    private void OnDestroy()
+    // --- TTS Public Methods ---
+
+    public void GenerateSpeechFromText(string prompt, string fileName, string dir)
     {
-        cancellationTokenSource.Cancel();
+        _ttsService.RequestAudio(prompt, fileName, dir);
     }
 }

@@ -52,7 +52,7 @@ public class GeminiServiceManager : IChatService
     public void Initialize(ScriptableObject config)
     {
         // Cast generic ScriptableObject to GeminiConfig
-        if (config is ChatServiceConfig geminiConfig)
+        if (config is GeminiServiceConfig geminiConfig)
         {
             _apiKey = geminiConfig.apiKey;
             _modelName = geminiConfig.modelName;

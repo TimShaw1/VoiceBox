@@ -4,76 +4,79 @@ using TimShaw.VoiceBox.LLM;
 using TimShaw.VoiceBox.STT;
 using TimShaw.VoiceBox.TTS; // Your interfaces
 
-public static class ServiceFactory
+namespace TimShaw.VoiceBox.Core
 {
-    public static IChatService CreateChatService(ScriptableObject config)
+    public static class ServiceFactory
     {
-        // Check the type of the ScriptableObject config file.
-        if (config is GeminiServiceConfig)
+        public static IChatService CreateChatService(ScriptableObject config)
         {
-            // If it's a GeminiConfig, create a GeminiChatService.
-            IChatService service = new GeminiServiceManager();
-            service.Initialize(config);
-            return service;
-        }
-        else
-        {
-            // If no valid config is provided, log an error.
-            if (config != null)
+            // Check the type of the ScriptableObject config file.
+            if (config is GeminiServiceConfig)
             {
-                Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}");
+                // If it's a GeminiConfig, create a GeminiChatService.
+                IChatService service = new GeminiServiceManager();
+                service.Initialize(config);
+                return service;
             }
             else
             {
-                Debug.LogWarning("[ServiceFactory] Chat service config is null. No chat service will be created.");
+                // If no valid config is provided, log an error.
+                if (config != null)
+                {
+                    Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}");
+                }
+                else
+                {
+                    Debug.LogWarning("[ServiceFactory] Chat service config is null. No chat service will be created.");
+                }
+                return null;
             }
-            return null;
         }
-    }
 
-    public static ISpeechToTextService CreateSttService(ScriptableObject config)
-    {
-        if (config is AzureSTTServiceConfig)
+        public static ISpeechToTextService CreateSttService(ScriptableObject config)
         {
-            ISpeechToTextService service = new AzureSTTServiceManager();
-            service.Initialize(config);
-            return service;
-        }
-        else
-        {
-            // If no valid config is provided, log an error.
-            if (config != null)
+            if (config is AzureSTTServiceConfig)
             {
-                Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+                ISpeechToTextService service = new AzureSTTServiceManager();
+                service.Initialize(config);
+                return service;
             }
             else
             {
-                Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+                // If no valid config is provided, log an error.
+                if (config != null)
+                {
+                    Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+                }
+                else
+                {
+                    Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+                }
+                return null;
             }
-            return null;
         }
-    }
 
-    public static ITextToSpeechService CreateTtsService(ScriptableObject config)
-    {
-        if (config is ElevenlabsTTSServiceConfig)
+        public static ITextToSpeechService CreateTtsService(ScriptableObject config)
         {
-            ITextToSpeechService service = new ElevenLabsTTSServiceManager();
-            service.Initialize(config);
-            return service;
-        }
-        else
-        {
-            // If no valid config is provided, log an error.
-            if (config != null)
+            if (config is ElevenlabsTTSServiceConfig)
             {
-                Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+                ITextToSpeechService service = new ElevenLabsTTSServiceManager();
+                service.Initialize(config);
+                return service;
             }
             else
             {
-                Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+                // If no valid config is provided, log an error.
+                if (config != null)
+                {
+                    Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+                }
+                else
+                {
+                    Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+                }
+                return null;
             }
-            return null;
         }
     }
 }

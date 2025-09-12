@@ -55,6 +55,18 @@ public class AIManager : MonoBehaviour
             (textToSpeechConfig as ElevenlabsTTSServiceConfig).apiKey = apiKeys["ELEVENLABS_API_KEY"];
     }
 
+    private void UnloadAPIKeys()
+    {
+        if (chatServiceConfig != null && chatServiceConfig is GeminiServiceConfig)
+            (chatServiceConfig as GeminiServiceConfig).apiKey = "";
+
+        if (speechToTextConfig != null && speechToTextConfig is AzureSTTServiceConfig)
+            (speechToTextConfig as AzureSTTServiceConfig).apiKey = "";
+
+        if (textToSpeechConfig != null && textToSpeechConfig is ElevenlabsTTSServiceConfig)
+            (textToSpeechConfig as ElevenlabsTTSServiceConfig).apiKey = "";
+    }
+
     // --- Internal Methods ---
 
     
@@ -89,6 +101,8 @@ public class AIManager : MonoBehaviour
     private void OnDestroy()
     {
         cancellationTokenSource.Cancel();
+        UnloadAPIKeys();
+
     }
 
     // --- LLM Public Methods ---

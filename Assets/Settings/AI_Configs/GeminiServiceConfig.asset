@@ -10,8 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab52e11552ed0734cb7d3bcac9b59b49, type: 3}
-  m_Name: ChatServiceConfig
+  m_Name: GeminiServiceConfig
   m_EditorClassIdentifier: 
   serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/models/
   apiKey: 
   modelName: gemini-2.0-flash
+  tools: []
+  useTools: 0
+  toolConfig:
+    functionCallingConfig:
+      mode: 0
+  safetySettings: []
+  useSafetySettings: 0
+  systemInstruction:
+    role: System
+    parts:
+    - text: You are an AI assistant that answers a user's questions.
+  generationConfig:
+    stopSequences: []
+    candidateCount: 1
+    maxOutputTokens: 100
+    temperature: 1
+    topP: 1
+    topK: 1
+  useGenerationConfig: 0

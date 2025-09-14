@@ -82,9 +82,21 @@ namespace TimShaw.VoiceBox.TTS
                 }
             }
         }
-        
 
-        // Requests file containing AI Voice saying the prompt and outputs the directory to said file
+
+
+        /// <summary>
+        /// <para>
+        /// Requests file containing AI Voice saying the prompt and outputs the directory to said file.
+        /// </para>
+        /// <para>
+        /// TODO: Stream audio into audioclip, allow previous and next text parameters, allow previous and next ID parameters
+        /// </para>
+        /// </summary>
+        /// <param name="prompt"></param>
+        /// <param name="fileName"></param>
+        /// <param name="dir"></param>
+        /// <returns></returns>
         public async Task RequestAudio(string prompt, string fileName, string dir)
         {
             string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceID; // Concatenate Voice ID to end of URL

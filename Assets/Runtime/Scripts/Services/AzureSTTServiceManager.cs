@@ -13,6 +13,7 @@ namespace TimShaw.VoiceBox.STT
     class AzureSTTServiceManager : ISpeechToTextService
     {
         public SpeechRecognizer speechRecognizer;
+        private Dictionary<string, string> audioEndpoints;
         public async Task TranscribeAudioFromMic(CancellationToken token) // 1. Accept the token
         {
             try
@@ -50,16 +51,29 @@ namespace TimShaw.VoiceBox.STT
                 return;
             }
 
-            using var audioConfig = (speechServiceObjectDerived.audioInputDeviceName.Length == 0) ? AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(speechServiceObjectDerived.audioInputDeviceName);
+            audioEndpoints = GetAudioInputEndpoints();
+
+            using var audioConfig = (speechServiceObjectDerived.audioInputDeviceName == "Default") ? 
+                AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(audioEndpoints[speechServiceObjectDerived.audioInputDeviceName]);
             var speechConfig = SpeechConfig.FromSubscription(speechServiceObjectDerived.apiKey, speechServiceObjectDerived.region);
             speechConfig.SpeechRecognitionLanguage = speechServiceObjectDerived.language;
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
         }
 
-        static List<MMDevice> GetAudioInputEndpoints(string[] args)
+        public static Dictionary<string, string> GetAudioInputEndpoints()
         {
+            var deviceList = new Dictionary<string, string>();
             var enumerator = new MMDeviceEnumerator();
-            return enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
+            var devices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
+
+            deviceList.Add("Default", "");
+
+            foreach (var device in devices)
+            {
+                deviceList.Add(device.FriendlyName, device.ID);
+            }
+
+            return deviceList;
         }
     }
 }

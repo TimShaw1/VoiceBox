@@ -15,4 +15,17 @@ MonoBehaviour:
   apiKey: 
   region: canadacentral
   language: en-CA
-  audioInputDeviceName: 
+  audioInputDeviceName: Headset Microphone (Oculus Virtual Audio Device)
+  audioInputEndpointNames:
+  - Default
+  - Microphone (Steam Streaming Microphone)
+  - Microphone (Virtual Desktop Audio)
+  - Headset Microphone (Oculus Virtual Audio Device)
+  - Microphone (Logi C615 HD WebCam)
+  - MOTIV Mix Virtual Output (Shure Virtual Audio)
+  - Microphone (Realtek High Definition Audio)
+  - Microphone (Bigscreen Audio Stream 1.2)
+  - Microphone (DroidCam Virtual Audio)
+  - Microphone (Voicemod Virtual Audio Device (WDM))
+  - Microphone (Shure MV7+)
+  - Microphone (2- Antlion Wireless Microphone)

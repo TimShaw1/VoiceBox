@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 021a684688135dc4c95b89d9982fd8ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testAzure: 0
+  testAzure: 1
   testElevenlabs: 0
   testChat: 0
 --- !u!4 &897424585

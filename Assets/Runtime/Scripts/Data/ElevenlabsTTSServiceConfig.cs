@@ -44,7 +44,7 @@ public class ElevenlabsTTSServiceConfig : ScriptableObject
     public string apiKey;
 
     [Tooltip("The ID of the voice you want to use.")]
-    public string voiceId;
+    public string voiceId = "JBFqnCBsd6RMkjVDRZzb";
 
     [Tooltip("The ID of the model to be used. Defaults to eleven_multilingual_v2.")]
     public string modelID = "eleven_multilingual_v2";

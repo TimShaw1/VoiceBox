@@ -1,16 +1,21 @@
 ﻿using NAudio.Wave;
+using Newtonsoft.Json;
 using OpenCover.Framework.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
+using static AudioStreamer;
 
 
 namespace TimShaw.VoiceBox.TTS
@@ -19,7 +24,7 @@ namespace TimShaw.VoiceBox.TTS
     {
 
         HttpClient client;
-        private ElevenlabsTTSServiceConfig ttsServiceObjectDerived;
+        public ElevenlabsTTSServiceConfig ttsServiceObjectDerived;
         private string fileExtension;
 
         [System.Serializable]
@@ -30,13 +35,27 @@ namespace TimShaw.VoiceBox.TTS
             public VoiceSettings voice_settings;
         }
 
+        [System.Serializable]
+        public class ElevenLabsStreamedResponse
+        {
+            public string audio;
+            public bool isFinal;
+            // We can ignore the alignment data for now if we don't need it
+        }
+
         public void Initialize(ScriptableObject config)
         {
 
             ttsServiceObjectDerived = config as ElevenlabsTTSServiceConfig;
             if (ttsServiceObjectDerived.apiKey.Length == 0)
             {
-                Debug.Log("No Elevenlabs API key found.");
+                Debug.LogError("No Elevenlabs API key found.");
+                return;
+            }
+
+            if (ttsServiceObjectDerived.voiceId.Length == 0)
+            {
+                Debug.LogError("No Elevenlabs Voice ID found.");
                 return;
             }
 
@@ -187,6 +206,92 @@ namespace TimShaw.VoiceBox.TTS
                     return null;
                 }
             }
+        }
+
+        // --- STREAMING ---
+        private async Task SendSocketMessage(string message, WebSocket _webSocket, CancellationToken token)
+        {
+            var bytes = Encoding.UTF8.GetBytes(message);
+            await _webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, token);
+        }
+
+        private async Task ReceiveAudioData(WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token)
+        {
+            // Start playing the audio source. It will initially play silence
+            // until OnAudioFilterRead starts getting data from our buffer.
+            //_audioSource.Play();
+
+            var receiveBuffer = new byte[8192]; // 8KB buffer
+            var messageBuilder = new StringBuilder();
+
+            while (_webSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
+            {
+                var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), token);
+
+                if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    // Append the received text chunk to our builder
+                    messageBuilder.Append(Encoding.UTF8.GetString(receiveBuffer, 0, result.Count));
+
+                    // If this is the end of a message, process the complete JSON
+                    if (result.EndOfMessage)
+                    {
+                        string jsonString = messageBuilder.ToString();
+
+                        // Check if the message contains audio data
+                        if (jsonString.Contains("\"audio\""))
+                        {
+                            ElevenLabsStreamedResponse response = JsonUtility.FromJson<ElevenLabsStreamedResponse>(jsonString);
+
+                            if (!string.IsNullOrEmpty(response.audio))
+                            {
+                                // 1. Decode the Base64 string into raw bytes
+                                byte[] audioBytes = Convert.FromBase64String(response.audio);
+
+                                // 2. Feed the bytes into our MP3 decoder
+                                _mp3Decoder.Feed(audioBytes);
+                            }
+                        }
+
+                        // You can add logic here to check for the "isFinal": true message
+                        // to gracefully stop the AudioSource after the buffer empties.
+
+                        // Clear the builder for the next message
+                        messageBuilder.Clear();
+                    }
+                }
+                else if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client closing", CancellationToken.None);
+                    break;
+                }
+            }
+
+            // Optional: Add logic here to wait until the buffer is empty before stopping the AudioSource
+        }
+
+        public async Task ConnectAndStream(string text, WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token)
+        {
+            var initialMessage = new { text = " " };
+            string jsonMessage = JsonConvert.SerializeObject(initialMessage);
+            Debug.Log(jsonMessage);
+            await SendSocketMessage(jsonMessage, _webSocket, token);
+
+            // 2. Send the text to be spoken
+            var textMessage = new { text = text, try_trigger_generation = true };
+            jsonMessage = JsonConvert.SerializeObject(textMessage);
+            Debug.Log(jsonMessage);
+            await SendSocketMessage(jsonMessage, _webSocket, token);
+
+            // 3. Send the End of Stream message
+            var eosMessage = new { text = "" };
+            jsonMessage = JsonConvert.SerializeObject(eosMessage);
+            Debug.Log(jsonMessage);
+            await SendSocketMessage(jsonMessage, _webSocket, token);
+
+            // 4. Start listening for audio data
+            //await ReceiveAudioData(token);
+            await ReceiveAudioData(_webSocket, _mp3Decoder, token);
         }
 
     }

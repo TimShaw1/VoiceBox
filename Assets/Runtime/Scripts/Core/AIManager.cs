@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.STT;
+using TimShaw.VoiceBox.TTS;
 using UnityEngine;
 using static UnityEditor.Progress;
 
@@ -235,10 +236,9 @@ public class AIManager : MonoBehaviour
 
     public void RequestAudioAndStream(string prompt, AudioSource audioSource)
     {
-        var derivedElevenlabsConfig = (textToSpeechConfig as ElevenlabsTTSServiceConfig);
         AudioStreamer audioStreamer = audioSource.GetComponent<AudioStreamer>();
         if (audioStreamer)
-            audioStreamer.StartStreaming(prompt, derivedElevenlabsConfig);
+            audioStreamer.StartStreaming(prompt, _ttsService);
         else
             Debug.LogError("Audio Source does not have an AudioStreamer component. Attach an AudioStreamer component to enable streaming.");
     }

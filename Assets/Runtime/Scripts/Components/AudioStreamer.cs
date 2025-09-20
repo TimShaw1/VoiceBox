@@ -7,6 +7,8 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.TTS;
 using UnityEngine;
 
 public class StreamingMp3Decoder
@@ -76,7 +78,6 @@ public class StreamingMp3Decoder
 
 /// <summary>
 /// Enables streaming audio
-/// TODO: Implement a more robust solution that can work for any TTS service
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class AudioStreamer : MonoBehaviour
@@ -101,7 +102,7 @@ public class AudioStreamer : MonoBehaviour
     /// <summary>
     /// Starts streaming speech for the given text.
     /// </summary>
-    public void StartStreaming(string text, ScriptableObject config)
+    public void StartStreaming(string text, ITextToSpeechService service)
     {
         if (_webSocket != null && _webSocket.State == WebSocketState.Open)
         {
@@ -117,14 +118,14 @@ public class AudioStreamer : MonoBehaviour
 
         _webSocket = new ClientWebSocket();
 
-        if (config is ElevenlabsTTSServiceConfig)
+        if (service is ElevenLabsTTSServiceManager)
         {
-            var derivedElevenlabsConfig = (config as ElevenlabsTTSServiceConfig);
-            _webSocket.Options.SetRequestHeader("xi-api-key", derivedElevenlabsConfig.apiKey);
-            string uri = $"wss://api.elevenlabs.io/v1/text-to-speech/{derivedElevenlabsConfig.voiceId}/stream-input?model_id=eleven_multilingual_v2";
+            var derivedElevenlabsServiceManager = (service as ElevenLabsTTSServiceManager);
+            _webSocket.Options.SetRequestHeader("xi-api-key", derivedElevenlabsServiceManager.ttsServiceObjectDerived.apiKey);
+            string uri = $"wss://api.elevenlabs.io/v1/text-to-speech/{derivedElevenlabsServiceManager.ttsServiceObjectDerived.voiceId}/stream-input?model_id=eleven_multilingual_v2";
 
             // Start the connection and streaming process
-            Task.Run(() => ConnectAndStream(text, uri, _cancellationSource.Token));
+            Task.Run(() => ConnectAndStream(text, uri, derivedElevenlabsServiceManager, _cancellationSource.Token));
             _audioSource.Play();
         }
     }
@@ -137,7 +138,7 @@ public class AudioStreamer : MonoBehaviour
         _cancellationSource?.Cancel();
     }
 
-    private async Task ConnectAndStream(string text, string uri, CancellationToken token)
+    private async Task ConnectAndStream(string text, string uri, ITextToSpeechService service, CancellationToken token)
     {
         try
         {
@@ -145,28 +146,8 @@ public class AudioStreamer : MonoBehaviour
             await _webSocket.ConnectAsync(new Uri(uri), token);
             Debug.Log("WebSocket Connected.");
 
-            // 1. Send the initial authentication and configuration message
-
-            var initialMessage = new { text = " " };
-            string jsonMessage = JsonConvert.SerializeObject(initialMessage);
-            Debug.Log(jsonMessage);
-            await SendSocketMessage(jsonMessage);
-
-            // 2. Send the text to be spoken
-            var textMessage = new { text = text, try_trigger_generation = true };
-            jsonMessage = JsonConvert.SerializeObject(textMessage);
-            Debug.Log(jsonMessage);
-            await SendSocketMessage(jsonMessage);
-
-            // 3. Send the End of Stream message
-            var eosMessage = new { text = "" };
-            jsonMessage = JsonConvert.SerializeObject(eosMessage);
-            Debug.Log(jsonMessage);
-            await SendSocketMessage(jsonMessage);
-
-            // 4. Start listening for audio data
-            //await ReceiveAudioData(token);
-            await ReceiveAudioData(token);
+            await service.ConnectAndStream(text, _webSocket, _mp3Decoder, token);
+            
         }
         catch (OperationCanceledException)
         {
@@ -191,75 +172,7 @@ public class AudioStreamer : MonoBehaviour
         }
     }
 
-    private async Task SendSocketMessage(string message)
-    {
-        var bytes = Encoding.UTF8.GetBytes(message);
-        await _webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, _cancellationSource.Token);
-    }
-
-    [System.Serializable]
-    public class ElevenLabsStreamedResponse
-    {
-        public string audio;
-        public bool isFinal;
-        // We can ignore the alignment data for now if we don't need it
-    }
-
     // Place this inside your AudioStreamer.cs class, replacing the old method.
-    private async Task ReceiveAudioData(CancellationToken token)
-    {
-        // Start playing the audio source. It will initially play silence
-        // until OnAudioFilterRead starts getting data from our buffer.
-        //_audioSource.Play();
-
-        var receiveBuffer = new byte[8192]; // 8KB buffer
-        var messageBuilder = new StringBuilder();
-
-        while (_webSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
-        {
-            var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), token);
-
-            if (result.MessageType == WebSocketMessageType.Text)
-            {
-                // Append the received text chunk to our builder
-                messageBuilder.Append(Encoding.UTF8.GetString(receiveBuffer, 0, result.Count));
-
-                // If this is the end of a message, process the complete JSON
-                if (result.EndOfMessage)
-                {
-                    string jsonString = messageBuilder.ToString();
-
-                    // Check if the message contains audio data
-                    if (jsonString.Contains("\"audio\""))
-                    {
-                        ElevenLabsStreamedResponse response = JsonUtility.FromJson<ElevenLabsStreamedResponse>(jsonString);
-
-                        if (!string.IsNullOrEmpty(response.audio))
-                        {
-                            // 1. Decode the Base64 string into raw bytes
-                            byte[] audioBytes = Convert.FromBase64String(response.audio);
-
-                            // 2. Feed the bytes into our MP3 decoder
-                            _mp3Decoder.Feed(audioBytes);
-                        }
-                    }
-
-                    // You can add logic here to check for the "isFinal": true message
-                    // to gracefully stop the AudioSource after the buffer empties.
-
-                    // Clear the builder for the next message
-                    messageBuilder.Clear();
-                }
-            }
-            else if (result.MessageType == WebSocketMessageType.Close)
-            {
-                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client closing", CancellationToken.None);
-                break;
-            }
-        }
-
-        // Optional: Add logic here to wait until the buffer is empty before stopping the AudioSource
-    }
 
     // This method is called by Unity on the audio thread.
     // It requests data to fill the audio buffer.

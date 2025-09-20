@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   serviceEndpoint: https://api.elevenlabs.io/v1/text-to-speech/
   apiKey: 
-  voiceID: Se2Vw1WbHmGbBbyWTuu4
+  voiceId: JBFqnCBsd6RMkjVDRZzb
   modelID: eleven_multilingual_v2
   voiceSettings:
     stability: 0

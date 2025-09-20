@@ -38,13 +38,13 @@ public class ElevenlabsTTSServiceConfig : ScriptableObject
 {
     [Header("Core Configuration")]
     [Tooltip("The API endpoint for the text-to-speech service.")]
-    public string serviceEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}";
+    public string serviceEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/";
 
     [Tooltip("Your ElevenLabs API key.")]
     public string apiKey;
 
     [Tooltip("The ID of the voice you want to use.")]
-    public string voiceID;
+    public string voiceId;
 
     [Tooltip("The ID of the model to be used. Defaults to eleven_multilingual_v2.")]
     public string modelID = "eleven_multilingual_v2";
@@ -54,7 +54,7 @@ public class ElevenlabsTTSServiceConfig : ScriptableObject
     public VoiceSettings voiceSettings;
 
     [Header("Audio Output")]
-    [Tooltip("Output format for the generated audio. Currently only mp3 and wav are supported. e.g., mp3_44100_128")]
+    [Tooltip("Output format for the generated audio. Currently only mp3 is supported. e.g., mp3_44100_128")]
     public string output_format = "mp3_44100_128";
 
     [Header("Generation Parameters")]

@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.STT;
 using UnityEngine;
@@ -15,9 +16,9 @@ public class AIManager : MonoBehaviour
     // --- Singleton Pattern ---
     // This makes the manager globally accessible via AIManager.Instance
     public static AIManager Instance { get; private set; }
-    public SpeechRecognizer speechRecognizer;
+    private SpeechRecognizer _speechRecognizer;
 
-    private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+    private readonly CancellationTokenSource cancellationTokenSource = new();
 
     // --- Configuration ---
     // The user will drag their ScriptableObject configuration assets here in the Inspector.
@@ -36,6 +37,14 @@ public class AIManager : MonoBehaviour
     private IChatService _chatService;
     private ISpeechToTextService _sttService;
     private ITextToSpeechService _ttsService;
+
+    public event System.EventHandler<SpeechRecognitionEventArgs> OnRecognizing;
+    public event System.EventHandler<SpeechRecognitionEventArgs> OnRecognized;
+    public event System.EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
+    public event System.EventHandler<SessionEventArgs> OnSessionStarted;
+    public event System.EventHandler<SessionEventArgs> OnSessionStopped;
+    public event System.EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
+    public event System.EventHandler<RecognitionEventArgs> OnSpeechEndDetected;
 
     private void LoadAPIKeys(string keysFile)
     {
@@ -90,8 +99,59 @@ public class AIManager : MonoBehaviour
         // Use a "Factory" to create the correct service instance based on the config file.
         _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
         _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
-        speechRecognizer = (_sttService as AzureSTTServiceManager).speechRecognizer;
+        _speechRecognizer = (_sttService as AzureSTTServiceManager).speechRecognizer;
         _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
+
+        // --- Wire up events ---
+        _speechRecognizer.Recognizing += (s, e) =>
+        {
+            Debug.Log($"VoiceBox Internal: Recognizing: {e.Result.Text}");
+            OnRecognizing?.Invoke(this, e);
+        };
+
+        _speechRecognizer.Recognized += (s, e) =>
+        {
+            // Optional: Your internal logic could go here
+            if (e.Result.Reason == ResultReason.RecognizedSpeech)
+            {
+                Debug.Log($"VoiceBox Internal: Recognized: {e.Result.Text}");
+            }
+            else if (e.Result.Reason == ResultReason.NoMatch)
+            {
+                Debug.Log($"VoiceBox Internal: No match.");
+            }
+            OnRecognized?.Invoke(this, e); // Invoke your public event
+        };
+
+        _speechRecognizer.Canceled += (s, e) =>
+        {
+            Debug.Log($"VoiceBox Internal: CANCELED: Reason={e.Reason}");
+            OnCanceled?.Invoke(this, e); // Invoke your public event
+        };
+
+        _speechRecognizer.SessionStarted += (s, e) =>
+        {
+            Debug.Log($"VoiceBox Internal: Session Started.");
+            OnSessionStarted?.Invoke(this, e);
+        };
+
+        _speechRecognizer.SessionStopped += (s, e) =>
+        {
+            Debug.Log($"VoiceBox Internal: Session Stopped.");
+            OnSessionStopped?.Invoke(this, e);
+        };
+
+        _speechRecognizer.SpeechStartDetected += (s, e) =>
+        {
+            Debug.Log($"VoiceBox Internal: Speech Start Detected.");
+            OnSpeechStartDetected?.Invoke(this, e);
+        };
+
+        _speechRecognizer.SpeechEndDetected += (s, e) =>
+        {
+            Debug.Log($"VoiceBox Internal: Speech End Detected.");
+            OnSpeechEndDetected?.Invoke(this, e);
+        };
     }
 
 
@@ -123,7 +183,7 @@ public class AIManager : MonoBehaviour
         }
 
         // The manager delegates the call to the actual service instance it's holding.
-        _chatService.SendMessage(messageHistory, onSuccess, onError);
+        Task.Run(() => _chatService.SendMessage(messageHistory, onSuccess, onError));
     }
 
     // --- STT Public Methods ---
@@ -138,7 +198,7 @@ public class AIManager : MonoBehaviour
 
         Debug.Log("VoiceBox: Starting speech recognition.");
 
-        await _sttService.TranscribeAudioFromMic(cancellationTokenSource.Token);
+        await Task.Run(() => _sttService.TranscribeAudioFromMic(cancellationTokenSource.Token));
     }
 
     public void StopSpeechTranscription()
@@ -148,8 +208,38 @@ public class AIManager : MonoBehaviour
 
     // --- TTS Public Methods ---
 
-    public void GenerateSpeechFromText(string prompt, string fileName, string dir)
+    public void GenerateSpeechFileFromText(string prompt, string fileName, string dir)
     {
-        _ttsService.RequestAudio(prompt, fileName, dir);
+        Task.Run(() => _ttsService.RequestAudioFile(prompt, fileName, dir));
+    }
+
+    public async void GenerateSpeechAudioClipFromText(
+        string prompt, 
+        Action<AudioClip> onSuccess,
+        Action<string> onError)
+    {
+        try
+        {
+            // Await the actual async method
+            AudioClip audioClip = await _ttsService.RequestAudioClip(prompt);
+
+            // Invoke the callback with the result.
+            // This will execute on the main thread because of how async/await works in Unity.
+            onSuccess?.Invoke(audioClip);
+        }
+        catch (Exception e)
+        {
+            onError?.Invoke($"Failed to generate speech: {e.Message}");
+        }
+    }
+
+    public void RequestAudioAndStream(string prompt, AudioSource audioSource)
+    {
+        var derivedElevenlabsConfig = (textToSpeechConfig as ElevenlabsTTSServiceConfig);
+        AudioStreamer audioStreamer = audioSource.GetComponent<AudioStreamer>();
+        if (audioStreamer)
+            audioStreamer.StartStreaming(prompt, derivedElevenlabsConfig);
+        else
+            Debug.LogError("Audio Source does not have an AudioStreamer component. Attach an AudioStreamer component to enable streaming.");
     }
 }

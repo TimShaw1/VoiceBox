@@ -1,13 +1,16 @@
-﻿using System;
+﻿using NAudio.Wave;
+using OpenCover.Framework.Model;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using NAudio.Wave;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
-using UnityEngine;
 using TimShaw.VoiceBox.Core;
+using UnityEditor.PackageManager.Requests;
+using UnityEngine;
+using UnityEngine.Networking;
 
 
 namespace TimShaw.VoiceBox.TTS
@@ -97,9 +100,9 @@ namespace TimShaw.VoiceBox.TTS
         /// <param name="fileName"></param>
         /// <param name="dir"></param>
         /// <returns></returns>
-        public async Task RequestAudio(string prompt, string fileName, string dir)
+        public async Task RequestAudioFile(string prompt, string fileName, string dir)
         {
-            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceID; // Concatenate Voice ID to end of URL
+            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId; // Concatenate Voice ID to end of URL
             Debug.Log(url);
 
             var payload = new ElevenLabsTTSRequest
@@ -125,7 +128,7 @@ namespace TimShaw.VoiceBox.TTS
 
                 // Stream response as binary data into a file
                 using (Stream stream = await response.Content.ReadAsStreamAsync())
-                using (FileStream fileStream = File.Create(dir + fileName.ToString() + fileExtension))
+                using (FileStream fileStream = System.IO.File.Create(dir + fileName.ToString() + fileExtension))
                 {
                     await stream.CopyToAsync(fileStream);
                     Debug.Log("Streamed");
@@ -140,6 +143,50 @@ namespace TimShaw.VoiceBox.TTS
 
             return;
 
+        }
+
+        public async Task<AudioClip> RequestAudioClip(string prompt)
+        {
+            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId;
+            Debug.Log("Requesting audio from: " + url);
+
+            var payload = new ElevenLabsTTSRequest
+            {
+                text = prompt,
+                model_id = ttsServiceObjectDerived.modelID,
+                voice_settings = ttsServiceObjectDerived.voiceSettings
+            };
+
+            string json = JsonUtility.ToJson(payload);
+            byte[] postData = System.Text.Encoding.UTF8.GetBytes(json);
+
+            using (UnityWebRequest www = new UnityWebRequest(url, "POST"))
+            {
+                www.uploadHandler = new UploadHandlerRaw(postData);
+                www.downloadHandler = new DownloadHandlerAudioClip(new Uri(url), AudioType.MPEG);
+                www.SetRequestHeader("Content-Type", "application/json");
+                // Add any other necessary headers, like authentication, here
+                www.SetRequestHeader("xi-api-key", ttsServiceObjectDerived.apiKey);
+
+                var operation = www.SendWebRequest();
+
+                while (!operation.isDone)
+                {
+                    await Task.Yield();
+                }
+
+                if (www.result == UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("Successfully downloaded audio data.");
+                    return DownloadHandlerAudioClip.GetContent(www);
+                }
+                else
+                {
+                    Debug.LogError("Failed to get audio clip: " + www.error);
+                    Debug.LogError("Response: " + www.downloadHandler.text);
+                    return null;
+                }
+            }
         }
 
     }

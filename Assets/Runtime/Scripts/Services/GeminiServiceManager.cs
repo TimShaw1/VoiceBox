@@ -99,13 +99,11 @@ namespace TimShaw.VoiceBox.LLM
 
                 // Use a settings object to ignore null values if using a more advanced JSON serializer.
                 // JsonUtility includes fields with default/null values, which is usually fine.
-                Debug.Log(MapToGeminiContents(messageHistory)[0]);
                 string jsonBody = JsonConvert.SerializeObject(requestBody, new JsonSerializerSettings
                 {
                     // This setting is useful to avoid sending empty configs to the API
                     NullValueHandling = NullValueHandling.Ignore
                 });
-                Debug.Log(jsonBody);
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
                 // 2. Send the request.

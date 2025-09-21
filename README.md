@@ -14,17 +14,23 @@ VoiceBox is a flexible and extensible framework for integrating various AI servi
 
 - **Chat**:
   - Google Gemini
-  - OpenAI ChatGPT (via a compatible endpoint)
+  - OpenAI ChatGPT
+  - Anthropic TODO
+  - DeepSeek TODO
+  - Ollama TODO
 - **Speech-to-Text (STT)**:
   - Microsoft Azure Cognitive Services
+  - Google Chirp TODO
 - **Text-to-Speech (TTS)**:
   - ElevenLabs
+  - Google Cloud TODO
+  - Azure TODO
 
 ## Setup
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/VoiceBox.git
+    git clone https://github.com/TimShaw1/VoiceBox.git
     ```
 2.  **Open the project in Unity**:
     - Open Unity Hub and click "Add".

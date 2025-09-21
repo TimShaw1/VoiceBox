@@ -2,53 +2,50 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using UnityEngine;
 using Newtonsoft.Json;
-using static UnityEditor.Timeline.TimelinePlaybackControls;
 
-namespace TimShaw.VoiceBox.LLM
+namespace TimShaw.VoiceBox.Core
 {
-   
+    /// <summary>
+    /// Manages the Gemini service, implementing the IChatService interface.
+    /// </summary>
     public class GeminiServiceManager : IChatService
     {
         private HttpClient _client;
         private string _endpointUrl;
-        private GeminiServiceConfig _config; // Store the entire config object
+        private GeminiServiceConfig _config;
 
         #region API Request/Response Structures
 
+        /// <summary>
+        /// Represents the request body for the Gemini API.
+        /// </summary>
         [Serializable]
         public class GeminiRequest
         {
             public List<GeminiContent> contents;
-
-            // Include all configuration parameters from the GeminiServiceConfig
-            //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public List<Tool> tools;
-
-            //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public ToolConfig toolConfig;
-
-            //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public List<SafetySetting> safetySettings;
-
-            //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public GeminiContent systemInstruction;
-
-            //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public GenerationConfig generationConfig;
         }
 
+        /// <summary>
+        /// Represents the response from the Gemini API.
+        /// </summary>
         [Serializable]
         public class GeminiResponse
         {
             public List<GeminiCandidate> candidates;
         }
 
+        /// <summary>
+        /// Represents a candidate in the Gemini API response.
+        /// </summary>
         [Serializable]
         public class GeminiCandidate
         {
@@ -57,11 +54,15 @@ namespace TimShaw.VoiceBox.LLM
 
         #endregion
 
+        /// <summary>
+        /// Initializes the Gemini service with the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the Gemini service.</param>
         public void Initialize(ScriptableObject config)
         {
             if (config is GeminiServiceConfig geminiConfig)
             {
-                _config = geminiConfig; // Store the config
+                _config = geminiConfig;
                 _endpointUrl = $"{_config.serviceEndpoint}{_config.modelName}:generateContent?key={_config.apiKey}";
                 _client = new HttpClient();
             }
@@ -71,6 +72,13 @@ namespace TimShaw.VoiceBox.LLM
             }
         }
 
+        /// <summary>
+        /// Sends a message to the Gemini service.
+        /// </summary>
+        /// <param name="messageHistory">The history of messages in the conversation.</param>
+        /// <param name="onSuccess">Callback invoked when the message is successfully sent.</param>
+        /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SendMessage(
             List<ChatMessage> messageHistory,
             Action<ChatMessage> onSuccess,
@@ -84,12 +92,9 @@ namespace TimShaw.VoiceBox.LLM
 
             try
             {
-                // 1. Create the request body, including the full configuration.
                 var requestBody = new GeminiRequest
                 {
                     contents = MapToGeminiContents(messageHistory),
-
-                    // Populate the request with data from the ScriptableObject
                     generationConfig = _config.useGenerationConfig ? _config.generationConfig : null,
                     safetySettings = _config.useSafetySettings ? _config.safetySettings : null,
                     tools = _config.useTools ? _config.tools : null,
@@ -97,19 +102,14 @@ namespace TimShaw.VoiceBox.LLM
                     systemInstruction = _config.systemInstruction
                 };
 
-                // Use a settings object to ignore null values if using a more advanced JSON serializer.
-                // JsonUtility includes fields with default/null values, which is usually fine.
                 string jsonBody = JsonConvert.SerializeObject(requestBody, new JsonSerializerSettings
                 {
-                    // This setting is useful to avoid sending empty configs to the API
                     NullValueHandling = NullValueHandling.Ignore
                 });
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-                // 2. Send the request.
                 HttpResponseMessage response = await _client.PostAsync(_endpointUrl, content);
 
-                // 3. Process the response.
                 if (!response.IsSuccessStatusCode)
                 {
                     string errorContent = await response.Content.ReadAsStringAsync();
@@ -134,6 +134,11 @@ namespace TimShaw.VoiceBox.LLM
             }
         }
 
+        /// <summary>
+        /// Maps a list of ChatMessage objects to a list of GeminiContent objects.
+        /// </summary>
+        /// <param name="messageHistory">The list of ChatMessage objects to map.</param>
+        /// <returns>A list of GeminiContent objects.</returns>
         private List<GeminiContent> MapToGeminiContents(List<ChatMessage> messageHistory)
         {
             var geminiContents = new List<GeminiContent>();
@@ -149,6 +154,13 @@ namespace TimShaw.VoiceBox.LLM
             return geminiContents;
         }
 
+        /// <summary>
+        /// Sends a message to the Gemini service and streams the response.
+        /// </summary>
+        /// <param name="messageHistory">The history of messages in the conversation.</param>
+        /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
+        /// <param name="onComplete">Callback invoked when the response is complete.</param>
+        /// <param name="onError">Callback invoked when an error occurs.</param>
         public void SendMessageStream(List<ChatMessage> messageHistory, Action<string> onChunkReceived, Action onComplete, Action<string> onError)
         {
             onError?.Invoke("Streaming is not yet implemented for this service.");

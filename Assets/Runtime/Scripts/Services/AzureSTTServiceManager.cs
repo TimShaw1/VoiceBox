@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,13 +8,25 @@ using NAudio.CoreAudioApi;
 using TimShaw.VoiceBox.Core;
 using UnityEngine;
 
-namespace TimShaw.VoiceBox.STT
+namespace TimShaw.VoiceBox.Core
 {
-    class AzureSTTServiceManager : ISpeechToTextService
+    /// <summary>
+    /// Manages the Azure Speech-to-Text (STT) service.
+    /// </summary>
+    public class AzureSTTServiceManager : ISpeechToTextService
     {
+        /// <summary>
+        /// The SpeechRecognizer instance used for speech recognition.
+        /// </summary>
         public SpeechRecognizer speechRecognizer;
         private Dictionary<string, string> audioEndpoints;
-        public async Task TranscribeAudioFromMic(CancellationToken token) // 1. Accept the token
+
+        /// <summary>
+        /// Transcribes audio from the microphone using the Azure STT service.
+        /// </summary>
+        /// <param name="token">A cancellation token to stop the transcription.</param>
+        /// <returns>A task representing the asynchronous transcription operation.</returns>
+        public async Task TranscribeAudioFromMic(CancellationToken token)
         {
             try
             {
@@ -22,16 +34,12 @@ namespace TimShaw.VoiceBox.STT
 
                 var stopRecognition = new TaskCompletionSource<int>();
 
-                // 2. Register a callback. When the token is cancelled, 
-                //    it will complete our TaskCompletionSource. This is the key change.
                 token.Register(() => stopRecognition.TrySetResult(0));
 
                 await speechRecognizer.StartContinuousRecognitionAsync();
 
-                // 3. Await the task properly instead of using WaitAny()
                 await stopRecognition.Task;
 
-                // 4. Ensure recognition is explicitly stopped for a clean shutdown.
                 await speechRecognizer.StopContinuousRecognitionAsync();
                 Debug.Log("VoiceBox: Transcription stopped.");
             }
@@ -42,6 +50,10 @@ namespace TimShaw.VoiceBox.STT
             }
         }
 
+        /// <summary>
+        /// Initializes the Azure STT service with the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the Azure STT service.</param>
         public void Initialize(ScriptableObject config)
         {
             var speechServiceObjectDerived = config as AzureSTTServiceConfig;
@@ -53,13 +65,17 @@ namespace TimShaw.VoiceBox.STT
 
             audioEndpoints = GetAudioInputEndpoints();
 
-            using var audioConfig = (speechServiceObjectDerived.audioInputDeviceName == "Default") ? 
+            using var audioConfig = (speechServiceObjectDerived.audioInputDeviceName == "Default") ?
                 AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(audioEndpoints[speechServiceObjectDerived.audioInputDeviceName]);
             var speechConfig = SpeechConfig.FromSubscription(speechServiceObjectDerived.apiKey, speechServiceObjectDerived.region);
             speechConfig.SpeechRecognitionLanguage = speechServiceObjectDerived.language;
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
         }
 
+        /// <summary>
+        /// Gets a dictionary of available audio input endpoints.
+        /// </summary>
+        /// <returns>A dictionary where the key is the friendly name of the device and the value is the device ID.</returns>
         public static Dictionary<string, string> GetAudioInputEndpoints()
         {
             var deviceList = new Dictionary<string, string>();

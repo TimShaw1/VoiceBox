@@ -1,23 +1,42 @@
-using NAudio.CoreAudioApi;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using TimShaw.VoiceBox.Editor;
-using TimShaw.VoiceBox.STT;
+using TimShaw.VoiceBox.Core;
 
+/// <summary>
+/// Configuration settings for the Azure Speech-to-Text (STT) service.
+/// </summary>
 [CreateAssetMenu(fileName = "AzureSTTServiceConfig", menuName = "VoiceBox/AzureSTTService Configuration")]
 public class AzureSTTServiceConfig : ScriptableObject
 {
+    /// <summary>
+    /// The API key for the Azure STT service.
+    /// </summary>
     public string apiKey;
+    /// <summary>
+    /// The region for the Azure STT service.
+    /// </summary>
     public string region;
+    /// <summary>
+    /// The language for speech recognition.
+    /// </summary>
     public string language;
 
+    /// <summary>
+    /// The name of the audio input device to use for transcription.
+    /// </summary>
     [Options("audioInputEndpointNames")]
     public string audioInputDeviceName;
 
+    /// <summary>
+    /// An array of available audio input device names.
+    /// </summary>
     public string[] audioInputEndpointNames;
 
+    /// <summary>
+    /// Called when the script is loaded or a value is changed in the Inspector.
+    /// Populates the list of available audio input devices.
+    /// </summary>
     public void OnValidate()
     {
         audioInputEndpointNames = AzureSTTServiceManager.GetAudioInputEndpoints().Keys.ToArray();

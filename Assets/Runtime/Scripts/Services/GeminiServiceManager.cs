@@ -1,11 +1,14 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using UnityEngine;
-using Newtonsoft.Json;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -63,7 +66,8 @@ namespace TimShaw.VoiceBox.Core
             if (config is GeminiServiceConfig geminiConfig)
             {
                 _config = geminiConfig;
-                _endpointUrl = $"{_config.serviceEndpoint}{_config.modelName}:generateContent?key={_config.apiKey}";
+                // Note: The base endpoint is set here. The specific method will be appended later.
+                _endpointUrl = $"{_config.serviceEndpoint}{_config.modelName}";
                 _client = new HttpClient();
             }
             else
@@ -92,6 +96,7 @@ namespace TimShaw.VoiceBox.Core
 
             try
             {
+                var generateContentEndpoint = $"{_endpointUrl}:generateContent?key={_config.apiKey}";
                 var requestBody = new GeminiRequest
                 {
                     contents = MapToGeminiContents(messageHistory),
@@ -108,7 +113,7 @@ namespace TimShaw.VoiceBox.Core
                 });
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-                HttpResponseMessage response = await _client.PostAsync(_endpointUrl, content);
+                HttpResponseMessage response = await _client.PostAsync(generateContentEndpoint, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -161,9 +166,97 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
         /// <param name="onComplete">Callback invoked when the response is complete.</param>
         /// <param name="onError">Callback invoked when an error occurs.</param>
-        public void SendMessageStream(List<ChatMessage> messageHistory, Action<string> onChunkReceived, Action onComplete, Action<string> onError)
+        public async Task SendMessageStream(
+            List<ChatMessage> messageHistory, 
+            Action<string> onChunkReceived, 
+            Action onComplete, 
+            Action<string> onError
+        )
         {
-            onError?.Invoke("Streaming is not yet implemented for this service.");
+            if (_client == null || _config == null)
+            {
+                onError?.Invoke("GeminiChatService is not initialized.");
+                return;
+            }
+
+            try
+            {
+                var streamEndpointUrl = $"{_endpointUrl}:streamGenerateContent?key={_config.apiKey}";
+
+                var requestBody = new GeminiRequest
+                {
+                    contents = MapToGeminiContents(messageHistory),
+                    generationConfig = _config.useGenerationConfig ? _config.generationConfig : null,
+                    safetySettings = _config.useSafetySettings ? _config.safetySettings : null,
+                    tools = _config.useTools ? _config.tools : null,
+                    toolConfig = _config.useTools ? _config.toolConfig : null,
+                    systemInstruction = _config.systemInstruction
+                };
+
+                string jsonBody = JsonConvert.SerializeObject(requestBody, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+                var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+                var request = new HttpRequestMessage(HttpMethod.Post, streamEndpointUrl) { Content = content };
+
+                using (var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string errorContent = await response.Content.ReadAsStringAsync();
+                        throw new HttpRequestException($"Error from Gemini API: {response.StatusCode}\n{errorContent}");
+                    }
+
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var reader = new StreamReader(stream))
+                    {
+                        string line;
+                        while ((line = await reader.ReadLineAsync()) != null)
+                        {
+                            string trimmedLine = line.Trim();
+
+                            if (trimmedLine.StartsWith("\"text\":"))
+                            {
+                                // Extract the value part, which starts after the first colon.
+                                int firstColonIndex = trimmedLine.IndexOf(':');
+                                if (firstColonIndex == -1) continue;
+
+                                string valuePart = trimmedLine.Substring(firstColonIndex + 1).Trim();
+
+                                // Clean up the extracted value by removing surrounding quotes and trailing commas.
+                                if (valuePart.StartsWith("\""))
+                                {
+                                    valuePart = valuePart.Substring(1);
+                                }
+                                if (valuePart.EndsWith("\","))
+                                {
+                                    valuePart = valuePart.Substring(0, valuePart.Length - 2);
+                                }
+                                else if (valuePart.EndsWith("\""))
+                                {
+                                    valuePart = valuePart.Substring(0, valuePart.Length - 1);
+                                }
+
+                                if (!string.IsNullOrEmpty(valuePart))
+                                {
+                                    // Unescape characters like \n, \", etc., to get the clean text.
+                                    string unescapedChunk = Regex.Unescape(valuePart);
+                                    onChunkReceived?.Invoke(unescapedChunk);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                onComplete?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[GeminiChatService] Error during streaming: {ex.Message}");
+                onError?.Invoke(ex.Message);
+            }
         }
     }
 }

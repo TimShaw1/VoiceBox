@@ -69,11 +69,23 @@ public class APITester : MonoBehaviour
         {
             var chats = new List<ChatMessage>();
             var systemPrompt = new ChatMessage(MessageRole.System, "You are an AI assistant that answers a user's questions.");
-            var chat = new ChatMessage(MessageRole.User, "What is 2 + 2?");
+            var chat = new ChatMessage(MessageRole.User, "Please write a 2 paragraph essay on the dog breed Husky");
             chats.Add(chat);
+
+            /*
             AIManager.Instance.SendChatMessage(
                 chats,
                 response => Debug.Log(response.Content),
+                error => Debug.Log(error)
+            );
+            */
+
+            string combinedResponse = "";
+
+            AIManager.Instance.StreamChatMessage(
+                chats,
+                chunk => { Debug.Log(chunk); combinedResponse += chunk; },
+                () => { Debug.Log(combinedResponse); },
                 error => Debug.Log(error)
             );
         }

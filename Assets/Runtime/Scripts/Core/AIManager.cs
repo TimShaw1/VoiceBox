@@ -198,6 +198,29 @@ public class AIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Sends a message to the Chat service and streams the response.
+    /// </summary>
+    /// <param name="messageHistory">The history of messages in the conversation.</param>
+    /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
+    /// <param name="onComplete">Callback invoked when the response is complete.</param>
+    /// <param name="onError">Callback invoked when an error occurs.</param>
+    public void StreamChatMessage(
+        List<ChatMessage> messageHistory,
+            Action<string> onChunkReceived,
+            Action onComplete,
+            Action<string> onError
+    )
+    {
+        if (_chatService == null)
+        {
+            onError?.Invoke("Chat service is not initialized. Check AIManager configuration.");
+            return;
+        }
+
+        Task.Run(() =>_chatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError));
+    }
+
+    /// <summary>
     /// Starts transcribing audio from the microphone using the configured STT service.
     /// </summary>
     public async void StartSpeechTranscription()

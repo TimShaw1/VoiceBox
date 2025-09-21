@@ -89,14 +89,14 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onChunkReceived">Callback invoked for each partial chunk of the response received from the stream.</param>
         /// <param name="onComplete">Callback invoked when the entire stream has finished.</param>
         /// <param name="onError">Callback invoked if an error occurs during the streaming process.</param>
-        void SendMessageStream(
+        Task SendMessageStream(
             List<ChatMessage> messageHistory,
             Action<string> onChunkReceived,
             Action onComplete,
             Action<string> onError
         )
         {
-            
+            return null;
         }
     }
 }

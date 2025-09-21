@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -6,15 +6,16 @@ using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using UnityEngine;
 
-
-
-namespace TimShaw.VoiceBox.LLM
+namespace TimShaw.VoiceBox.Core
 {
+    /// <summary>
+    /// Represents the response from a chat completion request to the OpenAI API.
+    /// </summary>
     [Serializable]
     public class ChatCompletionResponse
     {
         public string id;
-        public string @object;   // "object" is a reserved word in C#, so use @object
+        public string @object;
         public long created;
         public string model;
         public List<Choice> choices;
@@ -22,24 +23,33 @@ namespace TimShaw.VoiceBox.LLM
         public string service_tier;
     }
 
+    /// <summary>
+    /// Represents a choice in a chat completion response.
+    /// </summary>
     [Serializable]
     public class Choice
     {
         public int index;
         public Message message;
-        public string logprobs;   // null in your example, use string or make it object-like if needed
+        public string logprobs;
         public string finish_reason;
     }
 
+    /// <summary>
+    /// Represents a message in a chat completion response.
+    /// </summary>
     [Serializable]
     public class Message
     {
         public string role;
         public string content;
-        public string refusal;      // null in your example
-        public List<string> annotations;  // empty array in your example
+        public string refusal;
+        public List<string> annotations;
     }
 
+    /// <summary>
+    /// Represents the usage statistics for a chat completion request.
+    /// </summary>
     [Serializable]
     public class Usage
     {
@@ -50,6 +60,9 @@ namespace TimShaw.VoiceBox.LLM
         public CompletionTokensDetails completion_tokens_details;
     }
 
+    /// <summary>
+    /// Represents the details of the prompt tokens used.
+    /// </summary>
     [Serializable]
     public class PromptTokensDetails
     {
@@ -57,6 +70,9 @@ namespace TimShaw.VoiceBox.LLM
         public int audio_tokens;
     }
 
+    /// <summary>
+    /// Represents the details of the completion tokens used.
+    /// </summary>
     [Serializable]
     public class CompletionTokensDetails
     {
@@ -65,12 +81,21 @@ namespace TimShaw.VoiceBox.LLM
         public int accepted_prediction_tokens;
         public int rejected_prediction_tokens;
     }
+
+    /// <summary>
+    /// Manages the ChatGPT service, implementing the IChatService interface.
+    /// </summary>
     public class ChatGPTServiceManager : IChatService
     {
         static HttpClient client;
         public static bool init_success = false;
         private string modelName;
         private string serviceEndpoint;
+
+        /// <summary>
+        /// Initializes the ChatGPT service with the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the ChatGPT service.</param>
         public void Initialize(ScriptableObject config)
         {
             try
@@ -94,6 +119,13 @@ namespace TimShaw.VoiceBox.LLM
             }
         }
 
+        /// <summary>
+        /// Sends a message to the ChatGPT service.
+        /// </summary>
+        /// <param name="messageHistory">The history of messages in the conversation.</param>
+        /// <param name="onSuccess">Callback invoked when the message is successfully sent.</param>
+        /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SendMessage(List<ChatMessage> messageHistory,
             Action<ChatMessage> onSuccess,
             Action<string> onError)
@@ -123,7 +155,7 @@ namespace TimShaw.VoiceBox.LLM
             {
                 Debug.Log("CHATTING BROKE");
                 onError.Invoke(ex.ToString());
-                return; 
+                return;
             }
         }
     }

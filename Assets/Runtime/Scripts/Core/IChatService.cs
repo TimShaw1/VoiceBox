@@ -28,16 +28,26 @@ namespace TimShaw.VoiceBox.Core
     }
 
     /// <summary>
-    /// A simple data structure to represent a single message in a conversation history.
-    /// Using a struct like this allows for maintaining conversational context.
+    /// Represents a single message in a conversation history.
     /// </summary>
     [Serializable]
     public struct ChatMessage
     {
+        /// <summary>
+        /// The role of the message sender (System, User, or Model).
+        /// </summary>
         public MessageRole Role;
+        /// <summary>
+        /// The text content of the message.
+        /// </summary>
         [TextArea(3, 10)]
         public string Content;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChatMessage"/> struct.
+        /// </summary>
+        /// <param name="role">The role of the message sender.</param>
+        /// <param name="content">The text content of the message.</param>
         public ChatMessage(MessageRole role, string content)
         {
             Role = role;
@@ -70,8 +80,6 @@ namespace TimShaw.VoiceBox.Core
             Action<ChatMessage> onSuccess,
             Action<string> onError
         );
-
-        // --- Optional: For advanced streaming functionality ---
 
         /// <summary>
         /// Sends a conversation history and streams the response back in chunks.

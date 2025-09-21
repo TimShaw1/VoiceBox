@@ -1,26 +1,29 @@
 using UnityEngine;
 using TimShaw.VoiceBox.Core;
-using TimShaw.VoiceBox.LLM;
-using TimShaw.VoiceBox.STT;
-using TimShaw.VoiceBox.TTS; // Your interfaces
 
 namespace TimShaw.VoiceBox.Core
 {
+    /// <summary>
+    /// A factory class for creating AI service instances based on configuration files.
+    /// This class abstracts the creation logic for different service implementations.
+    /// </summary>
     public static class ServiceFactory
     {
+        /// <summary>
+        /// Creates a chat service instance based on the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the chat service.</param>
+        /// <returns>An initialized chat service instance, or null if the configuration is invalid.</returns>
         public static IChatService CreateChatService(ScriptableObject config)
         {
-            // Check the type of the ScriptableObject config file.
             if (config is GeminiServiceConfig)
             {
-                // If it's a GeminiConfig, create a GeminiChatService.
                 IChatService service = new GeminiServiceManager();
                 service.Initialize(config);
                 return service;
             }
             else
             {
-                // If no valid config is provided, log an error.
                 if (config != null)
                 {
                     Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}");
@@ -33,6 +36,11 @@ namespace TimShaw.VoiceBox.Core
             }
         }
 
+        /// <summary>
+        /// Creates a speech-to-text (STT) service instance based on the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the STT service.</param>
+        /// <returns>An initialized STT service instance, or null if the configuration is invalid.</returns>
         public static ISpeechToTextService CreateSttService(ScriptableObject config)
         {
             if (config is AzureSTTServiceConfig)
@@ -43,7 +51,6 @@ namespace TimShaw.VoiceBox.Core
             }
             else
             {
-                // If no valid config is provided, log an error.
                 if (config != null)
                 {
                     Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
@@ -56,6 +63,11 @@ namespace TimShaw.VoiceBox.Core
             }
         }
 
+        /// <summary>
+        /// Creates a text-to-speech (TTS) service instance based on the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the TTS service.</param>
+        /// <returns>An initialized TTS service instance, or null if the configuration is invalid.</returns>
         public static ITextToSpeechService CreateTtsService(ScriptableObject config)
         {
             if (config is ElevenlabsTTSServiceConfig)
@@ -66,14 +78,13 @@ namespace TimShaw.VoiceBox.Core
             }
             else
             {
-                // If no valid config is provided, log an error.
                 if (config != null)
                 {
-                    Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+                    Debug.LogError($"[ServiceFactory] Unknown TTS config type: {config.GetType().Name}");
                 }
                 else
                 {
-                    Debug.LogWarning("[ServiceFactory] STT service config is null. No STT service will be created.");
+                    Debug.LogWarning("[ServiceFactory] TTS service config is null. No TTS service will be created.");
                 }
                 return null;
             }

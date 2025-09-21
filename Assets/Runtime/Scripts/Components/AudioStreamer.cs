@@ -1,18 +1,21 @@
 using NAudio.Wave;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
-using TimShaw.VoiceBox.TTS;
 using UnityEngine;
 
+/// <summary>
+/// Decodes a streaming MP3 audio feed into raw audio samples.
+/// </summary>
 public class StreamingMp3Decoder
 {
+    /// <summary>
+    /// Gets a value indicating whether there are decoded samples available.
+    /// </summary>
     public bool HasSamples => !_decodedSamples.IsEmpty;
     private readonly ConcurrentQueue<float> _decodedSamples = new ConcurrentQueue<float>();
     private MemoryStream _mp3Stream;
@@ -23,12 +26,19 @@ public class StreamingMp3Decoder
     private int _sampleRate = AudioSettings.outputSampleRate;
     private AudioSpeakerMode speakerMode = AudioSettings.speakerMode;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StreamingMp3Decoder"/> class.
+    /// </summary>
     public StreamingMp3Decoder()
     {
         _mp3Stream = new MemoryStream();
         _conversionBuffer = new byte[BufferSize];
     }
 
+    /// <summary>
+    /// Feeds MP3 data into the decoder.
+    /// </summary>
+    /// <param name="mp3Data">The byte array of MP3 data.</param>
     public void Feed(byte[] mp3Data)
     {
         long originalPosition = _mp3Stream.Position;
@@ -44,11 +54,10 @@ public class StreamingMp3Decoder
 
                 int unitySampleRate = _sampleRate;
 
-                // --- THE FIX ---
-                // Determine Unity's channel count
+                // Determine Unity's channel count based on the current speaker mode.
                 int unityChannelCount = (speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
 
-                // Create an output format that EXACTLY matches Unity's configuration
+                // Create an output format that EXACTLY matches Unity's configuration.
                 var outputFormat = new WaveFormat(unitySampleRate, unityChannelCount);
 
                 _resampler = new MediaFoundationResampler(_mp3Reader, outputFormat);
@@ -59,6 +68,9 @@ public class StreamingMp3Decoder
         if (_resampler != null) ReadAndEnqueueAvailableSamples();
     }
 
+    /// <summary>
+    /// Reads and enqueues available audio samples from the resampler.
+    /// </summary>
     private void ReadAndEnqueueAvailableSamples()
     {
         int bytesRead;
@@ -71,13 +83,24 @@ public class StreamingMp3Decoder
             }
         }
     }
+
+    /// <summary>
+    /// Tries to get the next audio sample from the queue.
+    /// </summary>
+    /// <param name="sample">The retrieved audio sample.</param>
+    /// <returns>True if a sample was retrieved, otherwise false.</returns>
     public bool TryGetSample(out float sample) { return _decodedSamples.TryDequeue(out sample); }
+
+    /// <summary>
+    /// Disposes the MP3 reader and memory stream.
+    /// </summary>
     public void Dispose() { _mp3Reader?.Dispose(); _mp3Stream?.Dispose(); }
 }
 
 
 /// <summary>
-/// Enables streaming audio
+/// Manages streaming audio from a WebSocket and playing it through an AudioSource.
+/// It uses a streaming MP3 decoder to handle the audio data.
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class AudioStreamer : MonoBehaviour
@@ -87,21 +110,24 @@ public class AudioStreamer : MonoBehaviour
     private ClientWebSocket _webSocket;
     private CancellationTokenSource _cancellationSource;
 
-    // Thread-safe buffer for audio data
     private ConcurrentQueue<float> _audioBuffer = new ConcurrentQueue<float>();
 
     private StreamingMp3Decoder _mp3Decoder;
 
+    /// <summary>
+    /// Called when the script instance is being loaded.
+    /// </summary>
     private void Awake()
     {
         _audioSource = GetComponent<AudioSource>();
-        // We configure the AudioSource to be controlled by our script
         _audioSource.playOnAwake = false;
     }
 
     /// <summary>
-    /// Starts streaming speech for the given text.
+    /// Starts streaming speech for the given text using the specified service.
     /// </summary>
+    /// <param name="text">The text to be converted to speech.</param>
+    /// <param name="service">The text-to-speech service to use.</param>
     public void StartStreaming(string text, ITextToSpeechService service)
     {
         if (_webSocket != null && _webSocket.State == WebSocketState.Open)
@@ -113,7 +139,6 @@ public class AudioStreamer : MonoBehaviour
         _mp3Decoder = new StreamingMp3Decoder();
         _cancellationSource = new CancellationTokenSource();
 
-        // Clear any old data
         while (_audioBuffer.TryDequeue(out _)) { }
 
         _webSocket = new ClientWebSocket();
@@ -124,7 +149,6 @@ public class AudioStreamer : MonoBehaviour
             _webSocket.Options.SetRequestHeader("xi-api-key", derivedElevenlabsServiceManager.ttsServiceObjectDerived.apiKey);
             string uri = $"wss://api.elevenlabs.io/v1/text-to-speech/{derivedElevenlabsServiceManager.ttsServiceObjectDerived.voiceId}/stream-input?model_id=eleven_multilingual_v2";
 
-            // Start the connection and streaming process
             Task.Run(() => ConnectAndStream(text, uri, derivedElevenlabsServiceManager, _cancellationSource.Token));
             _audioSource.Play();
         }
@@ -138,6 +162,14 @@ public class AudioStreamer : MonoBehaviour
         _cancellationSource?.Cancel();
     }
 
+    /// <summary>
+    /// Connects to the WebSocket and streams the audio data.
+    /// </summary>
+    /// <param name="text">The text to be streamed.</param>
+    /// <param name="uri">The WebSocket URI.</param>
+    /// <param name="service">The text-to-speech service.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private async Task ConnectAndStream(string text, string uri, ITextToSpeechService service, CancellationToken token)
     {
         try
@@ -172,19 +204,17 @@ public class AudioStreamer : MonoBehaviour
         }
     }
 
-    // Place this inside your AudioStreamer.cs class, replacing the old method.
-
-    // This method is called by Unity on the audio thread.
-    // It requests data to fill the audio buffer.
-    // In AudioStreamer.cs
-
+    /// <summary>
+    // This method is called by Unity on the audio thread to request audio data.
+    // It fills the buffer with decoded audio samples.
+    /// </summary>
+    /// <param name="data">The array to fill with audio data.</param>
+    /// <param name="channels">The number of channels in the audio data.</param>
     void OnAudioFilterRead(float[] data, int channels)
     {
-        // Basic check to ensure the decoder is ready
         if (_mp3Decoder == null) return;
 
-        // A simple, direct loop.
-        // The decoder is now providing a perfectly formatted stream (correct sample rate AND channel count),
+        // The decoder provides a perfectly formatted stream (correct sample rate AND channel count),
         // so we just copy it directly into Unity's buffer.
         for (int i = 0; i < data.Length; i++)
         {
@@ -200,6 +230,9 @@ public class AudioStreamer : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Called when the MonoBehaviour will be destroyed.
+    /// </summary>
     private void OnDestroy()
     {
         StopStreaming();

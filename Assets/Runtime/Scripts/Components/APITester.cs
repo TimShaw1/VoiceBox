@@ -1,30 +1,43 @@
 using Microsoft.CognitiveServices.Speech;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TimShaw.VoiceBox.LLM;
-using TimShaw.VoiceBox.STT;
-using TimShaw.VoiceBox.TTS;
 using TimShaw.VoiceBox.Core;
-using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 
+/// <summary>
+/// A Unity MonoBehaviour for testing various AI service APIs like Azure Speech-to-Text,
+/// ElevenLabs Text-to-Speech, and chat services.
+/// </summary>
 public class APITester : MonoBehaviour
 {
-
+    /// <summary>
+    /// If true, tests the Azure Speech-to-Text service on start.
+    /// </summary>
     [SerializeField]
     public bool testAzure = false;
 
+    /// <summary>
+    /// If true, tests the ElevenLabs Text-to-Speech service on start.
+    /// </summary>
     [SerializeField]
     public bool testElevenlabs = false;
 
+    /// <summary>
+    /// If true, tests the chat service on start.
+    /// </summary>
     [SerializeField]
     public bool testChat = false;
 
+    /// <summary>
+    /// The AudioSource component to use for playing generated speech.
+    /// </summary>
     [SerializeField]
     public AudioSource audioSource;
 
+    /// <summary>
+    /// Callback method to log recognized speech from the Speech-to-Text service.
+    /// </summary>
+    /// <param name="s">The source of the event.</param>
+    /// <param name="e">The event arguments containing the recognition result.</param>
     void logRecognizedSpeech(object s, SpeechRecognitionEventArgs e)
     {
         if (e.Result.Reason == ResultReason.RecognizedSpeech)
@@ -33,7 +46,10 @@ public class APITester : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
+    /// <summary>
+    /// Called when the script instance is being loaded.
+    /// Initializes and triggers the selected API tests.
+    /// </summary>
     void Start()
     {
         if (testAzure)
@@ -44,24 +60,6 @@ public class APITester : MonoBehaviour
 
         if (testElevenlabs)
         {
-            Debug.Log("VoiceBox: Testing Audio File Request");
-            Debug.Log(Application.dataPath);
-            //AIManager.Instance.GenerateSpeechFileFromText("Hello World!", "test", Application.dataPath + "/");
-
-            //Task.Delay(2000).Wait();
-
-            /*
-            Debug.Log("VoiceBox: Testing Audio Clip");
-            AIManager.Instance.GenerateSpeechAudioClipFromText(
-                "This is an audio clip",
-                (audioclip) => audioSource.PlayOneShot(audioclip),
-                (e) => Debug.Log(e)
-            );
-            
-
-            Task.Delay(3000).Wait();
-            */
-
             Debug.Log("VoiceBox: Testing Audio Streaming");
             AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +
                 "This approach reduces first-word latency tremendously.", audioSource);
@@ -74,9 +72,9 @@ public class APITester : MonoBehaviour
             var chat = new ChatMessage(MessageRole.User, "What is 2 + 2?");
             chats.Add(chat);
             AIManager.Instance.SendChatMessage(
-                chats, 
-                response => Debug.Log(response.Content), 
-                error => Debug.Log(error) 
+                chats,
+                response => Debug.Log(response.Content),
+                error => Debug.Log(error)
             );
         }
     }

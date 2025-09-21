@@ -1,8 +1,6 @@
-﻿using NAudio.Wave;
+using NAudio.Wave;
 using Newtonsoft.Json;
-using OpenCover.Framework.Model;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -11,22 +9,27 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
-using Unity.VisualScripting.Antlr3.Runtime;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
-using static AudioStreamer;
 
-
-namespace TimShaw.VoiceBox.TTS
+namespace TimShaw.VoiceBox.Core
 {
-    class ElevenLabsTTSServiceManager : ITextToSpeechService
+    /// <summary>
+    /// Manages the ElevenLabs Text-to-Speech (TTS) service.
+    /// </summary>
+    public class ElevenLabsTTSServiceManager : ITextToSpeechService
     {
 
         HttpClient client;
+        /// <summary>
+        /// The configuration for the ElevenLabs TTS service.
+        /// </summary>
         public ElevenlabsTTSServiceConfig ttsServiceObjectDerived;
         private string fileExtension;
 
+        /// <summary>
+        /// Represents the request body for the ElevenLabs TTS API.
+        /// </summary>
         [System.Serializable]
         public class ElevenLabsTTSRequest
         {
@@ -35,14 +38,20 @@ namespace TimShaw.VoiceBox.TTS
             public VoiceSettings voice_settings;
         }
 
+        /// <summary>
+        /// Represents a streamed response from the ElevenLabs TTS API.
+        /// </summary>
         [System.Serializable]
         public class ElevenLabsStreamedResponse
         {
             public string audio;
             public bool isFinal;
-            // We can ignore the alignment data for now if we don't need it
         }
 
+        /// <summary>
+        /// Initializes the ElevenLabs TTS service with the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the ElevenLabs TTS service.</param>
         public void Initialize(ScriptableObject config)
         {
 
@@ -63,12 +72,17 @@ namespace TimShaw.VoiceBox.TTS
 
             fileExtension = ttsServiceObjectDerived.output_format.Contains("mp3") ? ".mp3" : ".wav";
 
-            client.DefaultRequestHeaders.Add("xi-api-key", ttsServiceObjectDerived.apiKey); // Add API Key header
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/mpeg")); // Add accepted file extension header
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/wav")); // Add accepted file extension header
+            client.DefaultRequestHeaders.Add("xi-api-key", ttsServiceObjectDerived.apiKey);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/mpeg"));
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/wav"));
 
         }
 
+        /// <summary>
+        /// Converts an MP3 file to a WAV file.
+        /// </summary>
+        /// <param name="_inPath_">The path to the input MP3 file.</param>
+        /// <param name="_outPath_">The path to the output WAV file.</param>
         private static void ConvertMp3ToWav(string _inPath_, string _outPath_)
         {
             using (Mp3FileReader mp3 = new Mp3FileReader(_inPath_))
@@ -80,7 +94,12 @@ namespace TimShaw.VoiceBox.TTS
             }
         }
 
-        
+        /// <summary>
+        /// Increases the volume of a WAV file.
+        /// </summary>
+        /// <param name="inputPath">The path to the input WAV file.</param>
+        /// <param name="outputPath">The path to the output WAV file.</param>
+        /// <param name="db">The amount to increase the volume by in decibels.</param>
         private static void IncreaseVolume(string inputPath, string outputPath, double db)
         {
             double linearScalingRatio = Math.Pow(10d, db / 10d);
@@ -105,23 +124,16 @@ namespace TimShaw.VoiceBox.TTS
             }
         }
 
-
-
         /// <summary>
-        /// <para>
-        /// Requests file containing AI Voice saying the prompt and outputs the directory to said file.
-        /// </para>
-        /// <para>
-        /// TODO: Stream audio into audioclip, allow previous and next text parameters, allow previous and next ID parameters
-        /// </para>
+        /// Requests an audio file from the ElevenLabs TTS service.
         /// </summary>
-        /// <param name="prompt"></param>
-        /// <param name="fileName"></param>
-        /// <param name="dir"></param>
-        /// <returns></returns>
+        /// <param name="prompt">The text to be converted to speech.</param>
+        /// <param name="fileName">The name of the output audio file.</param>
+        /// <param name="dir">The directory to save the audio file in.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task RequestAudioFile(string prompt, string fileName, string dir)
         {
-            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId; // Concatenate Voice ID to end of URL
+            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId;
             Debug.Log(url);
 
             var payload = new ElevenLabsTTSRequest
@@ -131,11 +143,9 @@ namespace TimShaw.VoiceBox.TTS
                 voice_settings = ttsServiceObjectDerived.voiceSettings
             };
 
-            // Convert Data to JSON
             string json = JsonUtility.ToJson(payload);
             StringContent httpContent = new StringContent(json, System.Text.Encoding.Default, "application/json");
 
-            // Request MPEG
             Debug.Log("Requesting audio...");
 
             try
@@ -145,7 +155,6 @@ namespace TimShaw.VoiceBox.TTS
                 response.EnsureSuccessStatusCode();
                 Debug.Log("Success...");
 
-                // Stream response as binary data into a file
                 using (Stream stream = await response.Content.ReadAsStreamAsync())
                 using (FileStream fileStream = System.IO.File.Create(dir + fileName.ToString() + fileExtension))
                 {
@@ -164,6 +173,11 @@ namespace TimShaw.VoiceBox.TTS
 
         }
 
+        /// <summary>
+        /// Requests an AudioClip from the ElevenLabs TTS service.
+        /// </summary>
+        /// <param name="prompt">The text to be converted to speech.</param>
+        /// <returns>A task that represents the asynchronous operation, returning an AudioClip.</returns>
         public async Task<AudioClip> RequestAudioClip(string prompt)
         {
             string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId;
@@ -184,7 +198,6 @@ namespace TimShaw.VoiceBox.TTS
                 www.uploadHandler = new UploadHandlerRaw(postData);
                 www.downloadHandler = new DownloadHandlerAudioClip(new Uri(url), AudioType.MPEG);
                 www.SetRequestHeader("Content-Type", "application/json");
-                // Add any other necessary headers, like authentication, here
                 www.SetRequestHeader("xi-api-key", ttsServiceObjectDerived.apiKey);
 
                 var operation = www.SendWebRequest();
@@ -208,20 +221,29 @@ namespace TimShaw.VoiceBox.TTS
             }
         }
 
-        // --- STREAMING ---
+        /// <summary>
+        /// Sends a message over a WebSocket connection.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="_webSocket">The WebSocket to use for the connection.</param>
+        /// <param name="token">A cancellation token to stop the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task SendSocketMessage(string message, WebSocket _webSocket, CancellationToken token)
         {
             var bytes = Encoding.UTF8.GetBytes(message);
             await _webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, token);
         }
 
+        /// <summary>
+        /// Receives audio data from a WebSocket connection.
+        /// </summary>
+        /// <param name="_webSocket">The WebSocket to use for the connection.</param>
+        /// <param name="_mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="token">A cancellation token to stop the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task ReceiveAudioData(WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token)
         {
-            // Start playing the audio source. It will initially play silence
-            // until OnAudioFilterRead starts getting data from our buffer.
-            //_audioSource.Play();
-
-            var receiveBuffer = new byte[8192]; // 8KB buffer
+            var receiveBuffer = new byte[8192];
             var messageBuilder = new StringBuilder();
 
             while (_webSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
@@ -230,33 +252,24 @@ namespace TimShaw.VoiceBox.TTS
 
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    // Append the received text chunk to our builder
                     messageBuilder.Append(Encoding.UTF8.GetString(receiveBuffer, 0, result.Count));
 
-                    // If this is the end of a message, process the complete JSON
                     if (result.EndOfMessage)
                     {
                         string jsonString = messageBuilder.ToString();
 
-                        // Check if the message contains audio data
                         if (jsonString.Contains("\"audio\""))
                         {
                             ElevenLabsStreamedResponse response = JsonUtility.FromJson<ElevenLabsStreamedResponse>(jsonString);
 
                             if (!string.IsNullOrEmpty(response.audio))
                             {
-                                // 1. Decode the Base64 string into raw bytes
                                 byte[] audioBytes = Convert.FromBase64String(response.audio);
 
-                                // 2. Feed the bytes into our MP3 decoder
                                 _mp3Decoder.Feed(audioBytes);
                             }
                         }
 
-                        // You can add logic here to check for the "isFinal": true message
-                        // to gracefully stop the AudioSource after the buffer empties.
-
-                        // Clear the builder for the next message
                         messageBuilder.Clear();
                     }
                 }
@@ -266,10 +279,16 @@ namespace TimShaw.VoiceBox.TTS
                     break;
                 }
             }
-
-            // Optional: Add logic here to wait until the buffer is empty before stopping the AudioSource
         }
 
+        /// <summary>
+        /// Connects to a WebSocket and streams audio data.
+        /// </summary>
+        /// <param name="text">The text to be streamed as audio.</param>
+        /// <param name="_webSocket">The WebSocket to use for the connection.</param>
+        /// <param name="_mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="token">A cancellation token to stop the streaming.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ConnectAndStream(string text, WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token)
         {
             var initialMessage = new { text = " " };
@@ -277,20 +296,16 @@ namespace TimShaw.VoiceBox.TTS
             Debug.Log(jsonMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
-            // 2. Send the text to be spoken
             var textMessage = new { text = text, try_trigger_generation = true };
             jsonMessage = JsonConvert.SerializeObject(textMessage);
             Debug.Log(jsonMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
-            // 3. Send the End of Stream message
             var eosMessage = new { text = "" };
             jsonMessage = JsonConvert.SerializeObject(eosMessage);
             Debug.Log(jsonMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
-            // 4. Start listening for audio data
-            //await ReceiveAudioData(token);
             await ReceiveAudioData(_webSocket, _mp3Decoder, token);
         }
 

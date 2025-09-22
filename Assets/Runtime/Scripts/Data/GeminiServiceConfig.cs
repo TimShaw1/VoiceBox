@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
+using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 
 /// <summary>
 /// Represents the content of a message in the Gemini API.
@@ -179,16 +182,18 @@ public class GenerationConfig
 /// Configuration settings for the Gemini service.
 /// </summary>
 [CreateAssetMenu(fileName = "GeminiServiceConfig", menuName = "VoiceBox/GeminiService Configuration")]
-public class GeminiServiceConfig : ScriptableObject
+public class GeminiServiceConfig : GenericChatServiceConfig
 {
+    public GeminiServiceConfig() 
+    {
+        serviceManagerType = typeof(GeminiServiceManager);
+        apiKeyJSONString = "GEMINI_API_KEY";
+    }
+
     /// <summary>
     /// The service endpoint for the Gemini API.
     /// </summary>
     public string serviceEndpoint;
-    /// <summary>
-    /// The API key for the Gemini service.
-    /// </summary>
-    public string apiKey;
     /// <summary>
     /// The name of the model to use.
     /// </summary>

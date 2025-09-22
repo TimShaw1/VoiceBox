@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -67,7 +69,7 @@ namespace TimShaw.VoiceBox.Core
         /// This should be called before any other methods.
         /// </summary>
         /// <param name="config">A ScriptableObject containing API keys, model names, and other settings.</param>
-        void Initialize(ScriptableObject config);
+        void Initialize(GenericChatServiceConfig config);
 
         /// <summary>
         /// Sends a complete conversation history to the chat service and waits for a single, complete response.
@@ -93,7 +95,8 @@ namespace TimShaw.VoiceBox.Core
             List<ChatMessage> messageHistory,
             Action<string> onChunkReceived,
             Action onComplete,
-            Action<string> onError
+            Action<string> onError,
+            CancellationToken token
         )
         {
             return null;

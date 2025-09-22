@@ -6,6 +6,7 @@ using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using NAudio.CoreAudioApi;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -54,7 +55,7 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes the Azure STT service with the provided configuration.
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the Azure STT service.</param>
-        public void Initialize(ScriptableObject config)
+        public void Initialize(GenericSTTServiceConfig config)
         {
             var speechServiceObjectDerived = config as AzureSTTServiceConfig;
             if (speechServiceObjectDerived.apiKey.Length == 0)

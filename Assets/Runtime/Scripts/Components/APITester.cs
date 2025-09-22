@@ -86,7 +86,7 @@ public class APITester : MonoBehaviour
                 chats,
                 chunk => { Debug.Log(chunk); combinedResponse += chunk; },
                 () => { Debug.Log(combinedResponse); },
-                error => Debug.Log(error)
+                error => Debug.LogError(error)
             );
         }
     }

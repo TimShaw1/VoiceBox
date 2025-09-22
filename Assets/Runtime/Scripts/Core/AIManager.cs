@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 /// <summary>
@@ -24,13 +25,13 @@ public class AIManager : MonoBehaviour
 
     [Header("Service Configurations")]
     [Tooltip("Configuration asset for the chat service (e.g., GeminiConfig, ChatGPTConfig).")]
-    [SerializeField] private ScriptableObject chatServiceConfig;
+    [SerializeField] private GenericChatServiceConfig chatServiceConfig;
 
     [Tooltip("Configuration asset for the STT service (e.g., AzureConfig).")]
-    [SerializeField] private ScriptableObject speechToTextConfig;
+    [SerializeField] private GenericSTTServiceConfig speechToTextConfig;
 
     [Tooltip("Configuration asset for the TTS service (e.g., ElevenlabsConfig).")]
-    [SerializeField] private ScriptableObject textToSpeechConfig;
+    [SerializeField] private GenericTTSServiceConfig textToSpeechConfig;
 
     private IChatService _chatService;
     private ISpeechToTextService _sttService;
@@ -74,14 +75,11 @@ public class AIManager : MonoBehaviour
         string jsonContent = File.ReadAllText(keysFile);
         var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
 
-        if (chatServiceConfig != null && chatServiceConfig is GeminiServiceConfig) 
-            (chatServiceConfig as GeminiServiceConfig).apiKey = apiKeys["GEMINI_API_KEY"];
+        chatServiceConfig.apiKey = apiKeys[chatServiceConfig.apiKeyJSONString];
 
-        if (speechToTextConfig != null && speechToTextConfig is AzureSTTServiceConfig)
-            (speechToTextConfig as AzureSTTServiceConfig).apiKey = apiKeys["AZURE_API_KEY"];
+        speechToTextConfig.apiKey = apiKeys[speechToTextConfig.apiKeyJSONString];
 
-        if (textToSpeechConfig != null && textToSpeechConfig is ElevenlabsTTSServiceConfig)
-            (textToSpeechConfig as ElevenlabsTTSServiceConfig).apiKey = apiKeys["ELEVENLABS_API_KEY"];
+        textToSpeechConfig.apiKey = apiKeys[textToSpeechConfig.apiKeyJSONString];
     }
 
     /// <summary>
@@ -217,7 +215,7 @@ public class AIManager : MonoBehaviour
             return;
         }
 
-        Task.Run(() =>_chatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError));
+        Task.Run(() =>_chatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, cancellationTokenSource.Token));
     }
 
     /// <summary>

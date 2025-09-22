@@ -1,5 +1,6 @@
 using UnityEngine;
-using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
+using System;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -14,15 +15,16 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the chat service.</param>
         /// <returns>An initialized chat service instance, or null if the configuration is invalid.</returns>
-        public static IChatService CreateChatService(ScriptableObject config)
+        public static IChatService CreateChatService(GenericChatServiceConfig config)
         {
-            if (config is GeminiServiceConfig)
+            try
             {
-                IChatService service = new GeminiServiceManager();
+                Type t = config.serviceManagerType;
+                IChatService service = Activator.CreateInstance(t) as IChatService;
                 service.Initialize(config);
                 return service;
             }
-            else
+            catch
             {
                 if (config != null)
                 {
@@ -41,15 +43,16 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the STT service.</param>
         /// <returns>An initialized STT service instance, or null if the configuration is invalid.</returns>
-        public static ISpeechToTextService CreateSttService(ScriptableObject config)
+        public static ISpeechToTextService CreateSttService(GenericSTTServiceConfig config)
         {
-            if (config is AzureSTTServiceConfig)
+            try
             {
-                ISpeechToTextService service = new AzureSTTServiceManager();
+                Type t = config.serviceManagerType;
+                ISpeechToTextService service = Activator.CreateInstance(t) as ISpeechToTextService;
                 service.Initialize(config);
                 return service;
             }
-            else
+            catch
             {
                 if (config != null)
                 {
@@ -68,15 +71,16 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the TTS service.</param>
         /// <returns>An initialized TTS service instance, or null if the configuration is invalid.</returns>
-        public static ITextToSpeechService CreateTtsService(ScriptableObject config)
+        public static ITextToSpeechService CreateTtsService(GenericTTSServiceConfig config)
         {
-            if (config is ElevenlabsTTSServiceConfig)
+            try
             {
-                ITextToSpeechService service = new ElevenLabsTTSServiceManager();
+                Type t = config.serviceManagerType;
+                ITextToSpeechService service = Activator.CreateInstance(t) as ITextToSpeechService;
                 service.Initialize(config);
                 return service;
             }
-            else
+            catch
             {
                 if (config != null)
                 {

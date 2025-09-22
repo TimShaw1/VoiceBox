@@ -6,8 +6,10 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -61,7 +63,7 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes the Gemini service with the provided configuration.
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the Gemini service.</param>
-        public void Initialize(ScriptableObject config)
+        public void Initialize(GenericChatServiceConfig config)
         {
             if (config is GeminiServiceConfig geminiConfig)
             {
@@ -170,7 +172,8 @@ namespace TimShaw.VoiceBox.Core
             List<ChatMessage> messageHistory, 
             Action<string> onChunkReceived, 
             Action onComplete, 
-            Action<string> onError
+            Action<string> onError,
+            CancellationToken token
         )
         {
             if (_client == null || _config == null)
@@ -213,7 +216,7 @@ namespace TimShaw.VoiceBox.Core
                     using (var reader = new StreamReader(stream))
                     {
                         string line;
-                        while ((line = await reader.ReadLineAsync()) != null)
+                        while ((line = await reader.ReadLineAsync()) != null && !token.IsCancellationRequested)
                         {
                             string trimmedLine = line.Trim();
 
@@ -250,7 +253,10 @@ namespace TimShaw.VoiceBox.Core
                     }
                 }
 
-                onComplete?.Invoke();
+                if (!token.IsCancellationRequested)
+                    onComplete?.Invoke();
+                else
+                    onError?.Invoke("Cancellation requested.");
             }
             catch (Exception ex)
             {

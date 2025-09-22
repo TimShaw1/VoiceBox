@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Core;
 
 /// <summary>
 /// Represents the voice settings for the ElevenLabs Text-to-Speech service.
@@ -60,20 +62,20 @@ public class PronunciationDictionaryLocator
 /// Configuration settings for the ElevenLabs Text-to-Speech (TTS) service.
 /// </summary>
 [CreateAssetMenu(fileName = "TTSServiceConfig", menuName = "VoiceBox/TTSService Configuration")]
-public class ElevenlabsTTSServiceConfig : ScriptableObject
+public class ElevenlabsTTSServiceConfig : GenericTTSServiceConfig
 {
+    public ElevenlabsTTSServiceConfig() 
+    {
+        serviceManagerType = typeof(ElevenLabsTTSServiceManager);
+        apiKeyJSONString = "ELEVENLABS_API_KEY";
+    }
+
     [Header("Core Configuration")]
     /// <summary>
     /// The API endpoint for the text-to-speech service.
     /// </summary>
     [Tooltip("The API endpoint for the text-to-speech service.")]
     public string serviceEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/";
-
-    /// <summary>
-    /// Your ElevenLabs API key.
-    /// </summary>
-    [Tooltip("Your ElevenLabs API key.")]
-    public string apiKey;
 
     /// <summary>
     /// The ID of the voice you want to use.

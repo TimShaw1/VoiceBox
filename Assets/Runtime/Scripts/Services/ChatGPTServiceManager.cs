@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -96,7 +97,7 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes the ChatGPT service with the provided configuration.
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the ChatGPT service.</param>
-        public void Initialize(ScriptableObject config)
+        public void Initialize(GenericChatServiceConfig config)
         {
             try
             {

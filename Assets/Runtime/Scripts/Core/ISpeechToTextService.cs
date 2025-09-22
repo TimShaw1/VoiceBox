@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -14,7 +15,7 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes the service with the necessary configuration.
         /// </summary>
         /// <param name="config">A ScriptableObject containing API keys and other settings.</param>
-        void Initialize(ScriptableObject config);
+        void Initialize(GenericSTTServiceConfig config);
 
         /// <summary>
         /// Starts transcribing audio from the microphone.

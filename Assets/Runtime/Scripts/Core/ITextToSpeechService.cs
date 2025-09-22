@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -15,7 +16,7 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes the service with the necessary configuration.
         /// </summary>
         /// <param name="config">A ScriptableObject containing API keys and other settings.</param>
-        void Initialize(ScriptableObject config);
+        void Initialize(GenericTTSServiceConfig config);
         /// <summary>
         /// Requests an audio file from a text prompt.
         /// </summary>

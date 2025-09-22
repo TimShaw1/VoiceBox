@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -52,7 +53,7 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes the ElevenLabs TTS service with the provided configuration.
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the ElevenLabs TTS service.</param>
-        public void Initialize(ScriptableObject config)
+        public void Initialize(GenericTTSServiceConfig config)
         {
 
             ttsServiceObjectDerived = config as ElevenlabsTTSServiceConfig;

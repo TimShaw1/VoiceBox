@@ -2,17 +2,20 @@ using System.Linq;
 using UnityEngine;
 using TimShaw.VoiceBox.Editor;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
 
 /// <summary>
 /// Configuration settings for the Azure Speech-to-Text (STT) service.
 /// </summary>
 [CreateAssetMenu(fileName = "AzureSTTServiceConfig", menuName = "VoiceBox/AzureSTTService Configuration")]
-public class AzureSTTServiceConfig : ScriptableObject
+public class AzureSTTServiceConfig : GenericSTTServiceConfig
 {
-    /// <summary>
-    /// The API key for the Azure STT service.
-    /// </summary>
-    public string apiKey;
+    public AzureSTTServiceConfig() 
+    {
+        serviceManagerType = typeof(AzureSTTServiceManager);
+        apiKeyJSONString = "AZURE_API_KEY";
+    }
+
     /// <summary>
     /// The region for the Azure STT service.
     /// </summary>

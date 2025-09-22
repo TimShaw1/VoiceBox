@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab52e11552ed0734cb7d3bcac9b59b49, type: 3}
   m_Name: GeminiServiceConfig
   m_EditorClassIdentifier: 
-  serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/models/
   apiKey: 
-  modelName: gemini-2.0-flash
+  apiKeyJSONString: GEMINI_API_KEY
+  serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/models/
+  modelName: gemini-2.5-flash
   tools: []
   useTools: 0
   toolConfig:

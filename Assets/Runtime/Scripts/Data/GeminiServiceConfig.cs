@@ -180,6 +180,7 @@ public class GenerationConfig
 
 /// <summary>
 /// Configuration settings for the Gemini service.
+/// TODO: add support for tools like URL context
 /// </summary>
 [CreateAssetMenu(fileName = "GeminiServiceConfig", menuName = "VoiceBox/GeminiService Configuration")]
 public class GeminiServiceConfig : GenericChatServiceConfig
@@ -193,11 +194,11 @@ public class GeminiServiceConfig : GenericChatServiceConfig
     /// <summary>
     /// The service endpoint for the Gemini API.
     /// </summary>
-    public string serviceEndpoint;
+    public string serviceEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/";
     /// <summary>
     /// The name of the model to use.
     /// </summary>
-    public string modelName;
+    public string modelName = "gemini-2.5-flash";
 
     [Header("Content Generation Settings")]
     /// <summary>

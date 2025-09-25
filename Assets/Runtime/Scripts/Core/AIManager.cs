@@ -25,17 +25,17 @@ public class AIManager : MonoBehaviour
 
     [Header("Service Configurations")]
     [Tooltip("Configuration asset for the chat service (e.g., GeminiConfig, ChatGPTConfig).")]
-    [SerializeField] private GenericChatServiceConfig chatServiceConfig;
+    [SerializeField] public GenericChatServiceConfig chatServiceConfig;
 
     [Tooltip("Configuration asset for the STT service (e.g., AzureConfig).")]
-    [SerializeField] private GenericSTTServiceConfig speechToTextConfig;
+    [SerializeField] public GenericSTTServiceConfig speechToTextConfig;
 
     [Tooltip("Configuration asset for the TTS service (e.g., ElevenlabsConfig).")]
-    [SerializeField] private GenericTTSServiceConfig textToSpeechConfig;
+    [SerializeField] public GenericTTSServiceConfig textToSpeechConfig;
 
-    private IChatService _chatService;
-    private ISpeechToTextService _sttService;
-    private ITextToSpeechService _ttsService;
+    public IChatService _chatService;
+    public ISpeechToTextService _sttService;
+    public ITextToSpeechService _ttsService;
 
     /// <summary>
     /// Occurs when the speech recognizer is processing audio and has an intermediate result.
@@ -70,16 +70,25 @@ public class AIManager : MonoBehaviour
     /// Loads API keys from a JSON file and applies them to the service configurations.
     /// </summary>
     /// <param name="keysFile">The path to the JSON file containing the API keys.</param>
-    private void LoadAPIKeys(string keysFile)
+    public void LoadAPIKeys(string keysFile)
     {
         string jsonContent = File.ReadAllText(keysFile);
         var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
 
-        chatServiceConfig.apiKey = apiKeys[chatServiceConfig.apiKeyJSONString];
+        if (chatServiceConfig && chatServiceConfig.apiKeyJSONString.Length > 0)
+            chatServiceConfig.apiKey = apiKeys[chatServiceConfig.apiKeyJSONString];
+        else
+            Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
 
-        speechToTextConfig.apiKey = apiKeys[speechToTextConfig.apiKeyJSONString];
+        if (speechToTextConfig && speechToTextConfig.apiKeyJSONString.Length > 0)
+            speechToTextConfig.apiKey = apiKeys[speechToTextConfig.apiKeyJSONString];
+        else
+            Debug.LogWarning("STT service config does not define an apiKeyJSONString");
 
-        textToSpeechConfig.apiKey = apiKeys[textToSpeechConfig.apiKeyJSONString];
+        if (textToSpeechConfig && textToSpeechConfig.apiKeyJSONString.Length > 0)
+            textToSpeechConfig.apiKey = apiKeys[textToSpeechConfig.apiKeyJSONString];
+        else
+            Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
     }
 
     /// <summary>
@@ -87,35 +96,20 @@ public class AIManager : MonoBehaviour
     /// </summary>
     private void UnloadAPIKeys()
     {
-        if (chatServiceConfig != null && chatServiceConfig is GeminiServiceConfig)
-            (chatServiceConfig as GeminiServiceConfig).apiKey = "";
+        chatServiceConfig.apiKey = "";
 
-        if (speechToTextConfig != null && speechToTextConfig is AzureSTTServiceConfig)
-            (speechToTextConfig as AzureSTTServiceConfig).apiKey = "";
+        speechToTextConfig.apiKey = "";
 
-        if (textToSpeechConfig != null && textToSpeechConfig is ElevenlabsTTSServiceConfig)
-            (textToSpeechConfig as ElevenlabsTTSServiceConfig).apiKey = "";
+        textToSpeechConfig.apiKey = "";
     }
 
-    /// <summary>
-    /// Initializes the singleton instance, loads API keys, and sets up the AI services.
-    /// </summary>
-    private void Awake()
+    public void InitSpeechRecognizer()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (_speechRecognizer != null) return;
 
-        LoadAPIKeys(Application.dataPath + "/keys.json");
+        if (_sttService == null) return;
 
-        _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
-        _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
         _speechRecognizer = (_sttService as AzureSTTServiceManager).speechRecognizer;
-        _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
 
         _speechRecognizer.Recognizing += (s, e) =>
         {
@@ -165,6 +159,31 @@ public class AIManager : MonoBehaviour
             Debug.Log($"VoiceBox Internal: Speech End Detected.");
             OnSpeechEndDetected?.Invoke(this, e);
         };
+    }
+
+    /// <summary>
+    /// Initializes the singleton instance, loads API keys, and sets up the AI services.
+    /// </summary>
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        LoadAPIKeys(Application.dataPath + "/keys.json");
+
+        _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
+        _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
+        _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
+
+        if (_sttService != null && _sttService is AzureSTTServiceManager)
+        {
+            InitSpeechRecognizer();
+        }
     }
 
     /// <summary>

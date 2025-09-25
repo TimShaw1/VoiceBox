@@ -16,6 +16,12 @@ public class AzureSTTServiceConfig : GenericSTTServiceConfig
         apiKeyJSONString = "AZURE_API_KEY";
     }
 
+    public override void _Init()
+    {
+        serviceManagerType = typeof(AzureSTTServiceManager);
+        apiKeyJSONString = "AZURE_API_KEY";
+    }
+
     /// <summary>
     /// The region for the Azure STT service.
     /// </summary>

@@ -28,7 +28,8 @@ namespace TimShaw.VoiceBox.Core
             {
                 if (config != null)
                 {
-                    Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}");
+                    if (config.serviceManagerType != null)
+                        Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}");
                 }
                 else
                 {
@@ -56,7 +57,8 @@ namespace TimShaw.VoiceBox.Core
             {
                 if (config != null)
                 {
-                    Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
+                    if (config.serviceManagerType != null)
+                        Debug.LogError($"[ServiceFactory] Unknown STT config type: {config.GetType().Name}");
                 }
                 else
                 {
@@ -80,11 +82,13 @@ namespace TimShaw.VoiceBox.Core
                 service.Initialize(config);
                 return service;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.LogError(config.serviceManagerType + " : " + ex.ToString());
                 if (config != null)
                 {
-                    Debug.LogError($"[ServiceFactory] Unknown TTS config type: {config.GetType().Name}");
+                    if (config.serviceManagerType != null)
+                        Debug.LogError($"[ServiceFactory] Unknown TTS config type: {config.GetType().Name}");
                 }
                 else
                 {

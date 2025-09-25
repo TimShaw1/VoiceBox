@@ -1,6 +1,8 @@
 using Microsoft.CognitiveServices.Speech;
 using System.Collections.Generic;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Tools;
 using UnityEngine;
 
 /// <summary>
@@ -9,6 +11,12 @@ using UnityEngine;
 /// </summary>
 public class APITester : MonoBehaviour
 {
+    /// <summary>
+    /// If true, spawns an AI manager
+    /// </summary>
+    [SerializeField]
+    public bool testSpawnManager = false;
+
     /// <summary>
     /// If true, tests the Azure Speech-to-Text service on start.
     /// </summary>
@@ -52,6 +60,11 @@ public class APITester : MonoBehaviour
     /// </summary>
     void Start()
     {
+        if (testSpawnManager)
+        {
+            ModdingTools.CreateAIManagerObject<GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsTTSServiceConfig>();
+            AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
+        }
         if (testAzure)
         {
             AIManager.Instance.OnRecognized += logRecognizedSpeech;

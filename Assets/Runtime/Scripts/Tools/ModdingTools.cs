@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Tools
 {
-    // TODO: Fix null reference issues caused by using CreateInstance
     static class ModdingTools
     {
         /// <summary>
@@ -71,6 +70,8 @@ namespace TimShaw.VoiceBox.Tools
                 aiManagerComponent.speechToTextConfig._Init();
                 aiManagerComponent.textToSpeechConfig._Init();
 
+                AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
+
                 aiManagerComponent._chatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
                 aiManagerComponent._sttService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);
                 aiManagerComponent._ttsService = ServiceFactory.CreateTtsService(aiManagerComponent.textToSpeechConfig);
@@ -99,6 +100,8 @@ namespace TimShaw.VoiceBox.Tools
                 aiManagerComponent.chatServiceConfig = genericChatServiceConfig;
                 aiManagerComponent.speechToTextConfig = genericSTTServiceConfig;
                 aiManagerComponent.textToSpeechConfig = genericTTSServiceConfig;
+
+                AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
 
                 aiManagerComponent._chatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
                 aiManagerComponent._sttService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);

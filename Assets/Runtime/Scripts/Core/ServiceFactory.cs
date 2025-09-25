@@ -82,9 +82,8 @@ namespace TimShaw.VoiceBox.Core
                 service.Initialize(config);
                 return service;
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.LogError(config.serviceManagerType + " : " + ex.ToString());
                 if (config != null)
                 {
                     if (config.serviceManagerType != null)

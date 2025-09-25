@@ -63,7 +63,6 @@ public class APITester : MonoBehaviour
         if (testSpawnManager)
         {
             ModdingTools.CreateAIManagerObject<GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsTTSServiceConfig>();
-            AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
         }
         if (testAzure)
         {

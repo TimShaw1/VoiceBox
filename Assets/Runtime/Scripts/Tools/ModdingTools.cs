@@ -57,32 +57,29 @@ namespace TimShaw.VoiceBox.Tools
             where STTConfigType : GenericSTTServiceConfig
             where TTSConfigType : GenericTTSServiceConfig
         {
-            if (AIManager.Instance == null) {
-                GameObject aiManager = new GameObject("_AIManager");
-                AIManager aiManagerComponent = aiManager.AddComponent<AIManager>();
-                aiManagerComponent.chatServiceConfig = CreateGenericChatServiceConfig<ChatConfigType>();
-                aiManagerComponent.speechToTextConfig = CreateGenericSTTServiceConfig<STTConfigType>();
-                aiManagerComponent.textToSpeechConfig = CreateGenericTTSServiceConfig<TTSConfigType>();
-
-                //GameObject.Instantiate(aiManager);
-
-                AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
-
-                aiManagerComponent._chatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
-                aiManagerComponent._sttService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);
-                aiManagerComponent._ttsService = ServiceFactory.CreateTtsService(aiManagerComponent.textToSpeechConfig);
-
-                if (aiManagerComponent.speechToTextConfig is AzureSTTServiceConfig)
-                    AIManager.Instance.InitSpeechRecognizer();
-
-                return aiManager;
-            }
-            else
-            {
-                return null;
-            }
+            return CreateAIManagerObject(CreateGenericChatServiceConfig<ChatConfigType>(), CreateGenericSTTServiceConfig<STTConfigType>(), CreateGenericTTSServiceConfig<TTSConfigType>());
         }
 
+        /// <summary>
+        /// Instantiates an AI manager <see cref="GameObject"/> if one does not already exist using pre-existing configs. 
+        /// Useful for modders who want to spawn the AI manager at runtime with customized service configs.
+        /// <br></br>
+        /// <br></br>
+        /// <example>
+        /// Example:
+        /// <code>
+        /// <see cref="GeminiServiceConfig"/> myChatConfig = <see cref="ModdingTools"/>.<see cref="CreateGenericChatServiceConfig{T}">CreateGenericChatServiceConfig</see>&lt;<see cref="GeminiServiceConfig"/>&gt;(); <br></br>
+        /// <see cref="AzureSTTServiceConfig"/> mySTTConfig = <see cref="ModdingTools"/>.<see cref="CreateGenericSTTServiceConfig{T}">CreateGenericSTTServiceConfig</see>&lt;<see cref="AzureSTTServiceConfig"/>&gt;(); <br></br>
+        /// <see cref="ElevenlabsTTSServiceConfig"/> myTTSConfig = <see cref="ModdingTools"/>.<see cref="CreateGenericTTSServiceConfig{T}">CreateGenericTTSServiceConfig</see>&lt;<see cref="ElevenlabsTTSServiceConfig"/>&gt;(); <br></br>
+        /// myChatConfig.modelName = "gemini-2.5-pro"; <br></br>
+        /// CreateAIManagerObject(myChatConfig, mySTTConfig, myTTSConfig);
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="genericChatServiceConfig">An existing <see cref="GenericChatServiceConfig"/> object</param>
+        /// <param name="genericSTTServiceConfig">An existing <see cref="GenericSTTServiceConfig"/> object</param>
+        /// <param name="genericTTSServiceConfig">An existing <see cref="GenericTTSServiceConfig"/> object</param>
+        /// <returns></returns>
         public static GameObject CreateAIManagerObject(
             GenericChatServiceConfig genericChatServiceConfig, 
             GenericSTTServiceConfig genericSTTServiceConfig, 

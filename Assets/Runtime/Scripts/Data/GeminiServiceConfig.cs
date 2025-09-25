@@ -191,12 +191,6 @@ public class GeminiServiceConfig : GenericChatServiceConfig
         apiKeyJSONString = "GEMINI_API_KEY";
     }
 
-    public override void _Init()
-    {
-        serviceManagerType = typeof(GeminiServiceManager);
-        apiKeyJSONString = "GEMINI_API_KEY";
-    }
-
     /// <summary>
     /// The service endpoint for the Gemini API.
     /// </summary>

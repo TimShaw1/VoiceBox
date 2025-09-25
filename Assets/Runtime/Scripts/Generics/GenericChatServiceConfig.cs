@@ -23,14 +23,6 @@ namespace TimShaw.VoiceBox.Generics
         /// The associated string to access the service's API key in keys.json
         /// </summary>
         public string apiKeyJSONString;
-
-        /// <summary>
-        /// Internal Init meant for modding support
-        /// </summary>
-        public virtual void _Init()
-        {
-
-        }
     }
 
 }

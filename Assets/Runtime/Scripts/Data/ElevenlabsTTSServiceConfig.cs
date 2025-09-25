@@ -70,12 +70,6 @@ public class ElevenlabsTTSServiceConfig : GenericTTSServiceConfig
         apiKeyJSONString = "ELEVENLABS_API_KEY";
     }
 
-    public override void _Init()
-    {
-        serviceManagerType = typeof(ElevenLabsTTSServiceManager);
-        apiKeyJSONString = "ELEVENLABS_API_KEY";
-    }
-
     [Header("Core Configuration")]
     /// <summary>
     /// The API endpoint for the text-to-speech service.

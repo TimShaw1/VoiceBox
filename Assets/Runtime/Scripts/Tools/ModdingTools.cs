@@ -66,10 +66,6 @@ namespace TimShaw.VoiceBox.Tools
 
                 //GameObject.Instantiate(aiManager);
 
-                aiManagerComponent.chatServiceConfig._Init();
-                aiManagerComponent.speechToTextConfig._Init();
-                aiManagerComponent.textToSpeechConfig._Init();
-
                 AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
 
                 aiManagerComponent._chatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);

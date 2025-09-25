@@ -80,7 +80,7 @@ namespace TimShaw.VoiceBox.Tools
         /// <param name="genericSTTServiceConfig">An existing <see cref="GenericSTTServiceConfig"/> object</param>
         /// <param name="genericTTSServiceConfig">An existing <see cref="GenericTTSServiceConfig"/> object</param>
         /// <returns></returns>
-        public static GameObject CreateAIManagerObject(
+        public static GameObject CreateAIManagerObject( // TODO: Add more overrides so only 1 of these has to be passed
             GenericChatServiceConfig genericChatServiceConfig, 
             GenericSTTServiceConfig genericSTTServiceConfig, 
             GenericTTSServiceConfig genericTTSServiceConfig

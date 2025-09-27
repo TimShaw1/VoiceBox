@@ -96,9 +96,9 @@ namespace TimShaw.VoiceBox.Tools
 
                 AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
 
-                aiManagerComponent._chatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
-                aiManagerComponent._sttService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);
-                aiManagerComponent._ttsService = ServiceFactory.CreateTtsService(aiManagerComponent.textToSpeechConfig);
+                aiManagerComponent.ChatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
+                aiManagerComponent.SpeechToTextService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);
+                aiManagerComponent.TextToSpeechService = ServiceFactory.CreateTtsService(aiManagerComponent.textToSpeechConfig);
 
                 if (genericSTTServiceConfig is AzureSTTServiceConfig)
                     AIManager.Instance.InitSpeechRecognizer();
@@ -109,7 +109,8 @@ namespace TimShaw.VoiceBox.Tools
             }
             else
             {
-                return null;
+                Debug.LogWarning("AI Manager already exists, no new object will be created.");
+                return AIManager.Instance.gameObject;
             }
         }
 

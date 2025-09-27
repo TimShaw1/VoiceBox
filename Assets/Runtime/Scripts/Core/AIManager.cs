@@ -33,9 +33,14 @@ public class AIManager : MonoBehaviour
     [Tooltip("Configuration asset for the TTS service (e.g., ElevenlabsConfig).")]
     [SerializeField] public GenericTTSServiceConfig textToSpeechConfig;
 
-    public IChatService _chatService;
-    public ISpeechToTextService _sttService;
-    public ITextToSpeechService _ttsService;
+    private IChatService _chatService;
+    public IChatService ChatService { get => _chatService; set => _chatService = value; }
+
+    private ISpeechToTextService _sttService;
+    public ISpeechToTextService SpeechToTextService { get => _sttService; set => _sttService = value; }
+
+    private ITextToSpeechService _ttsService;
+    public ITextToSpeechService TextToSpeechService { get => _ttsService; set => _ttsService = value; }
 
     /// <summary>
     /// Occurs when the speech recognizer is processing audio and has an intermediate result.
@@ -107,9 +112,9 @@ public class AIManager : MonoBehaviour
     {
         if (_speechRecognizer != null) return;
 
-        if (_sttService == null) return;
+        if (SpeechToTextService == null) return;
 
-        _speechRecognizer = (_sttService as AzureSTTServiceManager).speechRecognizer;
+        _speechRecognizer = (SpeechToTextService as AzureSTTServiceManager).speechRecognizer;
 
         _speechRecognizer.Recognizing += (s, e) =>
         {
@@ -176,11 +181,11 @@ public class AIManager : MonoBehaviour
 
         LoadAPIKeys(Application.dataPath + "/keys.json");
 
-        _chatService = ServiceFactory.CreateChatService(chatServiceConfig);
-        _sttService = ServiceFactory.CreateSttService(speechToTextConfig);
-        _ttsService = ServiceFactory.CreateTtsService(textToSpeechConfig);
+        ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
+        SpeechToTextService = ServiceFactory.CreateSttService(speechToTextConfig);
+        TextToSpeechService = ServiceFactory.CreateTtsService(textToSpeechConfig);
 
-        if (_sttService != null && _sttService is AzureSTTServiceManager)
+        if (SpeechToTextService != null && SpeechToTextService is AzureSTTServiceManager)
         {
             InitSpeechRecognizer();
         }
@@ -206,12 +211,12 @@ public class AIManager : MonoBehaviour
         Action<ChatMessage> onSuccess,
         Action<string> onError)
     {
-        if (_chatService == null)
+        if (ChatService == null)
         {
             onError?.Invoke("Chat service is not initialized. Check AIManager configuration.");
             return;
         }
-        Task.Run(() => _chatService.SendMessage(messageHistory, onSuccess, onError));
+        Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError));
     }
 
     /// <summary>
@@ -228,13 +233,13 @@ public class AIManager : MonoBehaviour
             Action<string> onError
     )
     {
-        if (_chatService == null)
+        if (ChatService == null)
         {
             onError?.Invoke("Chat service is not initialized. Check AIManager configuration.");
             return;
         }
 
-        Task.Run(() =>_chatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, cancellationTokenSource.Token));
+        Task.Run(() =>ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, cancellationTokenSource.Token));
     }
 
     /// <summary>
@@ -242,13 +247,13 @@ public class AIManager : MonoBehaviour
     /// </summary>
     public async void StartSpeechTranscription()
     {
-        if (_sttService == null)
+        if (SpeechToTextService == null)
         {
             Debug.Log("STT Service not initialized. Check AIManager configuration.");
             return;
         }
         Debug.Log("VoiceBox: Starting speech recognition.");
-        await Task.Run(() => _sttService.TranscribeAudioFromMic(cancellationTokenSource.Token));
+        await Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(cancellationTokenSource.Token));
     }
 
     /// <summary>
@@ -267,7 +272,7 @@ public class AIManager : MonoBehaviour
     /// <param name="dir">The directory to save the audio file in.</param>
     public void GenerateSpeechFileFromText(string prompt, string fileName, string dir)
     {
-        Task.Run(() => _ttsService.RequestAudioFile(prompt, fileName, dir));
+        Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir));
     }
 
     /// <summary>
@@ -283,7 +288,7 @@ public class AIManager : MonoBehaviour
     {
         try
         {
-            AudioClip audioClip = await _ttsService.RequestAudioClip(prompt);
+            AudioClip audioClip = await TextToSpeechService.RequestAudioClip(prompt);
             onSuccess?.Invoke(audioClip);
         }
         catch (Exception e)
@@ -301,7 +306,7 @@ public class AIManager : MonoBehaviour
     {
         AudioStreamer audioStreamer = audioSource.GetComponent<AudioStreamer>();
         if (audioStreamer)
-            audioStreamer.StartStreaming(prompt, _ttsService);
+            audioStreamer.StartStreaming(prompt, TextToSpeechService);
         else
             Debug.LogError("Audio Source does not have an AudioStreamer component. Attach an AudioStreamer component to enable streaming.");
     }

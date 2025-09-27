@@ -40,7 +40,7 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
-                Debug.Log("VoiceBox: Start transcribing audio...");
+                Debug.Log("Azure Service Manager: Start transcribing audio...");
 
                 var stopRecognition = new TaskCompletionSource<int>();
 
@@ -51,7 +51,7 @@ namespace TimShaw.VoiceBox.Core
                 await stopRecognition.Task;
 
                 await speechRecognizer.StopContinuousRecognitionAsync();
-                Debug.Log("VoiceBox: Transcription stopped.");
+                Debug.Log("Azure Service Manager: Transcription stopped.");
             }
             catch (System.Exception ex)
             {
@@ -75,8 +75,17 @@ namespace TimShaw.VoiceBox.Core
 
             audioEndpoints = GetAudioInputEndpoints();
 
-            using var audioConfig = (speechServiceObjectDerived.audioInputDeviceName == "Default") ?
-                AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(audioEndpoints[speechServiceObjectDerived.audioInputDeviceName]);
+            AudioConfig audioConfig;
+            try
+            {
+                audioConfig = (speechServiceObjectDerived.audioInputDeviceName == "Default") ?
+                    AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(audioEndpoints[speechServiceObjectDerived.audioInputDeviceName]);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Azure Service Manager: AudioConfig error: " + ex.Message + " -- Using default microphone.");
+                audioConfig = AudioConfig.FromDefaultMicrophoneInput();
+            }
             var speechConfig = SpeechConfig.FromSubscription(speechServiceObjectDerived.apiKey, speechServiceObjectDerived.region);
             speechConfig.SpeechRecognitionLanguage = speechServiceObjectDerived.language;
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);

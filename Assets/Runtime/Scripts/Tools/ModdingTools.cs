@@ -51,7 +51,7 @@ namespace TimShaw.VoiceBox.Tools
         /// <typeparam name="ChatConfigType">The type of <see cref="GenericChatServiceConfig"/> to attach to the AI Manager</typeparam>
         /// <typeparam name="STTConfigType">The type of <see cref="GenericSTTServiceConfig"/> to attach to the AI Manager</typeparam>
         /// <typeparam name="TTSConfigType">The type of <see cref="GenericTTSServiceConfig"/> to attach to the AI Manager</typeparam>
-        /// <returns></returns>
+        /// <returns>The instantiated <see cref="AIManager"/> object</returns>
         public static GameObject CreateAIManagerObject<ChatConfigType, STTConfigType, TTSConfigType>() 
             where ChatConfigType : GenericChatServiceConfig
             where STTConfigType : GenericSTTServiceConfig
@@ -76,11 +76,11 @@ namespace TimShaw.VoiceBox.Tools
         /// </code>
         /// </example>
         /// </summary>
-        /// <param name="genericChatServiceConfig">An existing <see cref="GenericChatServiceConfig"/> object</param>
-        /// <param name="genericSTTServiceConfig">An existing <see cref="GenericSTTServiceConfig"/> object</param>
-        /// <param name="genericTTSServiceConfig">An existing <see cref="GenericTTSServiceConfig"/> object</param>
-        /// <returns></returns>
-        public static GameObject CreateAIManagerObject( // TODO: Add more overrides so only 1 of these has to be passed
+        /// <param name="genericChatServiceConfig">An existing <see cref="GenericChatServiceConfig"/> object or null</param>
+        /// <param name="genericSTTServiceConfig">An existing <see cref="GenericSTTServiceConfig"/> object or null</param>
+        /// <param name="genericTTSServiceConfig">An existing <see cref="GenericTTSServiceConfig"/> object or null</param>
+        /// <returns>The instantiated <see cref="AIManager"/> object</returns>
+        public static GameObject CreateAIManagerObject(
             GenericChatServiceConfig genericChatServiceConfig, 
             GenericSTTServiceConfig genericSTTServiceConfig, 
             GenericTTSServiceConfig genericTTSServiceConfig
@@ -112,5 +112,6 @@ namespace TimShaw.VoiceBox.Tools
                 return null;
             }
         }
+
     }
 }

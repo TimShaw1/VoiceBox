@@ -55,7 +55,7 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (System.Exception ex)
             {
-                Debug.Log("STT BROKE");
+                Debug.Log("Azure Service Manager: Speech to Text error");
                 Debug.Log(ex.ToString());
             }
         }

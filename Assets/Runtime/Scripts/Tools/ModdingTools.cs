@@ -100,9 +100,6 @@ namespace TimShaw.VoiceBox.Tools
                 aiManagerComponent.SpeechToTextService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);
                 aiManagerComponent.TextToSpeechService = ServiceFactory.CreateTtsService(aiManagerComponent.textToSpeechConfig);
 
-                if (genericSTTServiceConfig is AzureSTTServiceConfig)
-                    AIManager.Instance.InitSpeechRecognizer();
-
                 //GameObject.Instantiate(aiManager);
 
                 return aiManager;

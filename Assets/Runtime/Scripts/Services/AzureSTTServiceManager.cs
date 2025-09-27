@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -21,6 +22,14 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public SpeechRecognizer speechRecognizer;
         private Dictionary<string, string> audioEndpoints;
+
+        public event EventHandler<SpeechRecognitionEventArgs> OnRecognizing;
+        public event EventHandler<SpeechRecognitionEventArgs> OnRecognized;
+        public event EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
+        public event EventHandler<SessionEventArgs> OnSessionStarted;
+        public event EventHandler<SessionEventArgs> OnSessionStopped;
+        public event EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
+        public event EventHandler<RecognitionEventArgs> OnSpeechEndDetected;
 
         /// <summary>
         /// Transcribes audio from the microphone using the Azure STT service.
@@ -71,6 +80,62 @@ namespace TimShaw.VoiceBox.Core
             var speechConfig = SpeechConfig.FromSubscription(speechServiceObjectDerived.apiKey, speechServiceObjectDerived.region);
             speechConfig.SpeechRecognitionLanguage = speechServiceObjectDerived.language;
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
+            InitSpeechRecognizer();
+        }
+
+        /// <summary>
+        /// Wires up public events to internal speech recognizer
+        /// </summary>
+        private void InitSpeechRecognizer()
+        {
+            speechRecognizer.Recognizing += (s, e) =>
+            {
+                Debug.Log($"Azure Service Manager: Recognizing: {e.Result.Text}");
+                OnRecognizing?.Invoke(this, e);
+            };
+
+            speechRecognizer.Recognized += (s, e) =>
+            {
+                if (e.Result.Reason == ResultReason.RecognizedSpeech)
+                {
+                    Debug.Log($"Azure Service Manager: Recognized: {e.Result.Text}");
+                }
+                else if (e.Result.Reason == ResultReason.NoMatch)
+                {
+                    Debug.Log($"Azure Service Manager: No match.");
+                }
+                OnRecognized?.Invoke(this, e);
+            };
+
+            speechRecognizer.Canceled += (s, e) =>
+            {
+                Debug.Log($"Azure Service Manager: CANCELED: Reason={e.Reason}");
+                OnCanceled?.Invoke(this, e);
+            };
+
+            speechRecognizer.SessionStarted += (s, e) =>
+            {
+                Debug.Log($"Azure Service Manager: Session Started.");
+                OnSessionStarted?.Invoke(this, e);
+            };
+
+            speechRecognizer.SessionStopped += (s, e) =>
+            {
+                Debug.Log($"Azure Service Manager: Session Stopped.");
+                OnSessionStopped?.Invoke(this, e);
+            };
+
+            speechRecognizer.SpeechStartDetected += (s, e) =>
+            {
+                Debug.Log($"Azure Service Manager: Speech Start Detected.");
+                OnSpeechStartDetected?.Invoke(this, e);
+            };
+
+            speechRecognizer.SpeechEndDetected += (s, e) =>
+            {
+                Debug.Log($"Azure Service Manager: Speech End Detected.");
+                OnSpeechEndDetected?.Invoke(this, e);
+            };
         }
 
         /// <summary>

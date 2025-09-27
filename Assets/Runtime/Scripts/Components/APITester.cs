@@ -66,7 +66,7 @@ public class APITester : MonoBehaviour
         }
         if (testAzure)
         {
-            AIManager.Instance.OnRecognized += logRecognizedSpeech;
+            AIManager.Instance.SpeechToTextService.OnRecognized += logRecognizedSpeech;
             AIManager.Instance.StartSpeechTranscription();
         }
 

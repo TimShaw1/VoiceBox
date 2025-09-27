@@ -19,7 +19,6 @@ public class AIManager : MonoBehaviour
     /// Gets the singleton instance of the AIManager.
     /// </summary>
     public static AIManager Instance { get; private set; }
-    private SpeechRecognizer _speechRecognizer;
 
     private readonly CancellationTokenSource cancellationTokenSource = new();
 
@@ -41,35 +40,6 @@ public class AIManager : MonoBehaviour
 
     private ITextToSpeechService _ttsService;
     public ITextToSpeechService TextToSpeechService { get => _ttsService; set => _ttsService = value; }
-
-    /// <summary>
-    /// Occurs when the speech recognizer is processing audio and has an intermediate result.
-    /// </summary>
-    public event System.EventHandler<SpeechRecognitionEventArgs> OnRecognizing;
-    /// <summary>
-    /// Occurs when the speech recognizer has finished processing an audio stream and has a final result.
-    /// </summary>
-    public event System.EventHandler<SpeechRecognitionEventArgs> OnRecognized;
-    /// <summary>
-    /// Occurs when the speech recognizer has been canceled.
-    /// </summary>
-    public event System.EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
-    /// <summary>
-    /// Occurs when a recognition session has started.
-    /// </summary>
-    public event System.EventHandler<SessionEventArgs> OnSessionStarted;
-    /// <summary>
-    /// Occurs when a recognition session has stopped.
-    /// </summary>
-    public event System.EventHandler<SessionEventArgs> OnSessionStopped;
-    /// <summary>
-    /// Occurs when the start of a speech segment is detected.
-    /// </summary>
-    public event System.EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
-    /// <summary>
-    /// Occurs when the end of a speech segment is detected.
-    /// </summary>
-    public event System.EventHandler<RecognitionEventArgs> OnSpeechEndDetected;
 
     /// <summary>
     /// Loads API keys from a JSON file and applies them to the service configurations.
@@ -108,64 +78,6 @@ public class AIManager : MonoBehaviour
         textToSpeechConfig.apiKey = "";
     }
 
-    public void InitSpeechRecognizer()
-    {
-        if (_speechRecognizer != null) return;
-
-        if (SpeechToTextService == null) return;
-
-        _speechRecognizer = (SpeechToTextService as AzureSTTServiceManager).speechRecognizer;
-
-        _speechRecognizer.Recognizing += (s, e) =>
-        {
-            Debug.Log($"VoiceBox Internal: Recognizing: {e.Result.Text}");
-            OnRecognizing?.Invoke(this, e);
-        };
-
-        _speechRecognizer.Recognized += (s, e) =>
-        {
-            if (e.Result.Reason == ResultReason.RecognizedSpeech)
-            {
-                Debug.Log($"VoiceBox Internal: Recognized: {e.Result.Text}");
-            }
-            else if (e.Result.Reason == ResultReason.NoMatch)
-            {
-                Debug.Log($"VoiceBox Internal: No match.");
-            }
-            OnRecognized?.Invoke(this, e);
-        };
-
-        _speechRecognizer.Canceled += (s, e) =>
-        {
-            Debug.Log($"VoiceBox Internal: CANCELED: Reason={e.Reason}");
-            OnCanceled?.Invoke(this, e);
-        };
-
-        _speechRecognizer.SessionStarted += (s, e) =>
-        {
-            Debug.Log($"VoiceBox Internal: Session Started.");
-            OnSessionStarted?.Invoke(this, e);
-        };
-
-        _speechRecognizer.SessionStopped += (s, e) =>
-        {
-            Debug.Log($"VoiceBox Internal: Session Stopped.");
-            OnSessionStopped?.Invoke(this, e);
-        };
-
-        _speechRecognizer.SpeechStartDetected += (s, e) =>
-        {
-            Debug.Log($"VoiceBox Internal: Speech Start Detected.");
-            OnSpeechStartDetected?.Invoke(this, e);
-        };
-
-        _speechRecognizer.SpeechEndDetected += (s, e) =>
-        {
-            Debug.Log($"VoiceBox Internal: Speech End Detected.");
-            OnSpeechEndDetected?.Invoke(this, e);
-        };
-    }
-
     /// <summary>
     /// Initializes the singleton instance, loads API keys, and sets up the AI services.
     /// </summary>
@@ -184,11 +96,6 @@ public class AIManager : MonoBehaviour
         ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
         SpeechToTextService = ServiceFactory.CreateSttService(speechToTextConfig);
         TextToSpeechService = ServiceFactory.CreateTtsService(textToSpeechConfig);
-
-        if (SpeechToTextService != null && SpeechToTextService is AzureSTTServiceManager)
-        {
-            InitSpeechRecognizer();
-        }
     }
 
     /// <summary>
@@ -239,7 +146,7 @@ public class AIManager : MonoBehaviour
             return;
         }
 
-        Task.Run(() =>ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, cancellationTokenSource.Token));
+        Task.Run(() => ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, cancellationTokenSource.Token));
     }
 
     /// <summary>

@@ -43,7 +43,7 @@ namespace TimShaw.VoiceBox.Tools
         /// Useful for modders who want to spawn the AI manager at runtime.
         /// <br></br>
         /// <br></br>
-        /// <example>Example Usage: <c>CreateAIManagerObject&lt;GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsSTTServiceConfig&gt;()</c></example>
+        /// <example>Example Usage: <c>CreateAIManagerObject&lt;GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsTTSServiceConfig&gt;()</c></example>
         /// <br></br>
         /// <br></br>
         /// <example>Example Usage where only 1 service is needed: <c>CreateAIManagerObject&lt;GeminiServiceConfig, GenericSTTServiceConfig, GenericTTSServiceConfig&gt;()</c></example>

@@ -8,6 +8,7 @@ using Microsoft.CognitiveServices.Speech.Audio;
 using NAudio.CoreAudioApi;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Data;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Tools;
+using TimShaw.VoiceBox.Data;
 using UnityEngine;
 
 /// <summary>

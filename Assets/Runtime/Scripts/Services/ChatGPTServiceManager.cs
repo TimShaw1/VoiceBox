@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Data;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core

@@ -21,7 +21,7 @@ public class AIManager : MonoBehaviour
     /// </summary>
     public static AIManager Instance { get; private set; }
 
-    private readonly CancellationTokenSource cancellationTokenSource = new();
+    private readonly CancellationTokenSource internalCancellationTokenSource = new();
 
     [Header("Service Configurations")]
     [Tooltip("Configuration asset for the chat service (e.g., GeminiConfig, ChatGPTConfig).")]
@@ -104,7 +104,7 @@ public class AIManager : MonoBehaviour
     /// </summary>
     private void OnDestroy()
     {
-        cancellationTokenSource.Cancel();
+        internalCancellationTokenSource.Cancel();
         UnloadAPIKeys();
     }
 
@@ -117,14 +117,18 @@ public class AIManager : MonoBehaviour
     public void SendChatMessage(
         List<ChatMessage> messageHistory,
         Action<ChatMessage> onSuccess,
-        Action<string> onError)
+        Action<string> onError,
+        CancellationToken token = default)
     {
         if (ChatService == null)
         {
             onError?.Invoke("Chat service is not initialized. Check AIManager configuration.");
             return;
         }
-        Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError));
+
+        token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
+
+        Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError, token));
     }
 
     /// <summary>
@@ -138,7 +142,8 @@ public class AIManager : MonoBehaviour
         List<ChatMessage> messageHistory,
             Action<string> onChunkReceived,
             Action onComplete,
-            Action<string> onError
+            Action<string> onError,
+            CancellationToken token = default
     )
     {
         if (ChatService == null)
@@ -147,21 +152,24 @@ public class AIManager : MonoBehaviour
             return;
         }
 
-        Task.Run(() => ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, cancellationTokenSource.Token));
+        token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
+
+        Task.Run(() => ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, token));
     }
 
     /// <summary>
     /// Starts transcribing audio from the microphone using the configured STT service.
     /// </summary>
-    public async void StartSpeechTranscription()
+    public async void StartSpeechTranscription(CancellationToken token = default)
     {
         if (SpeechToTextService == null)
         {
             Debug.Log("STT Service not initialized. Check AIManager configuration.");
             return;
         }
+        token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
         Debug.Log("VoiceBox: Starting speech recognition.");
-        await Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(cancellationTokenSource.Token));
+        await Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(token));
     }
 
     /// <summary>
@@ -169,7 +177,7 @@ public class AIManager : MonoBehaviour
     /// </summary>
     public void StopSpeechTranscription()
     {
-        cancellationTokenSource.Cancel();
+        internalCancellationTokenSource.Cancel();
     }
 
     /// <summary>

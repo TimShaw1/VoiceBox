@@ -23,13 +23,13 @@ public class APITester : MonoBehaviour
     /// If true, tests the Azure Speech-to-Text service on start.
     /// </summary>
     [SerializeField]
-    public bool testAzure = false;
+    public bool testSTT = false;
 
     /// <summary>
     /// If true, tests the ElevenLabs Text-to-Speech service on start.
     /// </summary>
     [SerializeField]
-    public bool testElevenlabs = false;
+    public bool testTTS = false;
 
     /// <summary>
     /// If true, tests the chat service on start.
@@ -66,13 +66,13 @@ public class APITester : MonoBehaviour
         {
             ModdingTools.CreateAIManagerObject<GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsTTSServiceConfig>();
         }
-        if (testAzure)
+        if (testSTT)
         {
             AIManager.Instance.SpeechToTextService.OnRecognized += logRecognizedSpeech;
             AIManager.Instance.StartSpeechTranscription();
         }
 
-        if (testElevenlabs)
+        if (testTTS)
         {
             Debug.Log("VoiceBox: Testing Audio Streaming");
             AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +

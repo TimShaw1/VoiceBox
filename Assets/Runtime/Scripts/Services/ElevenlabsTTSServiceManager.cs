@@ -22,11 +22,11 @@ namespace TimShaw.VoiceBox.Core
     public class ElevenLabsTTSServiceManager : ITextToSpeechService
     {
 
-        HttpClient client;
+        private HttpClient client;
         /// <summary>
         /// The configuration for the ElevenLabs TTS service.
         /// </summary>
-        public ElevenlabsTTSServiceConfig ttsServiceObjectDerived;
+        private ElevenlabsTTSServiceConfig _config;
         private string fileExtension;
 
         /// <summary>
@@ -57,14 +57,14 @@ namespace TimShaw.VoiceBox.Core
         public void Initialize(GenericTTSServiceConfig config)
         {
 
-            ttsServiceObjectDerived = config as ElevenlabsTTSServiceConfig;
-            if (ttsServiceObjectDerived.apiKey.Length == 0)
+            _config = config as ElevenlabsTTSServiceConfig;
+            if (_config.apiKey.Length == 0)
             {
                 Debug.LogError("No Elevenlabs API key found.");
                 return;
             }
 
-            if (ttsServiceObjectDerived.voiceId.Length == 0)
+            if (_config.voiceId.Length == 0)
             {
                 Debug.LogError("No Elevenlabs Voice ID found.");
                 return;
@@ -72,9 +72,9 @@ namespace TimShaw.VoiceBox.Core
 
             client = new HttpClient();
 
-            fileExtension = ttsServiceObjectDerived.output_format.Contains("mp3") ? ".mp3" : ".wav";
+            fileExtension = _config.output_format.Contains("mp3") ? ".mp3" : ".wav";
 
-            client.DefaultRequestHeaders.Add("xi-api-key", ttsServiceObjectDerived.apiKey);
+            client.DefaultRequestHeaders.Add("xi-api-key", _config.apiKey);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/mpeg"));
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/wav"));
 
@@ -135,14 +135,14 @@ namespace TimShaw.VoiceBox.Core
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task RequestAudioFile(string prompt, string fileName, string dir)
         {
-            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId;
+            string url = _config.serviceEndpoint + _config.voiceId;
             Debug.Log(url);
 
             var payload = new ElevenLabsTTSRequest
             {
                 text = prompt,
-                model_id = ttsServiceObjectDerived.modelID,
-                voice_settings = ttsServiceObjectDerived.voiceSettings
+                model_id = _config.modelID,
+                voice_settings = _config.voiceSettings
             };
 
             string json = JsonUtility.ToJson(payload);
@@ -182,14 +182,14 @@ namespace TimShaw.VoiceBox.Core
         /// <returns>A task that represents the asynchronous operation, returning an AudioClip.</returns>
         public async Task<AudioClip> RequestAudioClip(string prompt)
         {
-            string url = ttsServiceObjectDerived.serviceEndpoint + ttsServiceObjectDerived.voiceId;
+            string url = _config.serviceEndpoint + _config.voiceId;
             Debug.Log("Requesting audio from: " + url);
 
             var payload = new ElevenLabsTTSRequest
             {
                 text = prompt,
-                model_id = ttsServiceObjectDerived.modelID,
-                voice_settings = ttsServiceObjectDerived.voiceSettings
+                model_id = _config.modelID,
+                voice_settings = _config.voiceSettings
             };
 
             string json = JsonUtility.ToJson(payload);
@@ -200,7 +200,7 @@ namespace TimShaw.VoiceBox.Core
                 www.uploadHandler = new UploadHandlerRaw(postData);
                 www.downloadHandler = new DownloadHandlerAudioClip(new Uri(url), AudioType.MPEG);
                 www.SetRequestHeader("Content-Type", "application/json");
-                www.SetRequestHeader("xi-api-key", ttsServiceObjectDerived.apiKey);
+                www.SetRequestHeader("xi-api-key", _config.apiKey);
 
                 var operation = www.SendWebRequest();
 
@@ -311,5 +311,10 @@ namespace TimShaw.VoiceBox.Core
             await ReceiveAudioData(_webSocket, _mp3Decoder, token);
         }
 
+        public Uri InitWebsocketAndGetUri(ClientWebSocket webSocket)
+        {
+            webSocket.Options.SetRequestHeader("xi-api-key", _config.apiKey);
+            return new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id=eleven_multilingual_v2");
+        }
     }
 }

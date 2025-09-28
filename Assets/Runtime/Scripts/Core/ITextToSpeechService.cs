@@ -1,3 +1,4 @@
+using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +33,8 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="prompt">The text to be converted to speech.</param>
         /// <returns>A task that represents the asynchronous operation, returning an AudioClip.</returns>
         public Task<AudioClip> RequestAudioClip(string prompt);
+
+        public Uri InitWebsocketAndGetUri(ClientWebSocket webSocket);
 
         /// <summary>
         /// Connects to a WebSocket and streams audio data.

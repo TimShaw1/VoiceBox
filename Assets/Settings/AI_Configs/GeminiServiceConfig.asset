@@ -15,7 +15,7 @@ MonoBehaviour:
   apiKey: 
   apiKeyJSONString: GEMINI_API_KEY
   serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/openai/
-  modelName: gemini-2.5-pro
+  modelName: gemini-2.5-flash
   tools: []
   useTools: 0
   toolConfig:

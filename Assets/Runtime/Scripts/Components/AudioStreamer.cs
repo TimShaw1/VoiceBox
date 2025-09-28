@@ -143,15 +143,11 @@ public class AudioStreamer : MonoBehaviour
 
         _webSocket = new ClientWebSocket();
 
-        if (service is ElevenLabsTTSServiceManager)
-        {
-            var derivedElevenlabsServiceManager = (service as ElevenLabsTTSServiceManager);
-            _webSocket.Options.SetRequestHeader("xi-api-key", derivedElevenlabsServiceManager.ttsServiceObjectDerived.apiKey);
-            string uri = $"wss://api.elevenlabs.io/v1/text-to-speech/{derivedElevenlabsServiceManager.ttsServiceObjectDerived.voiceId}/stream-input?model_id=eleven_multilingual_v2";
+        Uri uri = service.InitWebsocketAndGetUri(_webSocket);
 
-            Task.Run(() => ConnectAndStream(text, uri, derivedElevenlabsServiceManager, _cancellationSource.Token));
-            _audioSource.Play();
-        }
+        Task.Run(() => ConnectAndStream(text, uri, service, _cancellationSource.Token));
+        _audioSource.Play();
+        
     }
 
     /// <summary>
@@ -170,12 +166,12 @@ public class AudioStreamer : MonoBehaviour
     /// <param name="service">The text-to-speech service.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    private async Task ConnectAndStream(string text, string uri, ITextToSpeechService service, CancellationToken token)
+    private async Task ConnectAndStream(string text, Uri uri, ITextToSpeechService service, CancellationToken token)
     {
         try
         {
             Debug.Log("Connecting to WebSocket...");
-            await _webSocket.ConnectAsync(new Uri(uri), token);
+            await _webSocket.ConnectAsync(uri, token);
             Debug.Log("WebSocket Connected.");
 
             await service.ConnectAndStream(text, _webSocket, _mp3Decoder, token);

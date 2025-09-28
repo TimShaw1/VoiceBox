@@ -1,4 +1,5 @@
 using Microsoft.CognitiveServices.Speech;
+using OpenAI.Chat;
 using System.Collections.Generic;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
@@ -81,17 +82,17 @@ public class APITester : MonoBehaviour
         if (testChat)
         {
             var chats = new List<ChatMessage>();
-            var systemPrompt = new ChatMessage(MessageRole.System, "You are an AI assistant that answers a user's questions.");
-            var chat = new ChatMessage(MessageRole.User, "Please write a 2 paragraph essay on the dog breed Husky");
+            var chat = new UserChatMessage("Please write a C# script that sends a request to Claude via the OpenAI dotnet library. Be sure to use callbacks for success and failure.");
             chats.Add(chat);
 
             /*
             AIManager.Instance.SendChatMessage(
                 chats,
-                response => Debug.Log(response.Content),
+                response => Debug.Log(response.Content[0].Text),
                 error => Debug.Log(error)
             );
             */
+            
 
             string combinedResponse = "";
 

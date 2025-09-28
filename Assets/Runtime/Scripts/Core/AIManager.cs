@@ -1,4 +1,5 @@
 using Microsoft.CognitiveServices.Speech;
+using OpenAI.Chat;
 using System;
 using System.Collections.Generic;
 using System.IO;

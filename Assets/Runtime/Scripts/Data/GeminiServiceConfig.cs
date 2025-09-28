@@ -185,7 +185,7 @@ namespace TimShaw.VoiceBox.Data
     /// Configuration settings for the Gemini service.
     /// TODO: add support for tools like URL context
     /// </summary>
-    [CreateAssetMenu(fileName = "GeminiServiceConfig", menuName = "VoiceBox/GeminiService Configuration")]
+    [CreateAssetMenu(fileName = "GeminiServiceConfig", menuName = "VoiceBox/Chat/GeminiService Configuration")]
     public class GeminiServiceConfig : GenericChatServiceConfig
     {
         public GeminiServiceConfig()
@@ -197,7 +197,7 @@ namespace TimShaw.VoiceBox.Data
         /// <summary>
         /// The service endpoint for the Gemini API.
         /// </summary>
-        public string serviceEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/";
+        public string serviceEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
         /// <summary>
         /// The name of the model to use.
         /// </summary>

@@ -10,7 +10,7 @@ namespace TimShaw.VoiceBox.Data
     /// <summary>
     /// Configuration settings for the Azure Speech-to-Text (STT) service.
     /// </summary>
-    [CreateAssetMenu(fileName = "AzureSTTServiceConfig", menuName = "VoiceBox/AzureSTTService Configuration")]
+    [CreateAssetMenu(fileName = "AzureSTTServiceConfig", menuName = "VoiceBox/STT/AzureSTTService Configuration")]
     public class AzureSTTServiceConfig : GenericSTTServiceConfig
     {
         public AzureSTTServiceConfig()

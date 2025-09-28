@@ -64,7 +64,7 @@ namespace TimShaw.VoiceBox.Data
     /// <summary>
     /// Configuration settings for the ElevenLabs Text-to-Speech (TTS) service.
     /// </summary>
-    [CreateAssetMenu(fileName = "TTSServiceConfig", menuName = "VoiceBox/TTSService Configuration")]
+    [CreateAssetMenu(fileName = "TTSServiceConfig", menuName = "VoiceBox/TTS/TTSService Configuration")]
     public class ElevenlabsTTSServiceConfig : GenericTTSServiceConfig
     {
         public ElevenlabsTTSServiceConfig()

@@ -116,6 +116,7 @@ public class AIManager : MonoBehaviour
     /// <param name="onError">Callback invoked when an error occurs.</param>
     public void SendChatMessage(
         List<ChatMessage> messageHistory,
+        OpenAIUtils.VoiceBoxChatCompletionOptions options,
         Action<ChatMessage> onSuccess,
         Action<string> onError,
         CancellationToken token = default)
@@ -128,7 +129,7 @@ public class AIManager : MonoBehaviour
 
         token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
-        Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError, token));
+        Task.Run(() => ChatService.SendMessage(messageHistory, options, onSuccess, onError, token));
     }
 
     /// <summary>
@@ -140,10 +141,11 @@ public class AIManager : MonoBehaviour
     /// <param name="onError">Callback invoked when an error occurs.</param>
     public void StreamChatMessage(
         List<ChatMessage> messageHistory,
-            Action<string> onChunkReceived,
-            Action onComplete,
-            Action<string> onError,
-            CancellationToken token = default
+        OpenAIUtils.VoiceBoxChatCompletionOptions options,
+        Action<string> onChunkReceived,
+        Action onComplete,
+        Action<string> onError,
+        CancellationToken token = default
     )
     {
         if (ChatService == null)
@@ -154,7 +156,7 @@ public class AIManager : MonoBehaviour
 
         token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
-        Task.Run(() => ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, token));
+        Task.Run(() => ChatService.SendMessageStream(messageHistory, options, onChunkReceived, onComplete, onError, token));
     }
 
     /// <summary>

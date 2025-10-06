@@ -20,21 +20,35 @@ namespace TimShaw.VoiceBox.Core
         }
 
         public async Task SendMessage(
-            List<ChatMessage> messageHistory, 
+            List<ChatMessage> messageHistory,
+            OpenAIUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess, 
             Action<string> onError,
             CancellationToken token)
         {
             if (_client == null || _config == null)
             {
-                onError?.Invoke("ChatGPTChatService is not initialized.");
+                onError?.Invoke("ChatGPT service is not initialized.");
                 return;
             }
 
             try
             {
-                var response = await _client.CompleteChatAsync(messageHistory, cancellationToken: token);
-                onSuccess.Invoke(response.Value.Content[0].Text);
+                var response = await _client.CompleteChatAsync(messageHistory, options, cancellationToken: token);
+                foreach (ChatToolCall toolCall in response.Value.ToolCalls)
+                {
+                    foreach (var toolIhave in options.VoiceBoxTools)
+                    {
+                        if (toolCall.FunctionName == toolIhave.Method.Name)
+                        {
+                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
+                        }
+                    }
+                }
+                if (response.Value.Content.Count == 0)
+                    onSuccess.Invoke("");
+                else
+                    onSuccess.Invoke(new AssistantChatMessage(response.Value.Content));
             }
             catch (Exception ex)
             {
@@ -42,20 +56,47 @@ namespace TimShaw.VoiceBox.Core
             }
         }
 
-        public async Task SendMessageStream(List<ChatMessage> messageHistory, Action<string> onChunkReceived, Action onComplete, Action<string> onError, CancellationToken token)
+        public async Task SendMessageStream(
+            List<ChatMessage> messageHistory,
+            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            Action<string> onChunkReceived, 
+            Action onComplete, 
+            Action<string> onError, 
+            CancellationToken token)
         {
             try
             {
+                OpenAIUtils.StreamingChatToolCallsBuilder toolBuilder = new();
                 await foreach (
-                    var update in _client.CompleteChatStreamingAsync(
+                    var streamingChatUpdate in _client.CompleteChatStreamingAsync(
                         messages: messageHistory,
+                        options: (options as ChatCompletionOptions),
                         cancellationToken: token
                     )
                 )
                 {
-                    onChunkReceived(update.ContentUpdate[0].Text);
+                    foreach (ChatMessageContentPart contentPart in streamingChatUpdate.ContentUpdate)
+                    {
+                        onChunkReceived(contentPart.Text);
+                    }
+
+                    foreach (StreamingChatToolCallUpdate toolCallUpdate in streamingChatUpdate.ToolCallUpdates)
+                    {
+                        toolBuilder.Append(toolCallUpdate);
+                    }
                 }
 
+                IReadOnlyList<ChatToolCall> toolCalls = toolBuilder.Build();
+                foreach (ChatToolCall toolCall in toolCalls)
+                {
+                    foreach (var toolIhave in options.VoiceBoxTools)
+                    {
+                        if (toolCall.FunctionName == toolIhave.Method.Name)
+                        {
+                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
+                        }
+                    }
+                }
                 onComplete.Invoke();
             }
             catch (Exception ex)

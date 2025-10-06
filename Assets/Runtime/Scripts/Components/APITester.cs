@@ -1,10 +1,12 @@
 using Microsoft.CognitiveServices.Speech;
 using OpenAI.Chat;
+using System;
 using System.Collections.Generic;
+using System.Text;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Tools;
-using TimShaw.VoiceBox.Data;
 using UnityEngine;
 
 /// <summary>
@@ -56,6 +58,16 @@ public class APITester : MonoBehaviour
         }
     }
 
+    public void SampleTool(string textToDisplay)
+    {
+        Debug.Log(textToDisplay);
+    }
+
+    public void SampleTool2(Vector3 dir)
+    {
+        Debug.Log(dir);
+    }
+
     /// <summary>
     /// Called when the script instance is being loaded.
     /// Initializes and triggers the selected API tests.
@@ -82,26 +94,33 @@ public class APITester : MonoBehaviour
         if (testChat)
         {
             var chats = new List<ChatMessage>();
-            var chat = new UserChatMessage("Please write a C# script that sends a request to Claude via the OpenAI dotnet library. Be sure to use callbacks for success and failure.");
+            var chat = new UserChatMessage(
+                "Display a vector3 with any direction to the console."
+                );
             chats.Add(chat);
 
-            /*
-            AIManager.Instance.SendChatMessage(
-                chats,
-                response => Debug.Log(response.Content[0].Text),
-                error => Debug.Log(error)
-            );
-            */
-            
+            OpenAIUtils.VoiceBoxChatTool tool = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool), "Displays provided text in the console");
+            OpenAIUtils.VoiceBoxChatTool tool2 = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool2), "Displays a provided vector3 to the console. The vector3 should be of the format (x, y, z)");
 
             string combinedResponse = "";
 
+            OpenAIUtils.VoiceBoxChatCompletionOptions options = new()
+            {
+                VoiceBoxTools = { tool, tool2 }
+            };
+
+            Debug.Log(options.Tools.Count);
+
+            //AIManager.Instance.SendChatMessage(chats, options, chatMessage => Debug.Log(chatMessage.Content[0].Text), error => Debug.LogError(error));
+            
             AIManager.Instance.StreamChatMessage(
                 chats,
+                options,
                 chunk => { Debug.Log(chunk); combinedResponse += chunk; },
-                () => { Debug.Log(combinedResponse); },
+                () => { Debug.Log("Combined response: " + combinedResponse); },
                 error => Debug.LogError(error)
             );
+            
         }
     }
 }

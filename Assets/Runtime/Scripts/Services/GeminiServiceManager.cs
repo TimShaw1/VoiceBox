@@ -7,8 +7,11 @@ using System;
 using System.ClientModel;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +64,7 @@ namespace TimShaw.VoiceBox.Core
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SendMessage(
             List<ChatMessage> messageHistory,
+            OpenAIUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess,
             Action<string> onError,
             CancellationToken token)
@@ -73,8 +77,21 @@ namespace TimShaw.VoiceBox.Core
 
             try
             {
-                var response = await _client.CompleteChatAsync(messageHistory, cancellationToken: token);
-                onSuccess.Invoke(new AssistantChatMessage(response.Value.Content));
+                var response = await _client.CompleteChatAsync(messageHistory, options, cancellationToken: token);
+                foreach (ChatToolCall toolCall in response.Value.ToolCalls)
+                {
+                    foreach (var toolIhave in options.VoiceBoxTools)
+                    {
+                        if (toolCall.FunctionName == toolIhave.Method.Name)
+                        {
+                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
+                        }
+                    }
+                }
+                if (response.Value.Content.Count == 0)
+                    onSuccess.Invoke("");
+                else
+                    onSuccess.Invoke(new AssistantChatMessage(response.Value.Content));
             }
             catch (Exception ex)
             {
@@ -92,23 +109,52 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onError">Callback invoked when an error occurs.</param>
         public async Task SendMessageStream(
             List<ChatMessage> messageHistory,
+            OpenAIUtils.VoiceBoxChatCompletionOptions options,
             Action<string> onChunkReceived,
             Action onComplete,
             Action<string> onError,
             CancellationToken token
         )
         {
-            await foreach (
-                var update in _client.CompleteChatStreamingAsync(
-                    messages: messageHistory,
-                    cancellationToken: token
-                )
-            )
+            try
             {
-                onChunkReceived(update.ContentUpdate[0].Text);
-            }
+                OpenAIUtils.StreamingChatToolCallsBuilder toolBuilder = new();
+                await foreach (
+                    var streamingChatUpdate in _client.CompleteChatStreamingAsync(
+                        messages: messageHistory,
+                        options: (options as ChatCompletionOptions),
+                        cancellationToken: token
+                    )
+                )
+                {
+                    foreach (ChatMessageContentPart contentPart in streamingChatUpdate.ContentUpdate)
+                    {
+                        onChunkReceived(contentPart.Text);
+                    }
 
-            onComplete.Invoke();
+                    foreach (StreamingChatToolCallUpdate toolCallUpdate in streamingChatUpdate.ToolCallUpdates)
+                    {
+                        toolBuilder.Append(toolCallUpdate);
+                    }
+                }
+
+                IReadOnlyList<ChatToolCall> toolCalls = toolBuilder.Build();
+                foreach (ChatToolCall toolCall in toolCalls)
+                {
+                    foreach (var toolIhave in options.VoiceBoxTools)
+                    {
+                        if (toolCall.FunctionName == toolIhave.Method.Name)
+                        {
+                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
+                        }
+                    }
+                }
+                onComplete.Invoke();
+            }
+            catch (Exception ex)
+            {
+                onError.Invoke(ex.Message);
+            }
         }
     }
 }

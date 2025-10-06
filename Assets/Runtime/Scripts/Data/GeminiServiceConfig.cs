@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
+using OpenAI.Chat;
 
 namespace TimShaw.VoiceBox.Data
 {
@@ -33,69 +34,6 @@ namespace TimShaw.VoiceBox.Data
         /// The text of the part.
         /// </summary>
         public string text;
-    }
-
-    /// <summary>
-    /// Represents a tool that the model can use.
-    /// </summary>
-    [System.Serializable]
-    public class Tool
-    {
-        /// <summary>
-        /// A list of function declarations.
-        /// </summary>
-        public List<FunctionDeclaration> functionDeclarations;
-    }
-
-    /// <summary>
-    /// Represents a function declaration for a tool.
-    /// </summary>
-    [System.Serializable]
-    public class FunctionDeclaration
-    {
-        /// <summary>
-        /// The name of the function.
-        /// </summary>
-        public string name;
-        /// <summary>
-        /// The description of the function.
-        /// </summary>
-        public string description;
-    }
-
-
-    /// <summary>
-    /// Represents the configuration for a tool.
-    /// </summary>
-    [System.Serializable]
-    public class ToolConfig
-    {
-        /// <summary>
-        /// The function calling configuration.
-        /// </summary>
-        public FunctionCallingConfig functionCallingConfig;
-    }
-
-    /// <summary>
-    /// Represents the configuration for function calling.
-    /// </summary>
-    [System.Serializable]
-    public class FunctionCallingConfig
-    {
-        /// <summary>
-        /// The mode for function calling.
-        /// </summary>
-        public Mode mode;
-        /// <summary>
-        /// The available modes for function calling.
-        /// </summary>
-        public enum Mode
-        {
-            MODE_UNSPECIFIED,
-            AUTO,
-            ANY,
-            NONE
-        }
     }
 
     /// <summary>
@@ -208,17 +146,11 @@ namespace TimShaw.VoiceBox.Data
         /// Optional. A list of Tools the model may use to generate the next response.
         /// </summary>
         [Tooltip("Optional. A list of Tools the model may use to generate the next response.")]
-        public List<Tool> tools;
+        public List<ChatTool> tools;
         /// <summary>
         /// Whether to use the tools.
         /// </summary>
         public bool useTools = false;
-
-        /// <summary>
-        /// Optional. Tool configuration for any Tool specified in the request.
-        /// </summary>
-        [Tooltip("Optional. Tool configuration for any Tool specified in the request.")]
-        public ToolConfig toolConfig;
 
         /// <summary>
         /// Optional. A list of unique SafetySetting instances for blocking unsafe content.

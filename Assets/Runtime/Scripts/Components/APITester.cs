@@ -60,12 +60,12 @@ public class APITester : MonoBehaviour
 
     public void SampleTool(string textToDisplay)
     {
-        Debug.Log(textToDisplay);
+        Debug.Log("AI is displaying text! --> " + textToDisplay);
     }
 
-    public void SampleTool2(Vector3 dir)
+    public void SampleTool2(Vector2 dir, Vector3 dir2, Vector4 dir3)
     {
-        Debug.Log(dir);
+        Debug.Log("AI is displaying vectors! --> " + dir + " " + dir2 + " " + dir3);
     }
 
     /// <summary>
@@ -95,12 +95,12 @@ public class APITester : MonoBehaviour
         {
             var chats = new List<ChatMessage>();
             var chat = new UserChatMessage(
-                "Display a vector3 with any direction to the console."
+                "First, display 3 vectors to the console that are all positive. Then, display the first vector as all negative and the rest positive. Finally, display all 3 vectors as negative."
                 );
             chats.Add(chat);
 
             OpenAIUtils.VoiceBoxChatTool tool = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool), "Displays provided text in the console");
-            OpenAIUtils.VoiceBoxChatTool tool2 = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool2), "Displays a provided vector3 to the console. The vector3 should be of the format (x, y, z)");
+            OpenAIUtils.VoiceBoxChatTool tool2 = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool2), "Displays a provided vector2, vector3, and vector4 to the console. The vectors should be of the format (x, y) for vector2, (x, y, z) for vector3, and (x, y, z, w) for vector4.");
 
             string combinedResponse = "";
 

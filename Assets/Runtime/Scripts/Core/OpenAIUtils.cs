@@ -146,6 +146,9 @@ namespace TimShaw.VoiceBox.Core
         #endregion
 
         #region
+        /// <summary>
+        /// A wrapper for <see cref="ChatCompletionOptions"/> that enables support for <see cref="VoiceBoxChatTool"/> tools to be used.
+        /// </summary>
         public class VoiceBoxChatCompletionOptions : ChatCompletionOptions
         {
             public VoiceBoxList<VoiceBoxChatTool> VoiceBoxTools = new VoiceBoxList<VoiceBoxChatTool>();

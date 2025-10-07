@@ -112,6 +112,7 @@ public class AIManager : MonoBehaviour
     /// Sends a conversation history to the configured chat service.
     /// </summary>
     /// <param name="messageHistory">A list of chat messages representing the conversation history.</param>
+    /// <param name="options">Request-level settings.</param>
     /// <param name="onSuccess">Callback invoked when the message is successfully sent, returning the response.</param>
     /// <param name="onError">Callback invoked when an error occurs.</param>
     public void SendChatMessage(
@@ -136,6 +137,7 @@ public class AIManager : MonoBehaviour
     /// Sends a message to the Chat service and streams the response.
     /// </summary>
     /// <param name="messageHistory">The history of messages in the conversation.</param>
+    /// <param name="options">Request-level settings.</param>
     /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
     /// <param name="onComplete">Callback invoked when the response is complete.</param>
     /// <param name="onError">Callback invoked when an error occurs.</param>

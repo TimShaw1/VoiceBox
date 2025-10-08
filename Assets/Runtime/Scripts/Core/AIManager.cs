@@ -230,4 +230,29 @@ public class AIManager : MonoBehaviour
         else
             Debug.LogError("Audio Source does not have an AudioStreamer component. Attach an AudioStreamer component to enable streaming.");
     }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="audioSource"></param>
+    public void StartVoiceAgentPipeline(AudioSource audioSource)
+    {
+        throw new NotImplementedException();
+
+        // Sample of what I want it to work like:
+        StartSpeechTranscription();
+        List<ChatMessage> messages = new();
+        SpeechToTextService.OnRecognized += (object s, SpeechRecognitionEventArgs e) =>
+        {
+            messages.Add(e.Result.Text);
+            StreamChatMessage(
+                messages,
+                null,
+                (chunk) => RequestAudioAndStream(chunk, audioSource),
+                null,
+                (error) => Debug.LogError(error)
+
+            );
+        };
+    }
 }

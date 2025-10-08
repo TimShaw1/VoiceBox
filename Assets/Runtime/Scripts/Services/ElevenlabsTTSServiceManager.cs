@@ -38,6 +38,8 @@ namespace TimShaw.VoiceBox.Core
             public string text;
             public string model_id;
             public VoiceSettings voice_settings;
+            public string previous_text = "";
+            public string next_text = "";
         }
 
         /// <summary>
@@ -285,6 +287,7 @@ namespace TimShaw.VoiceBox.Core
 
         /// <summary>
         /// Connects to a WebSocket and streams audio data.
+        /// TODO: add support for <c>previous_text</c> and <c>next_text</c> chunks in Elevenlabs request
         /// </summary>
         /// <param name="text">The text to be streamed as audio.</param>
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>

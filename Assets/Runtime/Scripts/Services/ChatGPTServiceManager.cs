@@ -16,7 +16,7 @@ namespace TimShaw.VoiceBox.Core
         public void Initialize(GenericChatServiceConfig config)
         {
             _config = config as ChatGPTServiceConfig;
-            _client = new ChatClient(_config.model, _config.apiKey);
+            _client = new ChatClient(_config.modelName, _config.apiKey);
         }
 
         public async Task SendMessage(

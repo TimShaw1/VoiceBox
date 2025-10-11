@@ -14,7 +14,7 @@ namespace TimShaw.VoiceBox.Data
         public ChatGPTServiceConfig()
         {
             serviceManagerType = typeof(ChatGPTServiceManager);
-            apiKeyJSONString = "CHATGPT_API_KEY";
+            apiKeyJSONString = "OPENAI_API_KEY";
         }
 
         /// <summary>
@@ -45,9 +45,6 @@ namespace TimShaw.VoiceBox.Data
 
         [Tooltip("Set of 16 key-value pairs that can be attached to an object.")]
         public Dictionary<string, string> metadata;
-
-        [Tooltip("Model ID used to generate the response.")]
-        public string model;
 
         [Tooltip("Whether to allow the model to run tool calls in parallel.")]
         public bool parallel_tool_calls = true;

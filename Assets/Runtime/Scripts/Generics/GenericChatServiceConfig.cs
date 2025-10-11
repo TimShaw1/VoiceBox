@@ -23,6 +23,11 @@ namespace TimShaw.VoiceBox.Generics
         /// The associated string to access the service's API key in keys.json
         /// </summary>
         public string apiKeyJSONString;
+
+        /// <summary>
+        /// The name of the model to use.
+        /// </summary>
+        public string modelName;
     }
 
 }

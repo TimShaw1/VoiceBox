@@ -24,12 +24,15 @@ namespace TimShaw.VoiceBox.Core
                 service.Initialize(config);
                 return service;
             }
-            catch
+            catch (Exception ex)
             {
                 if (config != null)
                 {
-                    if (config.serviceManagerType != null)
-                        Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}");
+                    if (config.modelName.Length == 0)
+                        Debug.LogError("[ServiceFactory] No model name specified for chat model.");
+
+                    if (config.serviceManagerType != null && ex.GetType() == typeof(NullReferenceException))
+                        Debug.LogError($"[ServiceFactory] Unknown chat config type: {config.GetType().Name}. Does it implement IChatService?");
                 }
                 else
                 {

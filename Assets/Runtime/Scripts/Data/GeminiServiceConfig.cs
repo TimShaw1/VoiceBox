@@ -136,10 +136,6 @@ namespace TimShaw.VoiceBox.Data
         /// The service endpoint for the Gemini API.
         /// </summary>
         public string serviceEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
-        /// <summary>
-        /// The name of the model to use.
-        /// </summary>
-        public string modelName = "gemini-2.5-flash";
 
         [Header("Content Generation Settings")]
         /// <summary>

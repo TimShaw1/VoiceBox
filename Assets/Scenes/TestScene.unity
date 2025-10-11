@@ -386,7 +386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50dc23352f8be8a43a88d1badd46413f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chatServiceConfig: {fileID: 11400000, guid: 53d397a345776c445ab503c0ebbe61d2, type: 2}
+  chatServiceConfig: {fileID: 11400000, guid: 0878669a9df1cbe4da2d2e3be0424723, type: 2}
   speechToTextConfig: {fileID: 11400000, guid: 3f9f42a6f9997884db1b63609ed2ba55, type: 2}
   textToSpeechConfig: {fileID: 11400000, guid: 989c424a9b8380844a4adebcdfea0254, type: 2}
 --- !u!4 &1681442662

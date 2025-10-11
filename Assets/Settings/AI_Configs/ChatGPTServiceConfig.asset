@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52932cae25cc90e42b37ee30feb8e2a0, type: 3}
+  m_Name: ChatGPTServiceConfig
+  m_EditorClassIdentifier: 
+  apiKey: 
+  apiKeyJSONString: OPENAI_API_KEY
+  modelName: gpt-5-nano
+  serviceEndpoint: https://api.openai.com/v1/responses/
+  background: 0
+  conversation: 
+  include: []
+  instructions: 
+  parallel_tool_calls: 0
+  previous_response_id: 
+  prompt_cache_key: 
+  safety_identifier: 
+  service_tier: auto
+  store: 0
+  stream: 0
+  temperature: 1
+  top_p: 1
+  truncation: disabled

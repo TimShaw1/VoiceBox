@@ -68,6 +68,11 @@ public class APITester : MonoBehaviour
         Debug.Log("AI is displaying vectors! --> " + dir + " " + dir2 + " " + dir3);
     }
 
+    public void SampleTool3(Vector2 dir)
+    {
+        Debug.Log("AI is displaying a vector! --> " + dir);
+    }
+
     /// <summary>
     /// Called when the script instance is being loaded.
     /// Initializes and triggers the selected API tests.
@@ -97,16 +102,16 @@ public class APITester : MonoBehaviour
             var chat = new ChatMessage(
                 ChatRole.User,
                 //"Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
-                "Display any 3 vectors to the console that are all positive. Use SampleTool2. Then, display 1 sentence about huskies to the console using SampleTool."
+                "Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
                 );
             chats.Add(chat);
 
-            OpenAIUtils.VoiceBoxChatTool tool = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool), "Displays provided text in the console");
-            OpenAIUtils.VoiceBoxChatTool tool2 = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool2), "Displays a provided vector2, vector3, and vector4 to the console.");
+            ChatUtils.VoiceBoxChatTool tool = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool), "Displays provided text in the console");
+            ChatUtils.VoiceBoxChatTool tool2 = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool3), "Displays a provided vector2 to the console.");
 
             string combinedResponse = "";
 
-            OpenAIUtils.VoiceBoxChatCompletionOptions options = new()
+            ChatUtils.VoiceBoxChatCompletionOptions options = new()
             {
                 VoiceBoxTools = { tool, tool2 }
             };

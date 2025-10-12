@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Data;
@@ -19,19 +20,21 @@ namespace TimShaw.VoiceBox.Core
         {
             _config = config as ChatGPTServiceConfig;
 
+            
             var options = new OpenAIClientOptions()
             {
-                Endpoint = new Uri(_config.serviceEndpoint)
+                Endpoint = _config.serviceEndpoint.Length > 0 ? new Uri(_config.serviceEndpoint) : null
             };
 
             _client = new ChatClientBuilder(
                     new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gpt-4o").AsIChatClient()
                 ).UseFunctionInvocation().Build();
+
         }
 
         public async Task SendMessage(
             List<ChatMessage> messageHistory,
-            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess, 
             Action<string> onError,
             CancellationToken token)
@@ -56,7 +59,7 @@ namespace TimShaw.VoiceBox.Core
 
         public async Task SendMessageStream(
             List<ChatMessage> messageHistory,
-            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<string> onChunkReceived, 
             Action onComplete, 
             Action<string> onError, 

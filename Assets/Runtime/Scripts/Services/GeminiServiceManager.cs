@@ -52,7 +52,7 @@ namespace TimShaw.VoiceBox.Core
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SendMessage(
             List<ChatMessage> messageHistory,
-            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess,
             Action<string> onError,
             CancellationToken token)
@@ -85,7 +85,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onError">Callback invoked when an error occurs.</param>
         public async Task SendMessageStream(
             List<ChatMessage> messageHistory,
-            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<string> onChunkReceived,
             Action onComplete,
             Action<string> onError,

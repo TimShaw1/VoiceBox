@@ -117,7 +117,7 @@ public class AIManager : MonoBehaviour
     /// <param name="onError">Callback invoked when an error occurs.</param>
     public void SendChatMessage(
         List<ChatMessage> messageHistory,
-        OpenAIUtils.VoiceBoxChatCompletionOptions options,
+        ChatUtils.VoiceBoxChatCompletionOptions options,
         Action<ChatMessage> onSuccess,
         Action<string> onError,
         CancellationToken token = default)
@@ -143,7 +143,7 @@ public class AIManager : MonoBehaviour
     /// <param name="onError">Callback invoked when an error occurs.</param>
     public void StreamChatMessage(
         List<ChatMessage> messageHistory,
-        OpenAIUtils.VoiceBoxChatCompletionOptions options,
+        ChatUtils.VoiceBoxChatCompletionOptions options,
         Action<string> onChunkReceived,
         Action onComplete,
         Action<string> onError,

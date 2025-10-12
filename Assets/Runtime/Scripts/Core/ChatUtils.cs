@@ -17,7 +17,7 @@ using Unity.VisualScripting;
 
 namespace TimShaw.VoiceBox.Core
 {
-    public static class OpenAIUtils
+    public static class ChatUtils
     {
         #region
 
@@ -117,7 +117,7 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public class VoiceBoxChatTool
         {
-            public AITool InternalChatTool;
+            public AIFunction InternalChatTool;
 
             public object Caller;
 
@@ -134,13 +134,13 @@ namespace TimShaw.VoiceBox.Core
                 Caller = caller;
                 Method = caller.GetType().GetMethod(functionName);
 
-                var options = new JsonSerializerOptions();
-                options.Converters.Add(new Vector2JsonConverter());
-                options.Converters.Add(new Vector3JsonConverter());
-                options.Converters.Add(new Vector4JsonConverter());
-                options.Converters.Add(new QuaternionJsonConverter());
+                var options = new JsonSerializerOptions()
+                {
+                    Converters = { new Vector2JsonConverter(), new Vector3JsonConverter(), new Vector4JsonConverter(), new QuaternionJsonConverter() },
+                    TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
+                };
 
-                InternalChatTool = AIFunctionFactory.Create(Method, Caller, functionName, functionDescription);
+                InternalChatTool = AIFunctionFactory.Create(Method, Caller, functionName, functionDescription, options);
 
             }
 
@@ -299,6 +299,10 @@ namespace TimShaw.VoiceBox.Core
 
         public class Vector2JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector2>
         {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert == typeof(UnityEngine.Vector2);
+            }
             public override UnityEngine.Vector2 Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
             {
                 if (reader.TokenType == System.Text.Json.JsonTokenType.String)
@@ -356,6 +360,10 @@ namespace TimShaw.VoiceBox.Core
         #region
         public class Vector3JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector3>
         {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert == typeof(UnityEngine.Vector3);
+            }
             public override UnityEngine.Vector3 Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
             {
                 if (reader.TokenType == System.Text.Json.JsonTokenType.String)
@@ -418,6 +426,10 @@ namespace TimShaw.VoiceBox.Core
         #region
         public class Vector4JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector4>
         {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert == typeof(UnityEngine.Vector4);
+            }
             public override UnityEngine.Vector4 Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
             {
                 if (reader.TokenType == System.Text.Json.JsonTokenType.String)
@@ -485,6 +497,10 @@ namespace TimShaw.VoiceBox.Core
         #region
         public class QuaternionJsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Quaternion>
         {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert == typeof(UnityEngine.Quaternion);
+            }
             public override UnityEngine.Quaternion Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
             {
                 if (reader.TokenType == System.Text.Json.JsonTokenType.String)

@@ -32,7 +32,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onError">Callback invoked when an error occurs, providing an error message.</param>
         Task SendMessage(
             List<ChatMessage> messageHistory,
-            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess,
             Action<string> onError,
             CancellationToken token
@@ -49,7 +49,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onError">Callback invoked if an error occurs during the streaming process.</param>
         Task SendMessageStream(
             List<ChatMessage> messageHistory,
-            OpenAIUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<string> onChunkReceived,
             Action onComplete,
             Action<string> onError,

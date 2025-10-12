@@ -20,7 +20,7 @@ namespace TimShaw.VoiceBox.Data
         /// <summary>
         /// The service endpoint for the Gemini API.
         /// </summary>
-        public string serviceEndpoint = "https://api.openai.com/v1/responses/";
+        public string serviceEndpoint = "https://api.openai.com/v1";
 
         [Tooltip("Whether to run the model response in the background.")]
         public bool background = false;

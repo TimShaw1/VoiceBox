@@ -15,7 +15,7 @@ MonoBehaviour:
   apiKey: 
   apiKeyJSONString: OPENAI_API_KEY
   modelName: gpt-5-nano
-  serviceEndpoint: https://api.openai.com/v1/responses/
+  serviceEndpoint: https://api.openai.com/v1
   background: 0
   conversation: 
   include: []

@@ -50,7 +50,7 @@ namespace TimShaw.VoiceBox.Core
         Task SendMessageStream(
             List<ChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<string> onChunkReceived,
+            Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,
             Action<string> onError,
             CancellationToken token

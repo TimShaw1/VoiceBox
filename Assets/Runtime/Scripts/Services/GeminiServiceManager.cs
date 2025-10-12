@@ -86,7 +86,7 @@ namespace TimShaw.VoiceBox.Core
         public async Task SendMessageStream(
             List<ChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<string> onChunkReceived,
+            Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,
             Action<string> onError,
             CancellationToken token
@@ -96,7 +96,7 @@ namespace TimShaw.VoiceBox.Core
             {
                 await foreach (ChatResponseUpdate item in _client.GetStreamingResponseAsync(messageHistory, options, token))
                 {
-                    onChunkReceived.Invoke(item.Text);
+                    onChunkReceived.Invoke(item);
                 }
 
                 onComplete.Invoke();

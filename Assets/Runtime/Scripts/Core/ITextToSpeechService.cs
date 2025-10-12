@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Components;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -25,7 +26,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public Task RequestAudioFile(string prompt, string fileName, string dir);
+        public Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token);
 
         /// <summary>
         /// Requests an AudioClip from a text prompt.

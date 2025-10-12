@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKey: 
   apiKeyJSONString: GEMINI_API_KEY
-  serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/openai/
   modelName: gemini-2.5-flash
+  serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/openai/
   useTools: 1
   safetySettings: []
   useSafetySettings: 0

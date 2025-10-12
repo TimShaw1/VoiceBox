@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Data;
 using UnityEngine;
@@ -135,7 +136,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task RequestAudioFile(string prompt, string fileName, string dir)
+        public async Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token)
         {
             string url = _config.serviceEndpoint + _config.voiceId;
             Debug.Log(url);

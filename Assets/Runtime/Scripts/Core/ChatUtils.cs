@@ -113,7 +113,8 @@ namespace TimShaw.VoiceBox.Core
 
         #region
         /// <summary>
-        /// A wrapper for a <see cref="ChatTool"/> that enables specifying a calling object and a method to call (via <see cref="MethodInfo"/>)
+        /// A wrapper for a <see cref="AIFunction"/> that enables specifying a calling object and a method to call (via <see cref="MethodInfo"/>). 
+        /// Also enables serialization of <see cref="UnityEngine.Vector2"/>, <see cref="UnityEngine.Vector3"/>, <see cref="UnityEngine.Vector4"/>, and <see cref="UnityEngine.Quaternion"/>
         /// </summary>
         public class VoiceBoxChatTool
         {

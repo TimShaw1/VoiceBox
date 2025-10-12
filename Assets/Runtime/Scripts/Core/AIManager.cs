@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Components;
 using UnityEngine;
 
 /// <summary>
@@ -22,6 +23,9 @@ public class AIManager : MonoBehaviour
     public static AIManager Instance { get; private set; }
 
     private readonly CancellationTokenSource internalCancellationTokenSource = new();
+
+    [Tooltip("Path to the api keys json file. Defaults to Assets/keys.json")]
+    [SerializeField] public string apiKeysJsonPath = "";
 
     [Header("Service Configurations")]
     [Tooltip("Configuration asset for the chat service (e.g., GeminiConfig, ChatGPTConfig).")]
@@ -92,7 +96,7 @@ public class AIManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        LoadAPIKeys(Application.dataPath + "/keys.json");
+        LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
 
         ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
         SpeechToTextService = ServiceFactory.CreateSttService(speechToTextConfig);
@@ -144,7 +148,7 @@ public class AIManager : MonoBehaviour
     public void StreamChatMessage(
         List<ChatMessage> messageHistory,
         ChatUtils.VoiceBoxChatCompletionOptions options,
-        Action<string> onChunkReceived,
+        Action<ChatResponseUpdate> onChunkReceived,
         Action onComplete,
         Action<string> onError,
         CancellationToken token = default
@@ -190,9 +194,9 @@ public class AIManager : MonoBehaviour
     /// <param name="prompt">The text to be converted to speech.</param>
     /// <param name="fileName">The name of the output audio file.</param>
     /// <param name="dir">The directory to save the audio file in.</param>
-    public void GenerateSpeechFileFromText(string prompt, string fileName, string dir)
+    public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, CancellationToken token)
     {
-        Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir));
+        Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir, token));
     }
 
     /// <summary>
@@ -222,11 +226,11 @@ public class AIManager : MonoBehaviour
     /// </summary>
     /// <param name="prompt">The text to be converted to speech.</param>
     /// <param name="audioSource">The AudioSource to stream the audio to.</param>
-    public void RequestAudioAndStream(string prompt, AudioSource audioSource)
+    public void RequestAudioAndStream(string prompt, AudioSource audioSource, CancellationToken token = default)
     {
         AudioStreamer audioStreamer = audioSource.GetComponent<AudioStreamer>();
         if (audioStreamer)
-            audioStreamer.StartStreaming(prompt, TextToSpeechService);
+            audioStreamer.StartStreaming(prompt, TextToSpeechService, token);
         else
             Debug.LogError("Audio Source does not have an AudioStreamer component. Attach an AudioStreamer component to enable streaming.");
     }

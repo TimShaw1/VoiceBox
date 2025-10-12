@@ -101,8 +101,8 @@ public class APITester : MonoBehaviour
             var chats = new List<ChatMessage>();
             var chat = new ChatMessage(
                 ChatRole.User,
-                //"Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
-                "Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
+                "Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
+                //"Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
                 );
             chats.Add(chat);
 
@@ -123,7 +123,7 @@ public class APITester : MonoBehaviour
             AIManager.Instance.StreamChatMessage(
                 chats,
                 options,
-                chunk => { Debug.Log(chunk); combinedResponse += chunk; },
+                chunk => { Debug.Log(chunk.Role + ": " + chunk.Text); combinedResponse += chunk; },
                 () => { Debug.Log("Combined response: " + combinedResponse); },
                 error => Debug.LogError(error)
             );

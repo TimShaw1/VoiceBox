@@ -1,5 +1,5 @@
+using Microsoft.Extensions.AI;
 using Microsoft.CognitiveServices.Speech;
-using OpenAI.Chat;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -94,13 +94,15 @@ public class APITester : MonoBehaviour
         if (testChat)
         {
             var chats = new List<ChatMessage>();
-            var chat = new UserChatMessage(
-                "First, display 3 vectors to the console that are all positive. Then, display the first vector as all negative and the rest positive. Finally, display all 3 vectors as negative."
+            var chat = new ChatMessage(
+                ChatRole.User,
+                //"Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
+                "Display any 3 vectors to the console that are all positive. Use SampleTool2. Then, display 1 sentence about huskies to the console using SampleTool."
                 );
             chats.Add(chat);
 
             OpenAIUtils.VoiceBoxChatTool tool = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool), "Displays provided text in the console");
-            OpenAIUtils.VoiceBoxChatTool tool2 = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool2), "Displays a provided vector2, vector3, and vector4 to the console. The vectors should be of the format (x, y) for vector2, (x, y, z) for vector3, and (x, y, z, w) for vector4.");
+            OpenAIUtils.VoiceBoxChatTool tool2 = new OpenAIUtils.VoiceBoxChatTool(this, nameof(SampleTool2), "Displays a provided vector2, vector3, and vector4 to the console.");
 
             string combinedResponse = "";
 

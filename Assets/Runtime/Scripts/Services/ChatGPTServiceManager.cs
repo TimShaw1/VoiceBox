@@ -1,4 +1,6 @@
-using OpenAI.Chat;
+using Azure;
+using Microsoft.Extensions.AI;
+using OpenAI;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -11,12 +13,20 @@ namespace TimShaw.VoiceBox.Core
 {
     class ChatGPTServiceManager : IChatService
     {
-        ChatClient _client;
+        IChatClient _client;
         ChatGPTServiceConfig _config;
         public void Initialize(GenericChatServiceConfig config)
         {
             _config = config as ChatGPTServiceConfig;
-            _client = new ChatClient(_config.modelName, _config.apiKey);
+
+            var options = new OpenAIClientOptions()
+            {
+                Endpoint = new Uri(_config.serviceEndpoint)
+            };
+
+            _client = new ChatClientBuilder(
+                    new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gpt-4o").AsIChatClient()
+                ).UseFunctionInvocation().Build();
         }
 
         public async Task SendMessage(
@@ -34,25 +44,13 @@ namespace TimShaw.VoiceBox.Core
 
             try
             {
-                var response = await _client.CompleteChatAsync(messageHistory, options, cancellationToken: token);
-                foreach (ChatToolCall toolCall in response.Value.ToolCalls)
-                {
-                    foreach (var toolIhave in options.VoiceBoxTools)
-                    {
-                        if (toolCall.FunctionName == toolIhave.Method.Name)
-                        {
-                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
-                        }
-                    }
-                }
-                if (response.Value.Content.Count == 0)
-                    onSuccess.Invoke("");
-                else
-                    onSuccess.Invoke(new AssistantChatMessage(response.Value.Content));
+                var response = await _client.GetResponseAsync(messageHistory, options, token);
+
+                onSuccess.Invoke(response.Messages[0]);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                onError.Invoke(ex.Message);
+                onError.Invoke(e.Message);
             }
         }
 
@@ -66,37 +64,11 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
-                OpenAIUtils.StreamingChatToolCallsBuilder toolBuilder = new();
-                await foreach (
-                    var streamingChatUpdate in _client.CompleteChatStreamingAsync(
-                        messages: messageHistory,
-                        options: (options as ChatCompletionOptions),
-                        cancellationToken: token
-                    )
-                )
+                await foreach (ChatResponseUpdate item in _client.GetStreamingResponseAsync(messageHistory, options, token))
                 {
-                    foreach (ChatMessageContentPart contentPart in streamingChatUpdate.ContentUpdate)
-                    {
-                        onChunkReceived(contentPart.Text);
-                    }
-
-                    foreach (StreamingChatToolCallUpdate toolCallUpdate in streamingChatUpdate.ToolCallUpdates)
-                    {
-                        toolBuilder.Append(toolCallUpdate);
-                    }
+                    onChunkReceived.Invoke(item.Text);
                 }
 
-                IReadOnlyList<ChatToolCall> toolCalls = toolBuilder.Build();
-                foreach (ChatToolCall toolCall in toolCalls)
-                {
-                    foreach (var toolIhave in options.VoiceBoxTools)
-                    {
-                        if (toolCall.FunctionName == toolIhave.Method.Name)
-                        {
-                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
-                        }
-                    }
-                }
                 onComplete.Invoke();
             }
             catch (Exception ex)

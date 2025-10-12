@@ -26,6 +26,7 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (Exception ex)
             {
+                Debug.LogException(ex);
                 if (config != null)
                 {
                     if (config.modelName.Length == 0)

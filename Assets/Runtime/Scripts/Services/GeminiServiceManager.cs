@@ -1,24 +1,11 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.AI;
 using OpenAI;
-using OpenAI.Chat;
-using OpenAI.Responses;
 using System;
-using System.ClientModel;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -28,7 +15,7 @@ namespace TimShaw.VoiceBox.Core
     /// </summary>
     public class GeminiServiceManager : IChatService
     {
-        private ChatClient _client;
+        private IChatClient _client;
         private GeminiServiceConfig _config;
 
         /// <summary>
@@ -40,14 +27,15 @@ namespace TimShaw.VoiceBox.Core
             if (config is GeminiServiceConfig geminiConfig)
             {
                 _config = geminiConfig;
-                _client = new(
-                    model: _config.modelName,
-                    credential: new ApiKeyCredential(_config.apiKey),
-                    options: new OpenAIClientOptions()
-                    {
-                        Endpoint = new Uri(_config.serviceEndpoint)
-                    }
-                );
+
+                var options = new OpenAIClientOptions()
+                {
+                    Endpoint = new Uri(_config.serviceEndpoint)
+                };
+
+                _client = new ChatClientBuilder(
+                    new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gemini-2.5-flash").AsIChatClient()
+                ).UseFunctionInvocation().Build();
             }
             else
             {
@@ -77,25 +65,13 @@ namespace TimShaw.VoiceBox.Core
 
             try
             {
-                var response = await _client.CompleteChatAsync(messageHistory, options, cancellationToken: token);
-                foreach (ChatToolCall toolCall in response.Value.ToolCalls)
-                {
-                    foreach (var toolIhave in options.VoiceBoxTools)
-                    {
-                        if (toolCall.FunctionName == toolIhave.Method.Name)
-                        {
-                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
-                        }
-                    }
-                }
-                if (response.Value.Content.Count == 0)
-                    onSuccess.Invoke("");
-                else
-                    onSuccess.Invoke(new AssistantChatMessage(response.Value.Content));
+                var response = await _client.GetResponseAsync(messageHistory, options, token);
+
+                onSuccess.Invoke(response.Messages[0]);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                onError.Invoke(ex.Message);
+                onError.Invoke(e.Message);
             }
 
         }
@@ -118,37 +94,11 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
-                OpenAIUtils.StreamingChatToolCallsBuilder toolBuilder = new();
-                await foreach (
-                    var streamingChatUpdate in _client.CompleteChatStreamingAsync(
-                        messages: messageHistory,
-                        options: (options as ChatCompletionOptions),
-                        cancellationToken: token
-                    )
-                )
+                await foreach (ChatResponseUpdate item in _client.GetStreamingResponseAsync(messageHistory, options, token))
                 {
-                    foreach (ChatMessageContentPart contentPart in streamingChatUpdate.ContentUpdate)
-                    {
-                        onChunkReceived(contentPart.Text);
-                    }
-
-                    foreach (StreamingChatToolCallUpdate toolCallUpdate in streamingChatUpdate.ToolCallUpdates)
-                    {
-                        toolBuilder.Append(toolCallUpdate);
-                    }
+                    onChunkReceived.Invoke(item.Text);
                 }
 
-                IReadOnlyList<ChatToolCall> toolCalls = toolBuilder.Build();
-                foreach (ChatToolCall toolCall in toolCalls)
-                {
-                    foreach (var toolIhave in options.VoiceBoxTools)
-                    {
-                        if (toolCall.FunctionName == toolIhave.Method.Name)
-                        {
-                            OpenAIUtils.InvokeMethodWithJsonArguments(toolIhave.Method, toolIhave.Caller, toolCall.FunctionArguments);
-                        }
-                    }
-                }
                 onComplete.Invoke();
             }
             catch (Exception ex)

@@ -1,5 +1,5 @@
+using Microsoft.Extensions.AI;
 using Microsoft.CognitiveServices.Speech;
-using OpenAI.Chat;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -240,11 +240,12 @@ public class AIManager : MonoBehaviour
         throw new NotImplementedException();
 
         // Sample of what I want it to work like:
+        /*
         StartSpeechTranscription();
         List<ChatMessage> messages = new();
         SpeechToTextService.OnRecognized += (object s, SpeechRecognitionEventArgs e) =>
         {
-            messages.Add(e.Result.Text);
+            messages.Add(new ChatMessage(ChatRole.User, e.Result.Text));
             StreamChatMessage(
                 messages,
                 null,
@@ -254,5 +255,6 @@ public class AIManager : MonoBehaviour
 
             );
         };
+        */
     }
 }

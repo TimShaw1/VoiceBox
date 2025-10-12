@@ -1,9 +1,7 @@
 
-
-using NAudio.CoreAudioApi;
+using Microsoft.Extensions.AI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OpenAI.Chat;
 using System;
 using System.Buffers;
 using System.Collections;
@@ -13,6 +11,7 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Unity.VisualScripting;
 
 
@@ -20,56 +19,6 @@ namespace TimShaw.VoiceBox.Core
 {
     public static class OpenAIUtils
     {
-        #region
-        /// <summary>
-        /// Invokes a given <paramref name="method"/> via the provided <paramref name="instance"/> (ignored if <paramref name="method"/> is static) with arguments <paramref name="argumentsData"/>
-        /// </summary>
-        /// <param name="method">The <see cref="MethodInfo"/> of the method to call</param>
-        /// <param name="instance">The object that should call <paramref name="method"/></param>
-        /// <param name="argumentsData">The arguments to be provided to <paramref name="method"/></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static object InvokeMethodWithJsonArguments(MethodInfo method, object instance, BinaryData argumentsData)
-        {
-            // 1. Parse the JSON string into a JObject
-            JObject parsedArguments = JObject.Parse(argumentsData.ToString());
-            // 2. Get the parameters directly from the method. This is the only source of truth needed.
-            ParameterInfo[] methodParameters = method.GetParameters();
-            object[] invokeArgs = new object[methodParameters.Length];
-
-            var serializerSettings = new JsonSerializerSettings();
-            serializerSettings.Converters.Add(new UnityVectorJSONConverter());
-            serializerSettings.Converters.Add(new UnityQuaternionJSONConverter());
-
-            // 3. Match JSON properties to method parameters and build the argument array
-            for (int i = 0; i < methodParameters.Length; i++)
-            {
-                ParameterInfo parameter = methodParameters[i];
-
-                // Find the corresponding argument in the JObject using the parameter's name.
-                if (parsedArguments.TryGetValue(parameter.Name, StringComparison.OrdinalIgnoreCase, out JToken argToken))
-                {
-                    // 4. THIS IS THE KEY:
-                    // Deserialize the JToken directly to the type of the current parameter.
-                    // The `parameter` object already has the `.ParameterType` we need.
-                    invokeArgs[i] = argToken.ToObject(parameter.ParameterType, JsonSerializer.Create(serializerSettings));
-                }
-                else if (parameter.HasDefaultValue)
-                {
-                    // If the AI didn't provide a value but the method has a default, use it.
-                    invokeArgs[i] = parameter.DefaultValue;
-                }
-                else
-                {
-                    // If a required parameter is missing, we can't proceed.
-                    throw new ArgumentException($"Missing argument for required parameter '{parameter.Name}' in AI response.");
-                }
-            }
-
-            // 5. Invoke the method with the prepared arguments
-            return method.Invoke(instance, invokeArgs);
-        }
-        #endregion
         #region
 
         public class VoiceBoxList<T> : IList<T>
@@ -147,14 +96,16 @@ namespace TimShaw.VoiceBox.Core
 
         #region
         /// <summary>
-        /// A wrapper for <see cref="ChatCompletionOptions"/> that enables support for <see cref="VoiceBoxChatTool"/> tools to be used.
+        /// A wrapper for <see cref="ChatOptions"/> that enables support for <see cref="VoiceBoxChatTool"/> tools to be used.
         /// </summary>
-        public class VoiceBoxChatCompletionOptions : ChatCompletionOptions
+        public class VoiceBoxChatCompletionOptions : ChatOptions
         {
             public VoiceBoxList<VoiceBoxChatTool> VoiceBoxTools = new VoiceBoxList<VoiceBoxChatTool>();
             public VoiceBoxChatCompletionOptions()
             {
-                VoiceBoxTools.AddCallback = (tool) => Tools.Add(tool.OpenAIChatTool);
+                if (Tools == null)
+                    Tools = new List<AITool>();
+                VoiceBoxTools.AddCallback = (tool) => Tools.Add(tool.InternalChatTool);
             }
         }
 
@@ -166,7 +117,7 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public class VoiceBoxChatTool
         {
-            public ChatTool OpenAIChatTool;
+            public AITool InternalChatTool;
 
             public object Caller;
 
@@ -183,11 +134,13 @@ namespace TimShaw.VoiceBox.Core
                 Caller = caller;
                 Method = caller.GetType().GetMethod(functionName);
 
-                OpenAIChatTool = ChatTool.CreateFunctionTool(
-                    functionName: Method.Name,
-                    functionDescription: functionDescription,
-                    functionParameters: GetBinaryDataFromParameters(Method.GetParameters())
-                );
+                var options = new JsonSerializerOptions();
+                options.Converters.Add(new Vector2JsonConverter());
+                options.Converters.Add(new Vector3JsonConverter());
+                options.Converters.Add(new Vector4JsonConverter());
+                options.Converters.Add(new QuaternionJsonConverter());
+
+                InternalChatTool = AIFunctionFactory.Create(Method, Caller, functionName, functionDescription);
 
             }
 
@@ -281,99 +234,6 @@ namespace TimShaw.VoiceBox.Core
         #endregion
 
         #region
-        public class StreamingChatToolCallsBuilder
-        {
-            private readonly Dictionary<int, string> _indexToToolCallId = new();
-            private readonly Dictionary<int, string> _indexToFunctionName = new();
-            private readonly Dictionary<int, SequenceBuilder<byte>> _indexToFunctionArguments = new();
-
-            public void Append(StreamingChatToolCallUpdate toolCallUpdate)
-            {
-                // Keep track of which tool call ID belongs to this update index.
-                if (toolCallUpdate.ToolCallId != null)
-                {
-                    _indexToToolCallId[toolCallUpdate.Index] = toolCallUpdate.ToolCallId;
-                }
-
-                // Keep track of which function name belongs to this update index.
-                if (toolCallUpdate.FunctionName != null)
-                {
-                    _indexToFunctionName[toolCallUpdate.Index] = toolCallUpdate.FunctionName;
-                }
-
-                // Keep track of which function arguments belong to this update index,
-                // and accumulate the arguments as new updates arrive.
-                if (toolCallUpdate.FunctionArgumentsUpdate != null && !toolCallUpdate.FunctionArgumentsUpdate.ToMemory().IsEmpty)
-                {
-                    if (!_indexToFunctionArguments.TryGetValue(toolCallUpdate.Index, out SequenceBuilder<byte> argumentsBuilder))
-                    {
-                        argumentsBuilder = new SequenceBuilder<byte>();
-                        _indexToFunctionArguments[toolCallUpdate.Index] = argumentsBuilder;
-                    }
-
-                    argumentsBuilder.Append(toolCallUpdate.FunctionArgumentsUpdate);
-                }
-            }
-
-            public IReadOnlyList<ChatToolCall> Build()
-            {
-                List<ChatToolCall> toolCalls = new();
-
-                foreach ((int index, string toolCallId) in _indexToToolCallId)
-                {
-                    ReadOnlySequence<byte> sequence = _indexToFunctionArguments[index].Build();
-                    string readableSequence = BinaryData.FromBytes(sequence.ToArray()).ToString();
-                    List<string> realToolCalls = ParseConcatenatedJson(readableSequence);
-
-                    foreach (string realToolCall in realToolCalls)
-                    {
-                        ChatToolCall toolCall = ChatToolCall.CreateFunctionToolCall(
-                            id: toolCallId,
-                            functionName: _indexToFunctionName[index],
-                            functionArguments: BinaryData.FromString(realToolCall));
-
-                        toolCalls.Add(toolCall);
-                    }
-                }
-
-                return toolCalls;
-            }
-
-            private static List<string> ParseConcatenatedJson(string concatenatedJson)
-            {
-                var jsonObjects = new List<string>();
-                int braceCount = 0;
-                int startIndex = 0;
-
-                for (int i = 0; i < concatenatedJson.Length; i++)
-                {
-                    char currentChar = concatenatedJson[i];
-
-                    if (currentChar == '{')
-                    {
-                        if (braceCount == 0)
-                        {
-                            startIndex = i;
-                        }
-                        braceCount++;
-                    }
-                    else if (currentChar == '}')
-                    {
-                        braceCount--;
-                        if (braceCount == 0 && startIndex != -1)
-                        {
-                            jsonObjects.Add(concatenatedJson.Substring(startIndex, i - startIndex + 1));
-                            startIndex = -1; // Reset startIndex
-                        }
-                    }
-                }
-
-                return jsonObjects;
-            }
-        }
-        #endregion
-
-        #region
         public class SequenceBuilder<T>
         {
             Segment _first;
@@ -437,168 +297,253 @@ namespace TimShaw.VoiceBox.Core
 
         #region
 
-        public class UnityVectorJSONConverter : JsonConverter
+        public class Vector2JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector2>
         {
-            public override bool CanConvert(Type objectType)
+            public override UnityEngine.Vector2 Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
             {
-                // This converter can be used for UnityEngine.Vector types.
-                return (objectType == typeof(UnityEngine.Vector2) ||  objectType == typeof(UnityEngine.Vector3) || objectType == typeof(UnityEngine.Vector4));
-            }
-
-            // This method handles converting JSON to a UnityEngine.Vector
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            {
-                // We expect the value to be a string like "(1, 2, 3)"
-                if (reader.TokenType == JsonToken.String)
+                if (reader.TokenType == System.Text.Json.JsonTokenType.String)
                 {
-                    string value = reader.Value.ToString();
-
-                    // 1. Clean the string: remove parentheses and spaces
+                    string value = reader.GetString();
                     value = value.Trim('(', ')', ' ');
-
-                    // 2. Split the string into components by the comma
                     string[] components = value.Split(',');
 
-                        switch (components.Length)
+                    if (components.Length == 2 &&
+                        float.TryParse(components[0], out float x) &&
+                        float.TryParse(components[1], out float y))
+                    {
+                        return new UnityEngine.Vector2(x, y);
+                    }
+                }
+                else if (reader.TokenType == System.Text.Json.JsonTokenType.StartObject)
+                {
+                    float x = 0, y = 0;
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.EndObject)
                         {
-                            case 2:
-                                if (
-                                    float.TryParse(components[0], out float x) &&
-                                    float.TryParse(components[1], out float y) 
-                                )
-                                {
-                                    if (objectType != typeof(UnityEngine.Vector2))
-                                        UnityEngine.Debug.LogWarning($"Desired type is {objectType.Name} but parsed type is Vector2.");
-                                    return new UnityEngine.Vector2(x, y);
-                                }
-                                break;
-                            case 3:
-                                if (
-                                    float.TryParse(components[0], out float x1) &&
-                                    float.TryParse(components[1], out float y1) &&
-                                    float.TryParse(components[2], out float z1)
-                                )
-                                {
-                                    if (objectType != typeof(UnityEngine.Vector3))
-                                        UnityEngine.Debug.LogWarning($"Desired type is {objectType.Name} but parsed type is Vector3.");
-                                    return new UnityEngine.Vector3(x1, y1, z1);
-                                }
-                                break;
-                            case 4:
-                                if (
-                                    float.TryParse(components[0], out float x2) &&
-                                    float.TryParse(components[1], out float y2) &&
-                                    float.TryParse(components[2], out float z2) &&
-                                    float.TryParse(components[3], out float w2)
-                                )
-                                {
-                                    if (objectType != typeof(UnityEngine.Vector4))
-                                        UnityEngine.Debug.LogWarning($"Desired type is {objectType.Name} but parsed type is Vector4.");
-                                    return new UnityEngine.Vector4(x2, y2, z2, w2);
-                                }
-                                break;
-                            default:
-                                return null;
+                            return new UnityEngine.Vector2(x, y);
                         }
 
-                
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.PropertyName)
+                        {
+                            string propertyName = reader.GetString();
+                            reader.Read();
+                            switch (propertyName.ToLower())
+                            {
+                                case "x":
+                                    x = reader.GetSingle();
+                                    break;
+                                case "y":
+                                    y = reader.GetSingle();
+                                    break;
+                            }
+                        }
+                    }
                 }
-                // If the JSON is already a proper object { "x": ... }, let the default logic handle it
-                else if (reader.TokenType == JsonToken.StartObject)
-                {
-                    JObject item = JObject.Load(reader);
-                    float x = item["x"]?.Value<float>() ?? 0;
-                    float y = item["y"]?.Value<float>() ?? 0;
-                    float z = item["z"]?.Value<float>() ?? 0;
-                    return new UnityEngine.Vector3(x, y, z);
-                }
-
-                // If the format is unexpected, return a default UnityEngine.Vector3 or throw an exception
-                throw new JsonSerializationException($"Unexpected token or format when parsing UnityEngine.Vector3. Value: {reader.Value}");
+                throw new System.Text.Json.JsonException($"Unexpected token or format when parsing Vector2. Value: {reader.GetString()}");
             }
 
-            // This method handles converting a UnityEngine.Vector3 to JSON (optional but good practice)
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void Write(System.Text.Json.Utf8JsonWriter writer, UnityEngine.Vector2 value, System.Text.Json.JsonSerializerOptions options)
             {
-                // We'll write it out in the standard, structured format
-                var vec = (UnityEngine.Vector3)value;
                 writer.WriteStartObject();
-                writer.WritePropertyName("x");
-                writer.WriteValue(vec.x);
-                writer.WritePropertyName("y");
-                writer.WriteValue(vec.y);
-                writer.WritePropertyName("z");
-                writer.WriteValue(vec.z);
+                writer.WriteNumber("x", value.x);
+                writer.WriteNumber("y", value.y);
                 writer.WriteEndObject();
             }
         }
         #endregion
 
         #region
-        public class UnityQuaternionJSONConverter : JsonConverter
+        public class Vector3JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector3>
         {
-            public override bool CanConvert(Type objectType)
+            public override UnityEngine.Vector3 Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
             {
-                // This converter can be used for UnityEngine.Quaternion type.
-                return objectType == typeof(UnityEngine.Quaternion);
-            }
-
-            // This method handles converting JSON to a UnityEngine.Quaternion
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            {
-                // We expect the value to be a string like "(0.1, 0.2, 0.3, 1.0)"
-                if (reader.TokenType == JsonToken.String)
+                if (reader.TokenType == System.Text.Json.JsonTokenType.String)
                 {
-                    string value = reader.Value.ToString();
-
-                    // 1. Clean the string: remove parentheses and spaces
+                    string value = reader.GetString();
                     value = value.Trim('(', ')', ' ');
-
-                    // 2. Split the string into components by the comma
                     string[] components = value.Split(',');
 
-                    if (components.Length == 4)
+                    if (components.Length == 3 &&
+                        float.TryParse(components[0], out float x) &&
+                        float.TryParse(components[1], out float y) &&
+                        float.TryParse(components[2], out float z))
                     {
-                        if (
-                            float.TryParse(components[0], out float x) &&
-                            float.TryParse(components[1], out float y) &&
-                            float.TryParse(components[2], out float z) &&
-                            float.TryParse(components[3], out float w)
-                        )
+                        return new UnityEngine.Vector3(x, y, z);
+                    }
+                }
+                else if (reader.TokenType == System.Text.Json.JsonTokenType.StartObject)
+                {
+                    float x = 0, y = 0, z = 0;
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.EndObject)
                         {
-                            return new UnityEngine.Quaternion(x, y, z, w);
+                            return new UnityEngine.Vector3(x, y, z);
+                        }
+
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.PropertyName)
+                        {
+                            string propertyName = reader.GetString();
+                            reader.Read();
+                            switch (propertyName.ToLower())
+                            {
+                                case "x":
+                                    x = reader.GetSingle();
+                                    break;
+                                case "y":
+                                    y = reader.GetSingle();
+                                    break;
+                                case "z":
+                                    z = reader.GetSingle();
+                                    break;
+                            }
                         }
                     }
                 }
-                // If the JSON is already a proper object { "x": ..., "y": ..., "z": ..., "w": ... }, let the default logic handle it
-                else if (reader.TokenType == JsonToken.StartObject)
-                {
-                    JObject item = JObject.Load(reader);
-                    float x = item["x"]?.Value<float>() ?? 0;
-                    float y = item["y"]?.Value<float>() ?? 0;
-                    float z = item["z"]?.Value<float>() ?? 0;
-                    float w = item["w"]?.Value<float>() ?? 1.0f; // Default w to 1.0 for a valid rotation
-                    return new UnityEngine.Quaternion(x, y, z, w);
-                }
-
-                // If the format is unexpected, return a default UnityEngine.Quaternion or throw an exception
-                throw new JsonSerializationException($"Unexpected token or format when parsing UnityEngine.Quaternion. Value: {reader.Value}");
+                throw new System.Text.Json.JsonException($"Unexpected token or format when parsing Vector3. Value: {reader.GetString()}");
             }
 
-            // This method handles converting a UnityEngine.Quaternion to JSON
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void Write(System.Text.Json.Utf8JsonWriter writer, UnityEngine.Vector3 value, System.Text.Json.JsonSerializerOptions options)
             {
-                // We'll write it out in the standard, structured format
-                var quat = (UnityEngine.Quaternion)value;
                 writer.WriteStartObject();
-                writer.WritePropertyName("x");
-                writer.WriteValue(quat.x);
-                writer.WritePropertyName("y");
-                writer.WriteValue(quat.y);
-                writer.WritePropertyName("z");
-                writer.WriteValue(quat.z);
-                writer.WritePropertyName("w");
-                writer.WriteValue(quat.w);
+                writer.WriteNumber("x", value.x);
+                writer.WriteNumber("y", value.y);
+                writer.WriteNumber("z", value.z);
+                writer.WriteEndObject();
+            }
+        }
+        #endregion
+
+        #region
+        public class Vector4JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector4>
+        {
+            public override UnityEngine.Vector4 Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+            {
+                if (reader.TokenType == System.Text.Json.JsonTokenType.String)
+                {
+                    string value = reader.GetString();
+                    value = value.Trim('(', ')', ' ');
+                    string[] components = value.Split(',');
+
+                    if (components.Length == 4 &&
+                        float.TryParse(components[0], out float x) &&
+                        float.TryParse(components[1], out float y) &&
+                        float.TryParse(components[2], out float z) &&
+                        float.TryParse(components[3], out float w))
+                    {
+                        return new UnityEngine.Vector4(x, y, z, w);
+                    }
+                }
+                else if (reader.TokenType == System.Text.Json.JsonTokenType.StartObject)
+                {
+                    float x = 0, y = 0, z = 0, w = 0;
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.EndObject)
+                        {
+                            return new UnityEngine.Vector4(x, y, z, w);
+                        }
+
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.PropertyName)
+                        {
+                            string propertyName = reader.GetString();
+                            reader.Read();
+                            switch (propertyName.ToLower())
+                            {
+                                case "x":
+                                    x = reader.GetSingle();
+                                    break;
+                                case "y":
+                                    y = reader.GetSingle();
+                                    break;
+                                case "z":
+                                    z = reader.GetSingle();
+                                    break;
+                                case "w":
+                                    w = reader.GetSingle();
+                                    break;
+                            }
+                        }
+                    }
+                }
+                throw new System.Text.Json.JsonException($"Unexpected token or format when parsing Vector4. Value: {reader.GetString()}");
+            }
+
+            public override void Write(System.Text.Json.Utf8JsonWriter writer, UnityEngine.Vector4 value, System.Text.Json.JsonSerializerOptions options)
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("x", value.x);
+                writer.WriteNumber("y", value.y);
+                writer.WriteNumber("z", value.z);
+                writer.WriteNumber("w", value.w);
+                writer.WriteEndObject();
+            }
+        }
+        #endregion
+
+        #region
+        public class QuaternionJsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Quaternion>
+        {
+            public override UnityEngine.Quaternion Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+            {
+                if (reader.TokenType == System.Text.Json.JsonTokenType.String)
+                {
+                    string value = reader.GetString();
+                    value = value.Trim('(', ')', ' ');
+                    string[] components = value.Split(',');
+
+                    if (components.Length == 4 &&
+                        float.TryParse(components[0], out float x) &&
+                        float.TryParse(components[1], out float y) &&
+                        float.TryParse(components[2], out float z) &&
+                        float.TryParse(components[3], out float w))
+                    {
+                        return new UnityEngine.Quaternion(x, y, z, w);
+                    }
+                }
+                else if (reader.TokenType == System.Text.Json.JsonTokenType.StartObject)
+                {
+                    float x = 0, y = 0, z = 0, w = 0;
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.EndObject)
+                        {
+                            return new UnityEngine.Quaternion(x, y, z, w);
+                        }
+
+                        if (reader.TokenType == System.Text.Json.JsonTokenType.PropertyName)
+                        {
+                            string propertyName = reader.GetString();
+                            reader.Read();
+                            switch (propertyName.ToLower())
+                            {
+                                case "x":
+                                    x = reader.GetSingle();
+                                    break;
+                                case "y":
+                                    y = reader.GetSingle();
+                                    break;
+                                case "z":
+                                    z = reader.GetSingle();
+                                    break;
+                                case "w":
+                                    w = reader.GetSingle();
+                                    break;
+                            }
+                        }
+                    }
+                }
+                throw new System.Text.Json.JsonException($"Unexpected token or format when parsing Quaternion. Value: {reader.GetString()}");
+            }
+
+            public override void Write(System.Text.Json.Utf8JsonWriter writer, UnityEngine.Quaternion value, System.Text.Json.JsonSerializerOptions options)
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("x", value.x);
+                writer.WriteNumber("y", value.y);
+                writer.WriteNumber("z", value.z);
+                writer.WriteNumber("w", value.w);
                 writer.WriteEndObject();
             }
         }

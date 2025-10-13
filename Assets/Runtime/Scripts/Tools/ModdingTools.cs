@@ -1,5 +1,6 @@
 
 
+using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
@@ -83,7 +84,8 @@ namespace TimShaw.VoiceBox.Tools
         public static GameObject CreateAIManagerObject(
             GenericChatServiceConfig genericChatServiceConfig, 
             GenericSTTServiceConfig genericSTTServiceConfig, 
-            GenericTTSServiceConfig genericTTSServiceConfig
+            GenericTTSServiceConfig genericTTSServiceConfig,
+            string apiKeysJsonPath = ""
         )
         {
             if (AIManager.Instance == null)
@@ -94,7 +96,7 @@ namespace TimShaw.VoiceBox.Tools
                 aiManagerComponent.speechToTextConfig = genericSTTServiceConfig;
                 aiManagerComponent.textToSpeechConfig = genericTTSServiceConfig;
 
-                AIManager.Instance.LoadAPIKeys(Application.dataPath + "/keys.json");
+                AIManager.Instance.LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
 
                 aiManagerComponent.ChatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
                 aiManagerComponent.SpeechToTextService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);
@@ -109,6 +111,36 @@ namespace TimShaw.VoiceBox.Tools
                 Debug.LogWarning("AI Manager already exists, no new object will be created.");
                 return AIManager.Instance.gameObject;
             }
+        }
+
+        /// <summary>
+        /// Initializes a <see cref="TTSManager"/> component with a <see cref="GenericTTSServiceConfig"/>. Also loads TTS API key.
+        /// </summary>
+        /// <param name="manager">The <see cref="TTSManager"/> to initialize</param>
+        /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager</param>
+        /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
+        /// <returns></returns>
+        public static void InitChatManagerObject(ChatManager manager, GenericChatServiceConfig config, string apiKeysJsonPath = "")
+        {
+            manager.chatServiceConfig = config;
+
+            manager.LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+            manager.ChatService = ServiceFactory.CreateChatService(manager.chatServiceConfig);
+        }
+
+        /// <summary>
+        /// Initializes a <see cref="TTSManager"/> component with a <see cref="GenericTTSServiceConfig"/>. Also loads TTS API key.
+        /// </summary>
+        /// <param name="manager">The <see cref="TTSManager"/> to initialize</param>
+        /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager</param>
+        /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
+        /// <returns></returns>
+        public static void InitTTSManagerObject(TTSManager manager, GenericTTSServiceConfig config, string apiKeysJsonPath = "")
+        {
+            manager.textToSpeechConfig = config;
+
+            manager.LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+            manager.TextToSpeechService = ServiceFactory.CreateTtsService(manager.textToSpeechConfig);
         }
 
     }

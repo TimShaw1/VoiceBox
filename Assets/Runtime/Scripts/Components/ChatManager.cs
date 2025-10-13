@@ -28,7 +28,7 @@ namespace TimShaw.VoiceBox.Components
 
         public void Awake()
         {
-            LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+            LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
             ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
 
             var chats = new List<ChatMessage>();
@@ -64,7 +64,7 @@ namespace TimShaw.VoiceBox.Components
         /// Loads API keys from a JSON file and applies them to the service configurations.
         /// </summary>
         /// <param name="keysFile">The path to the JSON file containing the API keys.</param>
-        public void LoadAPIKeys(string keysFile)
+        public void LoadAPIKey(string keysFile)
         {
             string jsonContent = File.ReadAllText(keysFile);
             var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);

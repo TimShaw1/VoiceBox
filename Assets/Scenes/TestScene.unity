@@ -152,8 +152,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testSpawnManager: 0
-  testSTT: 0
-  testTTS: 0
+  testSTT: 1
+  testTTS: 1
   testChat: 1
   audioSource: {fileID: 2085286909}
 --- !u!4 &897424585

@@ -67,7 +67,7 @@ namespace TimShaw.VoiceBox.Core
             {
                 var response = await _client.GetResponseAsync(messageHistory, options, token);
 
-                onSuccess.Invoke(response.Messages[0] as ChatUtils.VoiceBoxChatMessage);
+                onSuccess.Invoke(new ChatUtils.VoiceBoxChatMessage(response.Messages[0]));
             }
             catch (Exception e)
             {

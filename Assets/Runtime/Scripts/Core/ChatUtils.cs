@@ -54,6 +54,17 @@ namespace TimShaw.VoiceBox.Core
                 Role = new ChatRole(role.Value);
                 Contents = content is null ? new List<AIContent>() : new List<AIContent>() { new TextContent(content) };
             }
+
+            public VoiceBoxChatMessage(ChatMessage chatMessage)
+            {
+                Role = chatMessage.Role;
+                Contents = chatMessage.Contents;
+                AdditionalProperties = chatMessage.AdditionalProperties;
+                CreatedAt = chatMessage.CreatedAt;
+                RawRepresentation = chatMessage.RawRepresentation;
+                MessageId = chatMessage.MessageId;
+                AuthorName = chatMessage.AuthorName;
+            }
         }
         #endregion
 

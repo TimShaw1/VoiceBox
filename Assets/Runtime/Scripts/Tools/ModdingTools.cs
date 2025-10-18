@@ -119,10 +119,10 @@ namespace TimShaw.VoiceBox.Tools
         }
 
         /// <summary>
-        /// Initializes a <see cref="TTSManager"/> component with a <see cref="GenericTTSServiceConfig"/>. Also loads TTS API key.
+        /// Initializes a <see cref="ChatManager"/> component with a <see cref="GenericChatServiceConfig"/>. Also loads Chat API key.
         /// </summary>
-        /// <param name="manager">The <see cref="TTSManager"/> to initialize</param>
-        /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager. See <see cref="CreateGenericChatServiceConfig{T}"/></param>
+        /// <param name="manager">The <see cref="ChatManager"/> to initialize</param>
+        /// <param name="config">A <see cref="GenericChatServiceConfig"/> that specifies how to set up the Chat manager. See <see cref="CreateGenericChatServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
         /// <returns></returns>
         public static void InitChatManagerObject(ChatManager manager, GenericChatServiceConfig config, string apiKeysJsonPath = "")

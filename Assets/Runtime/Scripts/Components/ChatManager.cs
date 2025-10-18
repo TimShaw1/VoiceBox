@@ -30,26 +30,6 @@ namespace TimShaw.VoiceBox.Components
         {
             LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
             ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
-
-            var chats = new List<ChatUtils.VoiceBoxChatMessage>();
-            var chat = new ChatUtils.VoiceBoxChatMessage(
-                ChatUtils.VoiceBoxChatRole.User,
-                "Write a 1 paragraph essay about huskies."
-                //"Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
-                );
-            chats.Add(chat);
-
-            string combinedResponse = "";
-
-            //AIManager.Instance.SendChatMessage(chats, options, chatMessage => Debug.Log(chatMessage.Content[0].Text), error => Debug.LogError(error));
-
-            StreamChatMessage(
-                chats,
-                null,
-                chunk => { Debug.Log(chunk.Role + ": " + chunk.Text); combinedResponse += chunk; },
-                () => { Debug.Log("Combined response: " + combinedResponse); },
-                error => Debug.LogError(error)
-            );
         }
 
         /// <summary>

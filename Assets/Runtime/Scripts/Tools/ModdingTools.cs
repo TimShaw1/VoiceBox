@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Tools
 {
-    static class ModdingTools
+    public static class ModdingTools
     {
         /// <summary>
         /// Creates a generic chat service config object. Useful for modders who want to generate configs at runtime.
@@ -53,12 +53,17 @@ namespace TimShaw.VoiceBox.Tools
         /// <typeparam name="STTConfigType">The type of <see cref="GenericSTTServiceConfig"/> to attach to the AI Manager</typeparam>
         /// <typeparam name="TTSConfigType">The type of <see cref="GenericTTSServiceConfig"/> to attach to the AI Manager</typeparam>
         /// <returns>The instantiated <see cref="AIManager"/> object</returns>
-        public static GameObject CreateAIManagerObject<ChatConfigType, STTConfigType, TTSConfigType>() 
+        public static GameObject CreateAIManagerObject<ChatConfigType, STTConfigType, TTSConfigType>(string apiKeysJsonPath = "")
             where ChatConfigType : GenericChatServiceConfig
             where STTConfigType : GenericSTTServiceConfig
             where TTSConfigType : GenericTTSServiceConfig
         {
-            return CreateAIManagerObject(CreateGenericChatServiceConfig<ChatConfigType>(), CreateGenericSTTServiceConfig<STTConfigType>(), CreateGenericTTSServiceConfig<TTSConfigType>());
+            return CreateAIManagerObject(
+                CreateGenericChatServiceConfig<ChatConfigType>(),
+                CreateGenericSTTServiceConfig<STTConfigType>(),
+                CreateGenericTTSServiceConfig<TTSConfigType>(),
+                apiKeysJsonPath
+            );
         }
 
         /// <summary>

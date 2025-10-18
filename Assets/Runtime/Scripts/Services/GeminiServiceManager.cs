@@ -51,9 +51,9 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onError">Callback invoked when an error occurs.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SendMessage(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<ChatMessage> onSuccess,
+            Action<ChatUtils.VoiceBoxChatMessage> onSuccess,
             Action<string> onError,
             CancellationToken token)
         {
@@ -67,11 +67,11 @@ namespace TimShaw.VoiceBox.Core
             {
                 var response = await _client.GetResponseAsync(messageHistory, options, token);
 
-                onSuccess.Invoke(response.Messages[0]);
+                onSuccess.Invoke(response.Messages[0] as ChatUtils.VoiceBoxChatMessage);
             }
             catch (Exception e)
             {
-                onError.Invoke(e.Message);
+                onError.Invoke(e.Message + e.StackTrace);
             }
 
         }
@@ -84,7 +84,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onComplete">Callback invoked when the response is complete.</param>
         /// <param name="onError">Callback invoked when an error occurs.</param>
         public async Task SendMessageStream(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,
@@ -103,7 +103,7 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (Exception ex)
             {
-                onError.Invoke(ex.Message);
+                onError.Invoke(ex.Message + ex.StackTrace);
             }
         }
     }

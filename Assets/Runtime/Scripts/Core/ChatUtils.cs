@@ -1,24 +1,62 @@
 
 using Microsoft.Extensions.AI;
+using NAudio.CoreAudioApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
+using System.IO; 
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Unity.VisualScripting;
 
 
 namespace TimShaw.VoiceBox.Core
 {
     public static class ChatUtils
     {
+        public readonly struct VoiceBoxChatRole
+        {
+            /// <summary>Gets the role that instructs or sets the behavior of the system.</summary>
+            public static VoiceBoxChatRole System { get; } = new VoiceBoxChatRole("system");
+
+            /// <summary>Gets the role that provides responses to system-instructed, user-prompted input.</summary>
+            public static VoiceBoxChatRole Assistant { get; } = new VoiceBoxChatRole("assistant");
+
+            /// <summary>Gets the role that provides user input for chat interactions.</summary>
+            public static VoiceBoxChatRole User { get; } = new VoiceBoxChatRole("user");
+
+            /// <summary>Gets the role that provides additional information and references in response to tool use requests.</summary>
+            public static VoiceBoxChatRole Tool { get; } = new VoiceBoxChatRole("tool");
+
+            public string Value { get; }
+
+            public VoiceBoxChatRole(string value)
+            {
+                Value = value;
+            }
+        }
+
+        #region
+        public class VoiceBoxChatMessage : ChatMessage
+        {
+            /// <summary>Initializes a new instance of the <see cref="ChatMessage"/> class.</summary>
+            /// <param name="role">The role of the author of the message.</param>
+            /// <param name="content">The text content of the message.</param>
+            public VoiceBoxChatMessage(VoiceBoxChatRole role, string content)
+            {
+                Role = new ChatRole(role.Value);
+                Contents = content is null ? new List<AIContent>() : new List<AIContent>() { new TextContent(content) };
+            }
+        }
+        #endregion
+
         #region
 
         public class VoiceBoxList<T> : IList<T>
@@ -288,7 +326,7 @@ namespace TimShaw.VoiceBox.Core
                 {
                     long runningIndex;
                     checked { runningIndex = RunningIndex + Memory.Length; }
-                    Segment segment = new(items, runningIndex);
+                    Segment segment = new Segment(items, runningIndex);
                     Next = segment;
                     return segment;
                 }

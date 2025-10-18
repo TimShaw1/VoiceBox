@@ -31,9 +31,9 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onSuccess">Callback invoked when a successful response is received. The ChatMessage will have the 'Model' role.</param>
         /// <param name="onError">Callback invoked when an error occurs, providing an error message.</param>
         Task SendMessage(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<ChatMessage> onSuccess,
+            Action<ChatUtils.VoiceBoxChatMessage> onSuccess,
             Action<string> onError,
             CancellationToken token
         );
@@ -48,7 +48,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="onComplete">Callback invoked when the entire stream has finished.</param>
         /// <param name="onError">Callback invoked if an error occurs during the streaming process.</param>
         Task SendMessageStream(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,

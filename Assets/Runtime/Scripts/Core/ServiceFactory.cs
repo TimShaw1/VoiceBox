@@ -26,7 +26,6 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
                 if (config != null)
                 {
                     if (config.modelName.Length == 0)
@@ -57,7 +56,7 @@ namespace TimShaw.VoiceBox.Core
                 service.Initialize(config);
                 return service;
             }
-            catch
+            catch (Exception ex)
             {
                 if (config != null)
                 {

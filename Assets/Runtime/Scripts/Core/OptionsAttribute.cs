@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -5,7 +7,6 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Editor
 {
-
     /// <summary>
     /// An attribute to create a dropdown list in the Unity Inspector for a string field.
     /// </summary>
@@ -82,3 +83,5 @@ namespace TimShaw.VoiceBox.Editor
         }
     }
 }
+
+#endif

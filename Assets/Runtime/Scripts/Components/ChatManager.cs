@@ -15,7 +15,7 @@ namespace TimShaw.VoiceBox.Components
 {
     public class ChatManager : MonoBehaviour
     {
-        private readonly CancellationTokenSource internalCancellationTokenSource = new();
+        private readonly CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
 
         [Tooltip("Path to the api keys json file. Defaults to Assets/keys.json")]
         [SerializeField] public string apiKeysJsonPath = "";
@@ -31,9 +31,9 @@ namespace TimShaw.VoiceBox.Components
             LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
             ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
 
-            var chats = new List<ChatMessage>();
-            var chat = new ChatMessage(
-                ChatRole.User,
+            var chats = new List<ChatUtils.VoiceBoxChatMessage>();
+            var chat = new ChatUtils.VoiceBoxChatMessage(
+                ChatUtils.VoiceBoxChatRole.User,
                 "Write a 1 paragraph essay about huskies."
                 //"Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
                 );
@@ -83,7 +83,7 @@ namespace TimShaw.VoiceBox.Components
         /// <param name="onSuccess">Callback invoked when the message is successfully sent, returning the response.</param>
         /// <param name="onError">Callback invoked when an error occurs.</param>
         public void SendChatMessage(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess,
             Action<string> onError,
@@ -109,7 +109,7 @@ namespace TimShaw.VoiceBox.Components
         /// <param name="onComplete">Callback invoked when the response is complete.</param>
         /// <param name="onError">Callback invoked when an error occurs.</param>
         public void StreamChatMessage(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,

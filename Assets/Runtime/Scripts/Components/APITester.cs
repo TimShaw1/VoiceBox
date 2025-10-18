@@ -98,9 +98,9 @@ public class APITester : MonoBehaviour
 
         if (testChat)
         {
-            var chats = new List<ChatMessage>();
-            var chat = new ChatMessage(
-                ChatRole.User,
+            var chats = new List<ChatUtils.VoiceBoxChatMessage>();
+            var chat = new ChatUtils.VoiceBoxChatMessage(
+                ChatUtils.VoiceBoxChatRole.User,
                 "Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
                 //"Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
                 );
@@ -111,7 +111,7 @@ public class APITester : MonoBehaviour
 
             string combinedResponse = "";
 
-            ChatUtils.VoiceBoxChatCompletionOptions options = new()
+            ChatUtils.VoiceBoxChatCompletionOptions options = new ChatUtils.VoiceBoxChatCompletionOptions()
             {
                 VoiceBoxTools = { tool, tool2 }
             };

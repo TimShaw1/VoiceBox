@@ -1,15 +1,16 @@
-using Microsoft.Extensions.AI;
 using Microsoft.CognitiveServices.Speech;
+using Microsoft.Extensions.AI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
-using TimShaw.VoiceBox.Components;
 using UnityEngine;
+using static TimShaw.VoiceBox.Core.ChatUtils;
 
 /// <summary>
 /// Manages AI services, acting as a central hub for chat, speech-to-text (STT), and text-to-speech (TTS) functionalities.
@@ -22,7 +23,7 @@ public class AIManager : MonoBehaviour
     /// </summary>
     public static AIManager Instance { get; private set; }
 
-    private readonly CancellationTokenSource internalCancellationTokenSource = new();
+    private readonly CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
 
     [Tooltip("Path to the api keys json file. Defaults to Assets/keys.json")]
     [SerializeField] public string apiKeysJsonPath = "";
@@ -52,23 +53,30 @@ public class AIManager : MonoBehaviour
     /// <param name="keysFile">The path to the JSON file containing the API keys.</param>
     public void LoadAPIKeys(string keysFile)
     {
-        string jsonContent = File.ReadAllText(keysFile);
-        var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
+        try
+        {
+            string jsonContent = File.ReadAllText(keysFile);
+            var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
 
-        if (chatServiceConfig && chatServiceConfig.apiKeyJSONString.Length > 0)
-            chatServiceConfig.apiKey = apiKeys[chatServiceConfig.apiKeyJSONString];
-        else
-            Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
+            if (chatServiceConfig && chatServiceConfig.apiKeyJSONString.Length > 0)
+                chatServiceConfig.apiKey = apiKeys[chatServiceConfig.apiKeyJSONString];
+            else
+                Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
 
-        if (speechToTextConfig && speechToTextConfig.apiKeyJSONString.Length > 0)
-            speechToTextConfig.apiKey = apiKeys[speechToTextConfig.apiKeyJSONString];
-        else
-            Debug.LogWarning("STT service config does not define an apiKeyJSONString");
+            if (speechToTextConfig && speechToTextConfig.apiKeyJSONString.Length > 0)
+                speechToTextConfig.apiKey = apiKeys[speechToTextConfig.apiKeyJSONString];
+            else
+                Debug.LogWarning("STT service config does not define an apiKeyJSONString");
 
-        if (textToSpeechConfig && textToSpeechConfig.apiKeyJSONString.Length > 0)
-            textToSpeechConfig.apiKey = apiKeys[textToSpeechConfig.apiKeyJSONString];
-        else
-            Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
+            if (textToSpeechConfig && textToSpeechConfig.apiKeyJSONString.Length > 0)
+                textToSpeechConfig.apiKey = apiKeys[textToSpeechConfig.apiKeyJSONString];
+            else
+                Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
+        }
+        catch (FileNotFoundException)
+        {
+            Debug.LogWarning("[AI Manager] API keys json file not found on startup.");
+        }
     }
 
     /// <summary>
@@ -120,9 +128,9 @@ public class AIManager : MonoBehaviour
     /// <param name="onSuccess">Callback invoked when the message is successfully sent, returning the response.</param>
     /// <param name="onError">Callback invoked when an error occurs.</param>
     public void SendChatMessage(
-        List<ChatMessage> messageHistory,
+        List<ChatUtils.VoiceBoxChatMessage> messageHistory,
         ChatUtils.VoiceBoxChatCompletionOptions options,
-        Action<ChatMessage> onSuccess,
+        Action<ChatUtils.VoiceBoxChatMessage> onSuccess,
         Action<string> onError,
         CancellationToken token = default)
     {
@@ -145,8 +153,8 @@ public class AIManager : MonoBehaviour
     /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
     /// <param name="onComplete">Callback invoked when the response is complete.</param>
     /// <param name="onError">Callback invoked when an error occurs.</param>
-    public void StreamChatMessage(
-        List<ChatMessage> messageHistory,
+    public async void StreamChatMessage(
+        List<ChatUtils.VoiceBoxChatMessage> messageHistory,
         ChatUtils.VoiceBoxChatCompletionOptions options,
         Action<ChatResponseUpdate> onChunkReceived,
         Action onComplete,
@@ -162,7 +170,14 @@ public class AIManager : MonoBehaviour
 
         token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
-        Task.Run(() => ChatService.SendMessageStream(messageHistory, options, onChunkReceived, onComplete, onError, token));
+        try
+        {
+            await Task.Run(() => ChatService.SendMessageStream(messageHistory, options, onChunkReceived, onComplete, onError, token));
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
     }
 
     /// <summary>

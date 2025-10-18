@@ -1,6 +1,8 @@
 using System.Linq;
 using UnityEngine;
+#if UNITY_EDITOR 
 using TimShaw.VoiceBox.Editor;
+#endif
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
 
@@ -31,7 +33,9 @@ namespace TimShaw.VoiceBox.Data
         /// <summary>
         /// The name of the audio input device to use for transcription.
         /// </summary>
+        #if UNITY_EDITOR
         [Options("audioInputEndpointNames")]
+        #endif
         public string audioInputDeviceName = "Default";
 
         /// <summary>

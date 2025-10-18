@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
-using Unity.VisualScripting.FullSerializer;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -33,9 +32,9 @@ namespace TimShaw.VoiceBox.Core
         }
 
         public async Task SendMessage(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<ChatMessage> onSuccess, 
+            Action<ChatUtils.VoiceBoxChatMessage> onSuccess, 
             Action<string> onError,
             CancellationToken token)
         {
@@ -49,7 +48,7 @@ namespace TimShaw.VoiceBox.Core
             {
                 var response = await _client.GetResponseAsync(messageHistory, options, token);
 
-                onSuccess.Invoke(response.Messages[0]);
+                onSuccess.Invoke(response.Messages[0] as ChatUtils.VoiceBoxChatMessage);
             }
             catch (Exception e)
             {
@@ -58,7 +57,7 @@ namespace TimShaw.VoiceBox.Core
         }
 
         public async Task SendMessageStream(
-            List<ChatMessage> messageHistory,
+            List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatResponseUpdate> onChunkReceived, 
             Action onComplete, 
@@ -76,6 +75,7 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (Exception ex)
             {
+                UnityEngine.Debug.LogException(ex);
                 onError.Invoke(ex.Message);
             }
         }

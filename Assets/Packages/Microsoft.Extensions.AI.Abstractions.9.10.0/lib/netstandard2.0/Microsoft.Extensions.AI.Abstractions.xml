@@ -1745,9 +1745,6 @@
         <member name="T:Microsoft.Extensions.AI.ChatFinishReason">
             <summary>Represents the reason a chat response completed.</summary>
         </member>
-        <member name="F:Microsoft.Extensions.AI.ChatFinishReason._value">
-            <summary>The finish reason value. If <see langword="null"/> because `default(ChatFinishReason)` was used, the instance will behave like <see cref="P:Microsoft.Extensions.AI.ChatFinishReason.Stop"/>.</summary>
-        </member>
         <member name="M:Microsoft.Extensions.AI.ChatFinishReason.#ctor(System.String)">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ChatFinishReason"/> struct with a string that describes the reason.</summary>
             <param name="value">The reason value.</param>
@@ -1878,6 +1875,12 @@
             <summary>Represents the options for a chat request.</summary>
             <related type="Article" href="https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai#provide-options">Provide options.</related>
         </member>
+        <member name="M:Microsoft.Extensions.AI.ChatOptions.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ChatOptions"/> class.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ChatOptions.#ctor(Microsoft.Extensions.AI.ChatOptions)">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ChatOptions"/> class, performing a shallow copy of all properties from <paramref name="other"/>.</summary>
+        </member>
         <member name="P:Microsoft.Extensions.AI.ChatOptions.ConversationId">
             <summary>Gets or sets an optional identifier used to associate a request with an existing conversation.</summary>
             <related type="Article" href="https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai#stateless-vs-stateful-clients">Stateless vs. stateful clients.</related>
@@ -1981,6 +1984,43 @@
             <summary>Gets or sets the list of tools to include with a chat request.</summary>
             <related type="Article" href="https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai#tool-calling">Tool calling.</related>
         </member>
+        <member name="P:Microsoft.Extensions.AI.ChatOptions.AllowBackgroundResponses">
+            <summary>Gets or sets a value indicating whether the background responses are allowed.</summary>
+            <remarks>
+            <para>
+            Background responses allow running long-running operations or tasks asynchronously in the background that can be resumed by streaming APIs
+            and polled for completion by non-streaming APIs.
+            </para>
+            <para>
+            When this property is set to true, non-streaming APIs may start a background operation and return an initial
+            response with a continuation token. Subsequent calls to the same API should be made in a polling manner with
+            the continuation token to get the final result of the operation.
+            </para>
+            <para>
+            When this property is set to true, streaming APIs may also start a background operation and begin streaming
+            response updates until the operation is completed. If the streaming connection is interrupted, the
+            continuation token obtained from the last update that has one should be supplied to a subsequent call to the same streaming API
+            to resume the stream from the point of interruption and continue receiving updates until the operation is completed.
+            </para>
+            <para>
+            This property only takes effect if the implementation it's used with supports background responses.
+            If the implementation does not support background responses, this property will be ignored.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.ChatOptions.ContinuationToken">
+            <summary>Gets or sets the continuation token for resuming and getting the result of the chat response identified by this token.</summary>
+            <remarks>
+            This property is used for background responses that can be activated via the <see cref="P:Microsoft.Extensions.AI.ChatOptions.AllowBackgroundResponses"/>
+            property if the <see cref="T:Microsoft.Extensions.AI.IChatClient"/> implementation supports them.
+            Streamed background responses, such as those returned by default by <see cref="M:Microsoft.Extensions.AI.IChatClient.GetStreamingResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)"/>,
+            can be resumed if interrupted. This means that a continuation token obtained from the <see cref="P:Microsoft.Extensions.AI.ChatResponseUpdate.ContinuationToken"/> 
+            of an update just before the interruption occurred can be passed to this property to resume the stream from the point of interruption.
+            Non-streamed background responses, such as those returned by <see cref="M:Microsoft.Extensions.AI.IChatClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)"/>,
+            can be polled for completion by obtaining the token from the <see cref="P:Microsoft.Extensions.AI.ChatResponse.ContinuationToken"/> property 
+            and passing it to this property on subsequent calls to <see cref="M:Microsoft.Extensions.AI.IChatClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)"/>.
+            </remarks>
+        </member>
         <member name="P:Microsoft.Extensions.AI.ChatOptions.RawRepresentationFactory">
             <summary>
             Gets or sets a callback responsible for creating the raw representation of the chat options from an underlying implementation.
@@ -2007,9 +2047,14 @@
             <summary>Produces a clone of the current <see cref="T:Microsoft.Extensions.AI.ChatOptions"/> instance.</summary>
             <returns>A clone of the current <see cref="T:Microsoft.Extensions.AI.ChatOptions"/> instance.</returns>
             <remarks>
+            <para>
             The clone will have the same values for all properties as the original instance. Any collections, like <see cref="P:Microsoft.Extensions.AI.ChatOptions.Tools"/>,
             <see cref="P:Microsoft.Extensions.AI.ChatOptions.StopSequences"/>, and <see cref="P:Microsoft.Extensions.AI.ChatOptions.AdditionalProperties"/>, are shallow-cloned, meaning a new collection instance is created,
             but any references contained by the collections are shared with the original.
+            </para>
+            <para>
+            Derived types should override <see cref="M:Microsoft.Extensions.AI.ChatOptions.Clone"/> to return an instance of the derived type.
+            </para>
             </remarks>
         </member>
         <member name="T:Microsoft.Extensions.AI.ChatResponse">
@@ -2074,6 +2119,21 @@
         </member>
         <member name="P:Microsoft.Extensions.AI.ChatResponse.Usage">
             <summary>Gets or sets usage details for the chat response.</summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.ChatResponse.ContinuationToken">
+            <summary>Gets or sets the continuation token for getting result of the background chat response.</summary>
+            <remarks>
+            <see cref="T:Microsoft.Extensions.AI.IChatClient"/> implementations that support background responses will return
+            a continuation token if background responses are allowed in <see cref="P:Microsoft.Extensions.AI.ChatOptions.AllowBackgroundResponses"/>
+            and the result of the response has not been obtained yet. If the response has completed and the result has been obtained,
+            the token will be <see langword="null"/>.
+            <para>
+            This property should be used in conjunction with <see cref="P:Microsoft.Extensions.AI.ChatOptions.ContinuationToken"/> to 
+            continue to poll for the completion of the response. Pass this token to
+            <see cref="P:Microsoft.Extensions.AI.ChatOptions.ContinuationToken"/> on subsequent calls to <see cref="M:Microsoft.Extensions.AI.IChatClient.GetResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)"/>
+            to poll for completion.
+            </para>
+            </remarks>
         </member>
         <member name="P:Microsoft.Extensions.AI.ChatResponse.RawRepresentation">
             <summary>Gets or sets the raw representation of the chat response from an underlying implementation.</summary>
@@ -2180,6 +2240,12 @@
             <summary>Processes the <see cref="T:Microsoft.Extensions.AI.ChatResponseUpdate"/>, incorporating its contents into <paramref name="response"/>.</summary>
             <param name="update">The update to process.</param>
             <param name="response">The <see cref="T:Microsoft.Extensions.AI.ChatResponse"/> object that should be updated based on <paramref name="update"/>.</param>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ChatResponseExtensions.NotEmptyOrEqual(System.String,System.String)">
+            <summary>Gets whether both strings are not null/empty and not the same as each other.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ChatResponseExtensions.NotNullOrEqual(System.Nullable{Microsoft.Extensions.AI.ChatRole},System.Nullable{Microsoft.Extensions.AI.ChatRole})">
+            <summary>Gets whether two roles are not null and not the same as each other.</summary>
         </member>
         <member name="T:Microsoft.Extensions.AI.ChatResponseFormat">
             <summary>Represents the response format that is desired by the caller.</summary>
@@ -2297,9 +2363,6 @@
         <member name="F:Microsoft.Extensions.AI.ChatResponseUpdate._contents">
             <summary>The response update content items.</summary>
         </member>
-        <member name="F:Microsoft.Extensions.AI.ChatResponseUpdate._authorName">
-            <summary>The name of the author of the update.</summary>
-        </member>
         <member name="M:Microsoft.Extensions.AI.ChatResponseUpdate.#ctor">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ChatResponseUpdate"/> class.</summary>
         </member>
@@ -2379,6 +2442,19 @@
         </member>
         <member name="M:Microsoft.Extensions.AI.ChatResponseUpdate.ToString">
             <inheritdoc/>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.ChatResponseUpdate.ContinuationToken">
+            <summary>Gets or sets the continuation token for resuming the streamed chat response of which this update is a part.</summary>
+            <remarks>
+            <see cref="T:Microsoft.Extensions.AI.IChatClient"/> implementations that support background responses will return
+            a continuation token on each update if background responses are allowed in <see cref="P:Microsoft.Extensions.AI.ChatOptions.AllowBackgroundResponses"/>
+            except of the last update, for which the token will be <see langword="null"/>.
+            <para>
+            This property should be used for stream resumption, where the continuation token of the latest received update should be
+            passed to <see cref="P:Microsoft.Extensions.AI.ChatOptions.ContinuationToken"/> on subsequent calls to <see cref="M:Microsoft.Extensions.AI.IChatClient.GetStreamingResponseAsync(System.Collections.Generic.IEnumerable{Microsoft.Extensions.AI.ChatMessage},Microsoft.Extensions.AI.ChatOptions,System.Threading.CancellationToken)"/>
+            to resume streaming from the point of interruption.
+            </para>
+            </remarks>
         </member>
         <member name="P:Microsoft.Extensions.AI.ChatResponseUpdate.ContentForDebuggerDisplay">
             <summary>Gets a <see cref="T:Microsoft.Extensions.AI.AIContent"/> object to display in the debugger display.</summary>
@@ -2910,9 +2986,6 @@
             as part of the operation but the operation was still able to continue.
             </remarks>
         </member>
-        <member name="F:Microsoft.Extensions.AI.ErrorContent._message">
-            <summary>The error message.</summary>
-        </member>
         <member name="M:Microsoft.Extensions.AI.ErrorContent.#ctor(System.String)">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ErrorContent"/> class with the specified error message.</summary>
             <param name="message">The error message to store in this content.</param>
@@ -3197,7 +3270,7 @@
             <param name="callId">The tool call ID.</param>
             <param name="toolName">The tool name.</param>
             <param name="serverName">The MCP server name.</param>
-            <exception cref="T:System.ArgumentNullException"><paramref name="callId"/>, <paramref name="toolName"/>, or <paramref name="serverName"/> are <see langword="null"/>.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="callId"/>, <paramref name="toolName"/>, or <paramref name="serverName"/> is <see langword="null"/>.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="callId"/>, <paramref name="toolName"/>, or <paramref name="serverName"/> are empty or composed entirely of whitespace.</exception>
         </member>
         <member name="P:Microsoft.Extensions.AI.McpServerToolCallContent.CallId">
@@ -3529,6 +3602,12 @@
         </member>
         <member name="T:Microsoft.Extensions.AI.EmbeddingGenerationOptions">
             <summary>Represents the options for an embedding generation request.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.EmbeddingGenerationOptions.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.EmbeddingGenerationOptions"/> class.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.EmbeddingGenerationOptions.#ctor(Microsoft.Extensions.AI.EmbeddingGenerationOptions)">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.EmbeddingGenerationOptions"/> class, performing a shallow copy of all properties from <paramref name="other"/>.</summary>
         </member>
         <member name="P:Microsoft.Extensions.AI.EmbeddingGenerationOptions.Dimensions">
             <summary>Gets or sets the number of dimensions requested in the embedding.</summary>
@@ -4480,8 +4559,12 @@
             Primarily intended to remove characters produced by compiler-generated method name mangling.
             </returns>
         </member>
+        <member name="M:Microsoft.Extensions.AI.AIFunctionFactory.CompilerGeneratedNameRegex">
+            <summary>Regex that matches compiler-generated names (local functions and lambdas).</summary>
+        </member>
         <member name="M:Microsoft.Extensions.AI.AIFunctionFactory.InvalidNameCharsRegex">
-            <summary>Regex that flags any character other than ASCII digits or letters or the underscore.</summary>
+            <summary>Regex that flags any character other than ASCII digits or letters.</summary>
+            <remarks>Underscore isn't included so that sequences of underscores are replaced by a single one.</remarks>
         </member>
         <member name="M:Microsoft.Extensions.AI.AIFunctionFactory.ReflectionInvoke(System.Reflection.MethodInfo,System.Object,System.Object[])">
             <summary>Invokes the MethodInfo with the specified target object and arguments.</summary>
@@ -4880,6 +4963,12 @@
         <member name="T:Microsoft.Extensions.AI.ImageGenerationOptions">
             <summary>Represents the options for an image generation request.</summary>
         </member>
+        <member name="M:Microsoft.Extensions.AI.ImageGenerationOptions.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ImageGenerationOptions"/> class.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ImageGenerationOptions.#ctor(Microsoft.Extensions.AI.ImageGenerationOptions)">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ImageGenerationOptions"/> class, performing a shallow copy of all properties from <paramref name="other"/>.</summary>
+        </member>
         <member name="P:Microsoft.Extensions.AI.ImageGenerationOptions.Count">
             <summary>
             Gets or sets the number of images to generate.
@@ -4985,9 +5074,6 @@
         </member>
         <member name="T:Microsoft.Extensions.AI.ImageGenerationResponse">
             <summary>Represents the result of an image generation request.</summary>
-        </member>
-        <member name="F:Microsoft.Extensions.AI.ImageGenerationResponse._contents">
-            <summary>The content items in the generated text response.</summary>
         </member>
         <member name="M:Microsoft.Extensions.AI.ImageGenerationResponse.#ctor">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ImageGenerationResponse"/> class.</summary>
@@ -5150,6 +5236,43 @@
             An individual request may override this value via <see cref="P:Microsoft.Extensions.AI.ImageGenerationOptions.ModelId"/>.
             </remarks>
         </member>
+        <member name="T:Microsoft.Extensions.AI.ResponseContinuationToken">
+            <summary>
+            Represents a token used to resume, continue, or rehydrate an operation across multiple scenarios/calls,
+            such as resuming a streamed response from a specific point or retrieving the result of a background operation.
+            Subclasses of this class encapsulate all necessary information within the token to facilitate these actions.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Extensions.AI.ResponseContinuationToken._bytes">
+            <summary>Bytes representing this token.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ResponseContinuationToken.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/> class.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ResponseContinuationToken.#ctor(System.ReadOnlyMemory{System.Byte})">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/> class.</summary>
+            <param name="bytes">Bytes to create the token from.</param>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ResponseContinuationToken.FromBytes(System.ReadOnlyMemory{System.Byte})">
+            <summary>Create a new instance of <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/> from the provided <paramref name="bytes"/>.
+            </summary>
+            <param name="bytes">Bytes representing the <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/>.</param>
+            <returns>A <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/> equivalent to the one from which
+            the original<see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/> bytes were obtained.</returns>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ResponseContinuationToken.ToBytes">
+            <summary>Gets the bytes representing this <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/>.</summary>
+            <returns>Bytes representing the <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/>.</returns>"/>
+        </member>
+        <member name="T:Microsoft.Extensions.AI.ResponseContinuationToken.Converter">
+            <summary>Provides a <see cref="T:System.Text.Json.Serialization.JsonConverter`1"/> for serializing <see cref="T:Microsoft.Extensions.AI.ResponseContinuationToken"/> instances.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ResponseContinuationToken.Converter.Read(System.Text.Json.Utf8JsonReader@,System.Type,System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.ResponseContinuationToken.Converter.Write(System.Text.Json.Utf8JsonWriter,Microsoft.Extensions.AI.ResponseContinuationToken,System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
         <member name="T:Microsoft.Extensions.AI.DelegatingSpeechToTextClient">
             <summary>
             Provides an optional base class for an <see cref="T:Microsoft.Extensions.AI.ISpeechToTextClient"/> that passes through calls to another instance.
@@ -5287,6 +5410,12 @@
         </member>
         <member name="T:Microsoft.Extensions.AI.SpeechToTextOptions">
             <summary>Represents the options for an speech to text request.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.SpeechToTextOptions.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.SpeechToTextOptions"/> class.</summary>
+        </member>
+        <member name="M:Microsoft.Extensions.AI.SpeechToTextOptions.#ctor(Microsoft.Extensions.AI.SpeechToTextOptions)">
+            <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.SpeechToTextOptions"/> class, performing a shallow copy of all properties from <paramref name="other"/>.</summary>
         </member>
         <member name="P:Microsoft.Extensions.AI.SpeechToTextOptions.AdditionalProperties">
             <summary>Gets or sets any additional properties associated with the options.</summary>
@@ -5600,6 +5729,9 @@
         <member name="M:Microsoft.Extensions.AI.HostedCodeInterpreterTool.#ctor">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.HostedCodeInterpreterTool"/> class.</summary>
         </member>
+        <member name="P:Microsoft.Extensions.AI.HostedCodeInterpreterTool.Name">
+            <inheritdoc />
+        </member>
         <member name="P:Microsoft.Extensions.AI.HostedCodeInterpreterTool.Inputs">
             <summary>Gets or sets a collection of <see cref="T:Microsoft.Extensions.AI.AIContent"/> to be used as input to the code interpreter tool.</summary>
             <remarks>
@@ -5617,6 +5749,9 @@
         </member>
         <member name="M:Microsoft.Extensions.AI.HostedFileSearchTool.#ctor">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.HostedFileSearchTool"/> class.</summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.HostedFileSearchTool.Name">
+            <inheritdoc />
         </member>
         <member name="P:Microsoft.Extensions.AI.HostedFileSearchTool.Inputs">
             <summary>Gets or sets a collection of <see cref="T:Microsoft.Extensions.AI.AIContent"/> to be used as input to the file search tool.</summary>
@@ -5641,7 +5776,7 @@
             </summary>
             <param name="serverName">The name of the remote MCP server.</param>
             <param name="url">The URL of the remote MCP server.</param>
-            <exception cref="T:System.ArgumentNullException"><paramref name="serverName"/> or <paramref name="url"/> are <see langword="null"/>.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serverName"/> or <paramref name="url"/> is <see langword="null"/>.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="serverName"/> is empty or composed entirely of whitespace.</exception>
         </member>
         <member name="M:Microsoft.Extensions.AI.HostedMcpServerTool.#ctor(System.String,System.Uri)">
@@ -5650,8 +5785,11 @@
             </summary>
             <param name="serverName">The name of the remote MCP server.</param>
             <param name="url">The URL of the remote MCP server.</param>
-            <exception cref="T:System.ArgumentNullException"><paramref name="serverName"/> or <paramref name="url"/> are <see langword="null"/>.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serverName"/> or <paramref name="url"/> is <see langword="null"/>.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="serverName"/> is empty or composed entirely of whitespace.</exception>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.HostedMcpServerTool.Name">
+            <inheritdoc />
         </member>
         <member name="P:Microsoft.Extensions.AI.HostedMcpServerTool.ServerName">
             <summary>
@@ -5710,6 +5848,9 @@
         </member>
         <member name="M:Microsoft.Extensions.AI.HostedWebSearchTool.#ctor">
             <summary>Initializes a new instance of the <see cref="T:Microsoft.Extensions.AI.HostedWebSearchTool"/> class.</summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.HostedWebSearchTool.Name">
+            <inheritdoc />
         </member>
         <member name="T:Microsoft.Extensions.AI.UsageDetails">
             <summary>Provides usage details about a request/response.</summary>
@@ -6216,6 +6357,16 @@
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>
         </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.FunctionApprovalRequestContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.FunctionApprovalResponseContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
         <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.FunctionCallContent">
             <summary>
             Defines the source generated JSON serialization contract metadata for a given type.
@@ -6256,12 +6407,37 @@
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>
         </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.McpServerToolApprovalRequestContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.McpServerToolApprovalResponseContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.McpServerToolCallContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.McpServerToolResultContent">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
         <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.NoneChatToolMode">
             <summary>
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>
         </member>
         <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.RequiredChatToolMode">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.ResponseContinuationToken">
             <summary>
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>
@@ -6367,6 +6543,11 @@
             </summary>
         </member>
         <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.IListString">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Extensions.AI.AIJsonUtilities.JsonContext.IReadOnlyDictionaryStringObject">
             <summary>
             Defines the source generated JSON serialization contract metadata for a given type.
             </summary>

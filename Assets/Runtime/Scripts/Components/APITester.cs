@@ -118,9 +118,9 @@ public class APITester : MonoBehaviour
 
             Debug.Log(options.Tools.Count);
 
-            AIManager.Instance.SendChatMessage(chats, options, chatMessage => Debug.Log(chatMessage.Text), error => Debug.LogError(error));
+            //AIManager.Instance.SendChatMessage(chats, options, chatMessage => Debug.Log(chatMessage.Text), error => Debug.LogError(error));
             
-            /*
+            
             AIManager.Instance.StreamChatMessage(
                 chats,
                 options,
@@ -128,7 +128,7 @@ public class APITester : MonoBehaviour
                 () => { Debug.Log("Combined response: " + combinedResponse); },
                 error => Debug.LogError(error)
             );
-            */
+            
             
         }
     }

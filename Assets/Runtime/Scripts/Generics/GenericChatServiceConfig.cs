@@ -20,7 +20,7 @@ namespace TimShaw.VoiceBox.Generics
         public string apiKey;
 
         /// <summary>
-        /// The associated string to access the service's API key in keys.json
+        /// The associated string to access the service's API key in the environment or keys.json
         /// </summary>
         public string apiKeyJSONString;
 

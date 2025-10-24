@@ -7,6 +7,8 @@ namespace TimShaw.VoiceBox.Data
 {
     /// <summary>
     /// Configuration settings for the ChatGPT chat service.
+    /// <br></br>
+    /// This class sets <see cref="GenericChatServiceConfig.apiKeyJSONString"/> to OPENAI_API_KEY by default
     /// </summary>
     [CreateAssetMenu(fileName = "ChatGPTServiceConfig", menuName = "VoiceBox/Chat/ChatGPTService Configuration")]
     class ChatGPTServiceConfig : GenericChatServiceConfig

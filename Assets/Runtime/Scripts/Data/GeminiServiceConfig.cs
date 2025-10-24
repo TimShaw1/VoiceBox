@@ -120,7 +120,10 @@ namespace TimShaw.VoiceBox.Data
     }
 
     /// <summary>
-    /// Configuration settings for the Gemini service.
+    /// Configuration settings for the Gemini service. 
+    /// <br></br>
+    /// This class sets <see cref="GenericChatServiceConfig.apiKeyJSONString"/> to GEMINI_API_KEY by default
+    /// <br></br>
     /// TODO: add support for tools like URL context
     /// </summary>
     [CreateAssetMenu(fileName = "GeminiServiceConfig", menuName = "VoiceBox/Chat/GeminiService Configuration")]

@@ -9,6 +9,11 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Data
 {
+    /// <summary>
+    /// Configuration settings for the Ollama service. 
+    /// <br></br>
+    /// This class does not set <see cref="GenericChatServiceConfig.apiKeyJSONString"/>.
+    /// </summary>
     [CreateAssetMenu(fileName = "OllamaServiceConfig", menuName = "VoiceBox/Chat/OllamaService Configuration")]
     public class OllamaChatServiceConfig : GenericChatServiceConfig
     {

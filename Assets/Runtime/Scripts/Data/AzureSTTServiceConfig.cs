@@ -11,6 +11,8 @@ namespace TimShaw.VoiceBox.Data
 
     /// <summary>
     /// Configuration settings for the Azure Speech-to-Text (STT) service.
+    /// <br></br>
+    /// This class sets <see cref="GenericSTTServiceConfig.apiKeyJSONString"/> to AZURE_SPEECH_API_KEY by default
     /// </summary>
     [CreateAssetMenu(fileName = "AzureSTTServiceConfig", menuName = "VoiceBox/STT/AzureSTTService Configuration")]
     public class AzureSTTServiceConfig : GenericSTTServiceConfig
@@ -18,7 +20,7 @@ namespace TimShaw.VoiceBox.Data
         public AzureSTTServiceConfig()
         {
             serviceManagerType = typeof(AzureSTTServiceManager);
-            apiKeyJSONString = "AZURE_API_KEY";
+            apiKeyJSONString = "AZURE_SPEECH_API_KEY";
         }
 
         /// <summary>

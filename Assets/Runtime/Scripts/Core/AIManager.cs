@@ -25,7 +25,7 @@ public class AIManager : MonoBehaviour
 
     private readonly CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
 
-    [Tooltip("Path to the api keys json file. Defaults to Assets/keys.json")]
+    [Tooltip("Path to the api keys json file.")]
     [SerializeField] public string apiKeysJsonPath = "";
 
     [Header("Service Configurations")]
@@ -48,34 +48,93 @@ public class AIManager : MonoBehaviour
     public ITextToSpeechService TextToSpeechService { get => _ttsService; set => _ttsService = value; }
 
     /// <summary>
-    /// Loads API keys from a JSON file and applies them to the service configurations.
+    /// Loads API keys from direct arguments, environment variables, or a JSON file.
     /// </summary>
-    /// <param name="keysFile">The path to the JSON file containing the API keys.</param>
-    public void LoadAPIKeys(string keysFile)
+    /// <param name="keysFile">Optional path to the JSON file with API keys.</param>
+    /// <param name="chatKey">Optional, direct API key for the chat service.</param>
+    /// <param name="sttKey">Optional, direct API key for the Speech-to-Text service.</param>
+    /// <param name="ttsKey">Optional, direct API key for the Text-to-Speech service.</param>
+    public void LoadAPIKeys(string keysFile = null, string chatKey = null, string sttKey = null, string ttsKey = null)
+    {
+        // Load from JSON file if provided
+        Dictionary<string, string> apiKeysFromFile = null;
+        if (!string.IsNullOrEmpty(keysFile))
+        {
+            apiKeysFromFile = LoadKeysFromFile(keysFile);
+        }
+
+        // Set API keys with precedence: direct > environment > JSON file
+        if (chatServiceConfig != null)
+        {
+            chatServiceConfig.apiKey = GetApiKey(chatKey, chatServiceConfig.apiKeyJSONString, chatServiceConfig.apiKeyJSONString, apiKeysFromFile);
+            if (string.IsNullOrEmpty(chatServiceConfig.apiKey))
+                Debug.LogWarning("Chat service API key not found.");
+        }
+
+        if (speechToTextConfig != null)
+        {
+            speechToTextConfig.apiKey = GetApiKey(sttKey, speechToTextConfig.apiKeyJSONString, speechToTextConfig.apiKeyJSONString, apiKeysFromFile);
+            if (string.IsNullOrEmpty(speechToTextConfig.apiKey))
+                Debug.LogWarning("STT service API key not found.");
+        }
+
+        if (textToSpeechConfig != null)
+        {
+            textToSpeechConfig.apiKey = GetApiKey(ttsKey, textToSpeechConfig.apiKeyJSONString, textToSpeechConfig.apiKeyJSONString, apiKeysFromFile);
+            if (string.IsNullOrEmpty(textToSpeechConfig.apiKey))
+                Debug.LogWarning("TTS service API key not found.");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the API key based on the established precedence.
+    /// </summary>
+    private string GetApiKey(string directKey, string envVar, string jsonKey, Dictionary<string, string> keysFromFile)
+    {
+        // 1. Direct parameter
+        if (!string.IsNullOrEmpty(directKey))
+        {
+            return directKey;
+        }
+
+        // 2. Environment variable
+        if (!string.IsNullOrEmpty(envVar))
+        {
+            string envValue = Environment.GetEnvironmentVariable(envVar, EnvironmentVariableTarget.User);
+            if (!string.IsNullOrEmpty(envValue))
+            {
+                return envValue;
+            }
+        }
+
+        // 3. JSON file
+        if (keysFromFile != null && !string.IsNullOrEmpty(jsonKey) && keysFromFile.ContainsKey(jsonKey))
+        {
+            return keysFromFile[jsonKey];
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Loads API keys from a JSON file.
+    /// </summary>
+    private Dictionary<string, string> LoadKeysFromFile(string keysFile)
     {
         try
         {
             string jsonContent = File.ReadAllText(keysFile);
-            var apiKeys = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
-
-            if (chatServiceConfig && chatServiceConfig.apiKeyJSONString.Length > 0)
-                chatServiceConfig.apiKey = apiKeys[chatServiceConfig.apiKeyJSONString];
-            else
-                Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
-
-            if (speechToTextConfig && speechToTextConfig.apiKeyJSONString.Length > 0)
-                speechToTextConfig.apiKey = apiKeys[speechToTextConfig.apiKeyJSONString];
-            else
-                Debug.LogWarning("STT service config does not define an apiKeyJSONString");
-
-            if (textToSpeechConfig && textToSpeechConfig.apiKeyJSONString.Length > 0)
-                textToSpeechConfig.apiKey = apiKeys[textToSpeechConfig.apiKeyJSONString];
-            else
-                Debug.LogWarning("Chat service config does not define an apiKeyJSONString");
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
         }
         catch (FileNotFoundException)
         {
-            Debug.LogWarning("[AI Manager] API keys json file not found on startup.");
+            Debug.LogWarning($"[AI Manager] API keys json file not found at: {keysFile}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[AI Manager] Error reading API keys file: {ex.Message}");
+            return null;
         }
     }
 
@@ -104,7 +163,7 @@ public class AIManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+        LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : null);
 
         ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
         SpeechToTextService = ServiceFactory.CreateSttService(speechToTextConfig);

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKey: 
   apiKeyJSONString: OLLAMA_API_KEY
-  modelName: qwen3-coder:480b-cloud
+  modelName: deepseek-v3.1:671b-cloud
   serviceEndpoint: http://localhost:11434/

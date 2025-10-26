@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using OllamaSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,9 @@ using UnityEditor.PackageManager;
 
 namespace TimShaw.VoiceBox.Core
 {
+    /// <summary>
+    /// Manages the Ollama service, implementing the IChatService interface.
+    /// </summary>
     public class OllamaChatServiceManager : IChatService
     {
         IChatClient _client;
@@ -48,6 +52,11 @@ namespace TimShaw.VoiceBox.Core
                 return;
             }
 
+            if (options.Tools?.Count > 0)
+            {
+                UnityEngine.Debug.LogWarning("OllamaChatServiceManager: Tool calling with Ollama models is currently unsupported may and cause unexpected behaviour.");
+            }
+
             try
             {
                 var response = await _client.GetResponseAsync(messageHistory, options, token);
@@ -79,6 +88,10 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
+                if (options.Tools?.Count > 0)
+                {
+                    UnityEngine.Debug.LogWarning("OllamaChatServiceManager: Tool calling with Ollama models is currently unsupported may and cause unexpected behaviour.");
+                }
                 await foreach (ChatResponseUpdate item in _client.GetStreamingResponseAsync(messageHistory, options, token))
                 {
                     onChunkReceived?.Invoke(item);

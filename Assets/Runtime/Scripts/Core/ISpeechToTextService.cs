@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
+using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -28,11 +29,11 @@ namespace TimShaw.VoiceBox.Core
         /// <summary>
         /// Occurs when the speech recognizer is processing audio and has an intermediate result.
         /// </summary>
-        public event System.EventHandler<SpeechRecognitionEventArgs> OnRecognizing;
+        public event System.EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
         /// <summary>
         /// Occurs when the speech recognizer has finished processing an audio stream and has a final result.
         /// </summary>
-        public event System.EventHandler<SpeechRecognitionEventArgs> OnRecognized;
+        public event System.EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
         /// <summary>
         /// Occurs when the speech recognizer has been canceled.
         /// </summary>

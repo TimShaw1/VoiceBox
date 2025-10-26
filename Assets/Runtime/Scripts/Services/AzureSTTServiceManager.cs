@@ -1,15 +1,16 @@
+using Microsoft.CognitiveServices.Speech;
+using Microsoft.CognitiveServices.Speech.Audio;
+using NAudio.CoreAudioApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CognitiveServices.Speech;
-using Microsoft.CognitiveServices.Speech.Audio;
-using NAudio.CoreAudioApi;
 using TimShaw.VoiceBox.Core;
-using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Data;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
+using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -24,8 +25,8 @@ namespace TimShaw.VoiceBox.Core
         public SpeechRecognizer speechRecognizer;
         private Dictionary<string, string> audioEndpoints;
 
-        public event EventHandler<SpeechRecognitionEventArgs> OnRecognizing;
-        public event EventHandler<SpeechRecognitionEventArgs> OnRecognized;
+        public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
+        public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
         public event EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
         public event EventHandler<SessionEventArgs> OnSessionStarted;
         public event EventHandler<SessionEventArgs> OnSessionStopped;
@@ -101,7 +102,7 @@ namespace TimShaw.VoiceBox.Core
             speechRecognizer.Recognizing += (s, e) =>
             {
                 Debug.Log($"Azure Service Manager: Recognizing: {e.Result.Text}");
-                OnRecognizing?.Invoke(this, e);
+                OnRecognizing?.Invoke(this, (VoiceBoxSpeechRecognitionEventArgs)e);
             };
 
             speechRecognizer.Recognized += (s, e) =>
@@ -114,7 +115,7 @@ namespace TimShaw.VoiceBox.Core
                 {
                     Debug.Log($"Azure Service Manager: No match.");
                 }
-                OnRecognized?.Invoke(this, e);
+                OnRecognized?.Invoke(this, (VoiceBoxSpeechRecognitionEventArgs)e);
             };
 
             speechRecognizer.Canceled += (s, e) =>

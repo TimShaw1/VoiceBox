@@ -9,10 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23597dfa9a987354795fe301817fbcd4, type: 3}
-  m_Name: OllamaServiceConfig
+  m_Script: {fileID: 11500000, guid: b8505fab32696aa4bbfdb4b00542d3a4, type: 3}
+  m_Name: WhisperLiveSTTServiceConfig
   m_EditorClassIdentifier: 
   apiKey: 
-  apiKeyJSONString: OLLAMA_API_KEY
-  modelName: qwen3-coder:480b-cloud
-  serviceEndpoint: http://localhost:11434/
+  apiKeyJSONString: 

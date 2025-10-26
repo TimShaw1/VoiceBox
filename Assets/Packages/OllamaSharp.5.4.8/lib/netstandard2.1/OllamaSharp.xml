@@ -163,7 +163,7 @@
              	await foreach (var answerToken in chat.SendAsync(message))
              		Console.Write(answerToken);
             		// ...
-             	Console.WriteLine();
+             	UnityEngine.Debug.Log();
              }
              // ...
              // Output:
@@ -291,7 +291,7 @@
             <code>
             var response = await chat.SendAsync("Write a haiku about AI models");
             await foreach (var answerToken in response)
-            	 Console.WriteLine(answerToken);
+            	 UnityEngine.Debug.Log(answerToken);
             </code>
             </example>
         </member>
@@ -386,7 +386,7 @@
               format: "json",
               cancellationToken: CancellationToken.None))
             {
-              Console.WriteLine(response);
+              UnityEngine.Debug.Log(response);
             }
             </code>
             </example>
@@ -416,7 +416,7 @@
             var responseStream = chat.SendAsAsync(role, "How can I assist you today?");
             await foreach (var response in responseStream)
             {
-            	Console.WriteLine(response); // Streams and prints the response from the server
+            	UnityEngine.Debug.Log(response); // Streams and prints the response from the server
             }
             </code>
             </example>
@@ -451,7 +451,7 @@
             var images = new List&lt;IEnumerable&lt;byte>> { File.ReadAllBytes("exampleImage.jpg") };
             await foreach (var response in chat.SendAsAsync(role, message, images, CancellationToken.None))
             {
-              Console.WriteLine(response);
+              UnityEngine.Debug.Log(response);
             }
             </code>
             </example>
@@ -485,7 +485,7 @@
             // Sending a message as a user role and processing the response
             await foreach (var response in chat.SendAsAsync(ChatRole.User, "Describe the image", null))
             {
-              Console.WriteLine(response);
+              UnityEngine.Debug.Log(response);
             }
             </code>
             </example>
@@ -527,7 +527,7 @@
             var images = new List&lt;string> { "base64EncodedImageData" };
             await foreach (var response in chat.SendAsAsync(role, "Generate a summary for the attached image", tools, images))
             {
-              Console.WriteLine($"Received response: {response}");
+              UnityEngine.Debug.Log($"Received response: {response}");
             }
             </code>
             </example>
@@ -575,13 +575,13 @@
             Example usage:
             <code>
             List&lt;string> fruits = new List&lt;string> { "apple", "banana", "cherry" };
-            fruits.ForEachItem(fruit => Console.WriteLine(fruit));
+            fruits.ForEachItem(fruit => UnityEngine.Debug.Log(fruit));
             // Output:
             // apple
             // banana
             // cherry
             IEnumerable&lt;int> numbers = new List&lt;int> { 1, 2, 3 };
-            numbers.ForEachItem(number => Console.WriteLine(number * 2));
+            numbers.ForEachItem(number => UnityEngine.Debug.Log(number * 2));
             // Output:
             // 2
             // 4
@@ -1628,7 +1628,7 @@
             };
             builder.Append(chunk);
             var resultMessage = builder.ToMessage();
-            Console.WriteLine(resultMessage.Content); // Output: Hello, World!
+            UnityEngine.Debug.Log(resultMessage.Content); // Output: Hello, World!
             </code>
             </example>
         </member>
@@ -1660,8 +1660,8 @@
             });
             // Convert to a Message object
             var finalMessage = builder.ToMessage();
-            Console.WriteLine(finalMessage.Content); // Output: Generated content from assistant.
-            Console.WriteLine(finalMessage.Role);    // Output: Assistant
+            UnityEngine.Debug.Log(finalMessage.Content); // Output: Generated content from assistant.
+            UnityEngine.Debug.Log(finalMessage.Role);    // Output: Assistant
             </code>
             </example>
         </member>
@@ -1691,7 +1691,7 @@
               }
             };
             messageBuilder.Append(chunk);
-            Console.WriteLine(messageBuilder.Role); // Output: Assistant
+            UnityEngine.Debug.Log(messageBuilder.Role); // Output: Assistant
             </code>
             </example>
         </member>
@@ -1719,7 +1719,7 @@
             };
             builder.Append(chunk);
             var resultMessage = builder.ToMessage();
-            Console.WriteLine(string.Join(", ", resultMessage.Images)); // Output: example_image.png
+            UnityEngine.Debug.Log(string.Join(", ", resultMessage.Images)); // Output: example_image.png
             </code>
             </example>
         </member>
@@ -1754,7 +1754,7 @@
               }
             };
             messageBuilder.Append(chunk);
-            Console.WriteLine(messageBuilder.ToolCalls.Count); // Output: 1
+            UnityEngine.Debug.Log(messageBuilder.ToolCalls.Count); // Output: 1
             </code>
             </example>
         </member>
@@ -1777,7 +1777,7 @@
             Example usage:
             <code>
             var messageBuilder = new MessageBuilder();
-            Console.WriteLine(messageBuilder.HasValue); // Output: False
+            UnityEngine.Debug.Log(messageBuilder.HasValue); // Output: False
             // Append a new chunk of content
             messageBuilder.Append(new ChatResponseStream
             {
@@ -1787,7 +1787,7 @@
                 Role = ChatRole.Assistant
               }
             });
-            Console.WriteLine(messageBuilder.HasValue); // Output: True
+            UnityEngine.Debug.Log(messageBuilder.HasValue); // Output: True
             </code>
             </example>
         </member>

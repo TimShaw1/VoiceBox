@@ -1,13 +1,15 @@
-using Microsoft.Extensions.AI;
 using Microsoft.CognitiveServices.Speech;
+using Microsoft.Extensions.AI;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Tools;
 using UnityEngine;
+using static TimShaw.VoiceBox.Core.STTUtils;
 
 /// <summary>
 /// A Unity MonoBehaviour for testing various AI service APIs like Azure Speech-to-Text,
@@ -45,12 +47,14 @@ public class APITester : MonoBehaviour
     [SerializeField]
     public AudioSource audioSource;
 
+    private CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
+
     /// <summary>
     /// Callback method to log recognized speech from the Speech-to-Text service.
     /// </summary>
     /// <param name="s">The source of the event.</param>
     /// <param name="e">The event arguments containing the recognition result.</param>
-    void logRecognizedSpeech(object s, SpeechRecognitionEventArgs e)
+    void logRecognizedSpeech(object s, VoiceBoxSpeechRecognitionEventArgs e)
     {
         if (e.Result.Reason == ResultReason.RecognizedSpeech)
         {
@@ -86,7 +90,7 @@ public class APITester : MonoBehaviour
         if (testSTT)
         {
             AIManager.Instance.SpeechToTextService.OnRecognized += logRecognizedSpeech;
-            AIManager.Instance.StartSpeechTranscription();
+            AIManager.Instance.StartSpeechTranscription(internalCancellationTokenSource.Token);
         }
 
         if (testTTS)
@@ -131,5 +135,10 @@ public class APITester : MonoBehaviour
             
             
         }
+    }
+
+    private void OnDestroy()
+    {
+        internalCancellationTokenSource.Cancel();
     }
 }

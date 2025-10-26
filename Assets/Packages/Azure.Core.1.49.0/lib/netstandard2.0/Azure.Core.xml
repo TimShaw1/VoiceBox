@@ -867,7 +867,7 @@
         </member>
         <member name="M:Azure.Core.Diagnostics.AzureEventSourceListener.CreateConsoleLogger(System.Diagnostics.Tracing.EventLevel)">
             <summary>
-            Creates a new instance of <see cref="T:Azure.Core.Diagnostics.AzureEventSourceListener" /> that forwards events to <see cref="M:System.Console.WriteLine(System.String)" />.
+            Creates a new instance of <see cref="T:Azure.Core.Diagnostics.AzureEventSourceListener" /> that forwards events to <see cref="M:System.UnityEngine.Debug.Log(System.String)" />.
             </summary>
             <param name="level">The level of events to enable.</param>
         </member>
@@ -4737,7 +4737,7 @@
              var client = new AlarmClient();
              client.Ring += (SyncAsyncEventArgs e) =&gt;
              {
-                 Console.WriteLine("Wake up!");
+                 UnityEngine.Debug.Log("Wake up!");
                  return Task.CompletedTask;
              };
             
@@ -4786,7 +4786,7 @@
              {
                  if (e.IsRunningSynchronously)
                  {
-                     Console.WriteLine("Wake up!");
+                     UnityEngine.Debug.Log("Wake up!");
                  }
                  else
                  {
@@ -4824,7 +4824,7 @@
              catch (AggregateException ex)
              {
                  ex.Handle(e =&gt; e is InvalidOperationException);
-                 Console.WriteLine("Please switch to your backup alarm.");
+                 UnityEngine.Debug.Log("Please switch to your backup alarm.");
              }
              </code>
              </exception>
@@ -6177,7 +6177,7 @@
             
              await foreach (SecretProperties secretProperties in allSecretProperties)
              {
-                 Console.WriteLine(secretProperties.Name);
+                 UnityEngine.Debug.Log(secretProperties.Name);
              }
              </code>
              or using a while loop:
@@ -6191,7 +6191,7 @@
                  while (await enumerator.MoveNextAsync())
                  {
                      SecretProperties secretProperties = enumerator.Current;
-                     Console.WriteLine(secretProperties.Name);
+                     UnityEngine.Debug.Log(secretProperties.Name);
                  }
              }
              finally
@@ -6470,9 +6470,9 @@
             <example>
             <code>
             ETag tag = ETag.Parse("\"sometag\"");
-            Console.WriteLine(tag.ToString("G"));
+            UnityEngine.Debug.Log(tag.ToString("G"));
             // Displays: sometag
-            Console.WriteLine(tag.ToString("H"));
+            UnityEngine.Debug.Log(tag.ToString("H"));
             // Displays: "sometag"
             </code>
             </example>
@@ -7818,7 +7818,7 @@
              {
                  if (e.IsRunningSynchronously)
                  {
-                     Console.WriteLine("Wake up!");
+                     UnityEngine.Debug.Log("Wake up!");
                  }
                  else
                  {

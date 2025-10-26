@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKey: 
   apiKeyJSONString: OLLAMA_API_KEY
-  modelName: gpt-oss:120b-cloud
+  modelName: qwen3-coder:480b-cloud
   serviceEndpoint: http://localhost:11434/

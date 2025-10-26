@@ -46,11 +46,11 @@ namespace TimShaw.VoiceBox.Core
             {
                 var response = await _client.GetResponseAsync(messageHistory, options, token);
 
-                onSuccess.Invoke(new ChatUtils.VoiceBoxChatMessage(response.Messages[0]));
+                onSuccess?.Invoke(new ChatUtils.VoiceBoxChatMessage(response.Messages[0]));
             }
             catch (Exception e)
             {
-                onError.Invoke(e.Message);
+                onError?.Invoke(e.Message);
             }
         }
 
@@ -66,15 +66,15 @@ namespace TimShaw.VoiceBox.Core
             {
                 await foreach (ChatResponseUpdate item in _client.GetStreamingResponseAsync(messageHistory, options, token))
                 {
-                    onChunkReceived.Invoke(item);
+                    onChunkReceived?.Invoke(item);
                 }
 
-                onComplete.Invoke();
+                onComplete?.Invoke();
             }
             catch (Exception ex)
             {
                 UnityEngine.Debug.LogException(ex);
-                onError.Invoke(ex.Message);
+                onError?.Invoke(ex.Message);
             }
         }
     }

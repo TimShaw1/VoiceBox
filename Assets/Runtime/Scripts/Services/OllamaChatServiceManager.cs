@@ -4,10 +4,12 @@ using Microsoft.Extensions.AI;
 using OllamaSharp;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
+using UnityEditor.PackageManager;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -18,8 +20,11 @@ namespace TimShaw.VoiceBox.Core
         public void Initialize(GenericChatServiceConfig config)
         {
             _config = config as OllamaChatServiceConfig;
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri(_config.serviceEndpoint);
+            httpClient.DefaultRequestHeaders.Add("Authorization", _config.apiKey);
 
-            _client = new OllamaApiClient(new Uri(_config.serviceEndpoint), _config.modelName);
+            _client = new OllamaApiClient(httpClient, _config.modelName);
 
         }
 

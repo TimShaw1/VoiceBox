@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: OllamaServiceConfig
   m_EditorClassIdentifier: 
   apiKey: 
-  apiKeyJSONString: 
-  modelName: gemma3:1b
+  apiKeyJSONString: OLLAMA_API_KEY
+  modelName: gpt-oss:120b-cloud
   serviceEndpoint: http://localhost:11434/

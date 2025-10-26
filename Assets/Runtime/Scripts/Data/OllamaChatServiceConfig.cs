@@ -12,7 +12,7 @@ namespace TimShaw.VoiceBox.Data
     /// <summary>
     /// Configuration settings for the Ollama service. 
     /// <br></br>
-    /// This class does not set <see cref="GenericChatServiceConfig.apiKeyJSONString"/>.
+    /// This class sets <see cref="GenericChatServiceConfig.apiKeyJSONString"/> to OLLAMA_API_KEY by default
     /// </summary>
     [CreateAssetMenu(fileName = "OllamaServiceConfig", menuName = "VoiceBox/Chat/OllamaService Configuration")]
     public class OllamaChatServiceConfig : GenericChatServiceConfig
@@ -20,7 +20,7 @@ namespace TimShaw.VoiceBox.Data
         public OllamaChatServiceConfig()
         {
             serviceManagerType = typeof(OllamaChatServiceManager);
-            apiKeyJSONString = "";
+            apiKeyJSONString = "OLLAMA_API_KEY";
         }
 
         public string serviceEndpoint = "http://localhost:11434/";

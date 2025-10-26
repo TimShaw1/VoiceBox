@@ -9,22 +9,22 @@ using TimShaw.VoiceBox.Generics;
 
 namespace TimShaw.VoiceBox.Core
 {
-    class ChatGPTServiceManager : IChatService
+    class ClaudeServiceManager : IChatService
     {
         IChatClient _client;
-        ChatGPTServiceConfig _config;
+        ClaudeServiceConfig _config;
         public void Initialize(GenericChatServiceConfig config)
         {
-            _config = config as ChatGPTServiceConfig;
+            _config = config as ClaudeServiceConfig;
 
-            
+
             var options = new OpenAIClientOptions()
             {
-                Endpoint = _config.serviceEndpoint.Length > 0 ? new Uri(_config.serviceEndpoint) : null
+                Endpoint = new Uri(_config.serviceEndpoint)
             };
 
             _client = new ChatClientBuilder(
-                    new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gpt-4o").AsIChatClient()
+                    new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "claude-haiku-4-5").AsIChatClient()
                 ).UseFunctionInvocation().Build();
 
         }
@@ -32,13 +32,13 @@ namespace TimShaw.VoiceBox.Core
         public async Task SendMessage(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<ChatUtils.VoiceBoxChatMessage> onSuccess, 
+            Action<ChatUtils.VoiceBoxChatMessage> onSuccess,
             Action<string> onError,
             CancellationToken token)
         {
             if (_client == null || _config == null)
             {
-                onError?.Invoke("ChatGPT service is not initialized.");
+                onError?.Invoke("Claude service is not initialized.");
                 return;
             }
 
@@ -57,9 +57,9 @@ namespace TimShaw.VoiceBox.Core
         public async Task SendMessageStream(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,
-            Action<ChatResponseUpdate> onChunkReceived, 
-            Action onComplete, 
-            Action<string> onError, 
+            Action<ChatResponseUpdate> onChunkReceived,
+            Action onComplete,
+            Action<string> onError,
             CancellationToken token)
         {
             try

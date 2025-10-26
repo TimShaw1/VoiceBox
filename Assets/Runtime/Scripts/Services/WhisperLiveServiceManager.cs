@@ -56,15 +56,27 @@ namespace TimShaw.VoiceBox.Core
         private DateTime? _lastResponseReceived;
         private Segment _lastSegment;
         private string _lastReceivedSegmentText;
-        private string _lastJoinedText;
 
         private readonly List<Segment> _transcript = new();
         private readonly List<Segment> _translatedTranscript = new();
 
+        public event Action<string, List<Segment>> OnPartialTranscription;
         public event Action<string, List<Segment>> OnTranscription;
         public event Action<string, List<Segment>> OnTranslation;
 
         public double DisconnectIfNoResponseFor { get; set; } = 15.0;
+
+        private string _lastEmittedText = "";
+        private string _lastStableText = "";
+        private string _finalizedText = "";
+        private string _previousLastSentence = "";
+        private DateTime _lastTextChange = DateTime.UtcNow;
+        private bool _isFinalized = false;
+
+        private double _finalizationDelaySec = 1; // silence duration before finalizing
+
+        private readonly int _maxSentences = 2;
+
 
         public Client(
             string host,
@@ -81,7 +93,7 @@ namespace TimShaw.VoiceBox.Core
             bool clipAudio = false,
             int sameOutputThreshold = 10,
             bool enableTranslation = false,
-            string targetLanguage = "fr",
+            string targetLanguage = "en",
             CancellationToken token = default)
         {
             Language = lang;
@@ -230,7 +242,24 @@ namespace TimShaw.VoiceBox.Core
             }
         }
 
-        private void ProcessSegments(List<Segment> segs, bool translated)
+        private static string GetLastSentences(string text, int count)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return "";
+
+            var sentences = text
+                .Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .ToList();
+
+            if (sentences.Count == 0) return text.Trim();
+
+            var last = sentences.Skip(Math.Max(0, sentences.Count - count)).ToList();
+            return string.Join(". ", last).Trim() + (text.EndsWith(".") ? "." : "");
+        }
+
+
+        private async Task ProcessSegments(List<Segment> segs, bool translated)
         {
             if (segs == null || segs.Count == 0) return;
 
@@ -244,15 +273,71 @@ namespace TimShaw.VoiceBox.Core
 
             _lastResponseReceived = DateTime.UtcNow;
 
-            var joined = string.Join(" ", segs.Select(s => s.text.Trim()));
-            if (joined == _lastJoinedText)
-                return;
+            await Task.Delay(100);
 
-            _lastJoinedText = joined;
-            if (translated)
-                OnTranslation?.Invoke(joined, segs);
-            else
-                OnTranscription?.Invoke(joined, segs);
+            var joined = string.Join(" ", segs.Select(s => s.text.Trim()));
+
+            // ---- Extract last few sentences ----
+            string limited = GetLastSentences(joined, _maxSentences);
+
+            // ---- Remove overlap from previous detection ----
+            if (!string.IsNullOrEmpty(_previousLastSentence))
+            {
+                // Normalize for safe comparison
+                var prev = _previousLastSentence.Trim();
+                var limitTrimmed = limited.TrimStart();
+
+                if (limitTrimmed.StartsWith(prev, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Remove the previous sentence + any leftover punctuation or whitespace
+                    limited = limitTrimmed.Substring(prev.Length).TrimStart();
+
+                    // If starts with punctuation (., !, ?), remove it and following space
+                    while (limited.Length > 0 && (limited[0] == '.' || limited[0] == '!' || limited[0] == '?' || limited[0] == ' '))
+                    {
+                        limited = limited.Substring(1);
+                    }
+
+                    limited = limited.TrimStart();
+                }
+            }
+
+            // ---- Remove already finalized portion ----
+            string currentUnfinalized = limited;
+            if (!string.IsNullOrEmpty(_finalizedText) && limited.StartsWith(_finalizedText))
+            {
+                currentUnfinalized = limited.Substring(_finalizedText.Length).TrimStart();
+            }
+
+            // ---- Detect stabilization ----
+            if (currentUnfinalized == _lastEmittedText)
+            {
+                await Task.Delay(Convert.ToInt32(_finalizationDelaySec * 1000));
+
+                if (!_isFinalized && (DateTime.UtcNow - _lastTextChange).TotalSeconds > _finalizationDelaySec)
+                {
+                    _isFinalized = true;
+
+                    if (!string.IsNullOrWhiteSpace(currentUnfinalized))
+                    {
+                        _finalizedText = string.Join(" ", new[] { _finalizedText, currentUnfinalized }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+                        _lastStableText = currentUnfinalized;
+
+                        // Track last sentence for next overlap detection
+                        _previousLastSentence = GetLastSentences(currentUnfinalized, 1);
+
+                        OnTranscription?.Invoke(currentUnfinalized, segs);
+                    }
+                }
+                return;
+            }
+
+            // ---- Text changed partial update ----
+            _lastEmittedText = currentUnfinalized;
+            _lastTextChange = DateTime.UtcNow;
+            _isFinalized = false;
+
+            OnPartialTranscription?.Invoke(currentUnfinalized, segs);
         }
 
         public async Task SendJsonAsync(object obj)

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
-using UnityEditor.PackageManager;
 
 namespace TimShaw.VoiceBox.Core
 {

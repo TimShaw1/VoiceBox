@@ -5,6 +5,7 @@ using TimShaw.VoiceBox.Editor;
 #endif
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
+using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Data
 {
@@ -51,7 +52,7 @@ namespace TimShaw.VoiceBox.Data
         /// </summary>
         public void OnValidate()
         {
-            audioInputEndpointNames = AzureSTTServiceManager.GetAudioInputEndpoints().Keys.ToArray();
+            audioInputEndpointNames = GetAudioInputEndpoints().Keys.ToArray();
         }
     }
 }

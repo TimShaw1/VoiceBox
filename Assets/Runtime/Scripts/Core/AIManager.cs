@@ -242,7 +242,7 @@ public class AIManager : MonoBehaviour
     /// <summary>
     /// Starts transcribing audio from the microphone using the configured STT service.
     /// </summary>
-    public async void StartSpeechTranscription(CancellationToken token = default)
+    public void StartSpeechTranscription(CancellationToken token = default)
     {
         if (SpeechToTextService == null)
         {
@@ -251,7 +251,7 @@ public class AIManager : MonoBehaviour
         }
         token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
         Debug.Log("VoiceBox: Starting speech recognition.");
-        await Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(token));
+        Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(token));
     }
 
     /// <summary>

@@ -148,25 +148,5 @@ namespace TimShaw.VoiceBox.Core
                 OnSpeechEndDetected?.Invoke(this, e);
             };
         }
-
-        /// <summary>
-        /// Gets a dictionary of available audio input endpoints.
-        /// </summary>
-        /// <returns>A dictionary where the key is the friendly name of the device and the value is the device ID.</returns>
-        public static Dictionary<string, string> GetAudioInputEndpoints()
-        {
-            var deviceList = new Dictionary<string, string>();
-            var enumerator = new MMDeviceEnumerator();
-            var devices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
-
-            deviceList.Add("Default", "");
-
-            foreach (var device in devices)
-            {
-                deviceList.Add(device.FriendlyName, device.ID);
-            }
-
-            return deviceList;
-        }
     }
 }

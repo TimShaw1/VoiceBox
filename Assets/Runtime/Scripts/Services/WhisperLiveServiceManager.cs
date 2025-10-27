@@ -12,28 +12,28 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
-using Unity.VisualScripting.Antlr3.Runtime;
 using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
 {
     public class Segment
     {
-        public double start { get; set; }
-        public double end { get; set; }
-        public string text { get; set; }
-        public bool completed { get; set; }
+        public double Start { get; set; }
+        public double End { get; set; }
+        public string Text { get; set; }
+        public bool Completed { get; set; }
     }
 
     public class Client : IDisposable
     {
         public const string END_OF_AUDIO = "END_OF_AUDIO";
-        public static readonly Dictionary<string, Client> INSTANCES = new();
+        public static readonly Dictionary<string, Client> INSTANCES = new Dictionary<string, Client>();
 
         private readonly ClientWebSocket _socket = new ClientWebSocket();
         private CancellationTokenSource _cts = new CancellationTokenSource();
-        private readonly SemaphoreSlim _sendLock = new(1, 1);
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private readonly string _uid = Guid.NewGuid().ToString();
 
         // config
@@ -57,14 +57,14 @@ namespace TimShaw.VoiceBox.Core
         private Segment _lastSegment;
         private string _lastReceivedSegmentText;
 
-        private readonly List<Segment> _transcript = new();
-        private readonly List<Segment> _translatedTranscript = new();
+        private readonly List<Segment> _transcript = new List<Segment>();
+        private readonly List<Segment> _translatedTranscript = new List<Segment>();
 
         public event Action<string, List<Segment>> OnPartialTranscription;
         public event Action<string, List<Segment>> OnTranscription;
         public event Action<string, List<Segment>> OnTranslation;
 
-        public double DisconnectIfNoResponseFor { get; set; } = 15.0;
+        public double DisconnectIfNoResponseFor { get; set; } = 15;
 
         private string _lastEmittedText = "";
         private string _lastStableText = "";
@@ -117,7 +117,7 @@ namespace TimShaw.VoiceBox.Core
             Task.Run(() => ConnectAndRun(uri), _cts.Token);
         }
 
-        public void _setCTS(CancellationToken token) { _cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token); }
+        public void addCancellationToken(CancellationToken token) { _cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token); }
 
         private async Task ConnectAndRun(Uri uri)
         {
@@ -275,7 +275,7 @@ namespace TimShaw.VoiceBox.Core
 
             await Task.Delay(100);
 
-            var joined = string.Join(" ", segs.Select(s => s.text.Trim()));
+            var joined = string.Join(" ", segs.Select(s => s.Text.Trim()));
 
             // ---- Extract last few sentences ----
             string limited = GetLastSentences(joined, _maxSentences);
@@ -403,8 +403,8 @@ namespace TimShaw.VoiceBox.Core
             {
                 var s = list[i];
                 sw.WriteLine(i + 1);
-                sw.WriteLine($"{Fmt(s.start)} --> {Fmt(s.end)}");
-                sw.WriteLine(s.text);
+                sw.WriteLine($"{Fmt(s.Start)} --> {Fmt(s.End)}");
+                sw.WriteLine(s.Text);
                 sw.WriteLine();
             }
             UnityEngine.Debug.Log($"[INFO]: Wrote SRT {path}");
@@ -420,42 +420,43 @@ namespace TimShaw.VoiceBox.Core
     public class TranscriptionTeeClient
     {
         protected readonly List<Client> Clients;
-        protected WaveFormat Format = new(16000, 16, 1);
+        protected WaveFormat Format = new WaveFormat(16000, 16, 1);
         protected int Chunk = 4096;
 
-        private WaveInEvent _waveIn;
+        public WaveInEvent waveIn;
 
         public TranscriptionTeeClient(List<Client> clients)
         {
             Clients = clients;
-        }
 
-        public void StartRecording()
-        {
-            _waveIn = new WaveInEvent
+            waveIn = new WaveInEvent
             {
                 WaveFormat = Format,
                 BufferMilliseconds = (int)Math.Round(Chunk / (double)Format.SampleRate * 1000)
             };
-            _waveIn.DataAvailable += (s, e) =>
+            waveIn.DataAvailable += (s, e) =>
             {
                 var bytes = Int16ToFloatBytes(e.Buffer, e.BytesRecorded);
                 foreach (var c in Clients)
                     if (c.Recording)
                         _ = c.SendAsync(bytes);
             };
-            _waveIn.StartRecording();
+        }
+
+        public void StartRecording()
+        {
+            waveIn.StartRecording();
         }
 
         public void StopRecording()
         {
-            _waveIn?.StopRecording();
-            _waveIn?.Dispose();
+            waveIn?.StopRecording();
+            waveIn?.Dispose();
             foreach (var c in Clients)
             {
-                c.WaitBeforeDisconnect();
+                // c.WaitBeforeDisconnect();
                 _ = c.SendAsync(Encoding.UTF8.GetBytes(Client.END_OF_AUDIO), WebSocketMessageType.Text);
-                //c.WriteSrtFile();
+                // c.WriteSrtFile();
                 _ = c.CloseAsync();
             }
         }
@@ -474,6 +475,9 @@ namespace TimShaw.VoiceBox.Core
         }
     }
 
+    /// <summary>
+    /// Helper class that manages transcription from a microphone via WhisperLive
+    /// </summary>
     public class TranscriptionClient : TranscriptionTeeClient
     {
         public Client Client { get; }
@@ -504,8 +508,12 @@ namespace TimShaw.VoiceBox.Core
         }
     }
 
+    /// <summary>
+    /// Manages the WhisperLive Speech-to-Text (STT) service.
+    /// </summary>
     public class WhisperLiveServiceManager : ISpeechToTextService
     {
+        private WhisperLiveServiceConfig _config;
         private TranscriptionClient _client;
 
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
@@ -518,7 +526,13 @@ namespace TimShaw.VoiceBox.Core
 
         public void Initialize(GenericSTTServiceConfig config)
         {
+            _config = config as WhisperLiveServiceConfig;
             _client = new TranscriptionClient("localhost", 9090, lang: "en");
+
+            var deviceNum = GetAudioInputDeviceNum(_config.audioInputDeviceName, GetAudioInputEndpoints());
+
+            // If device is not found, use default
+            _client.waveIn.DeviceNumber = deviceNum == -1 ? 0 : deviceNum;
         }
 
         public async Task TranscribeAudioFromMic(CancellationToken token)
@@ -526,7 +540,7 @@ namespace TimShaw.VoiceBox.Core
             var stopRecognition = new TaskCompletionSource<int>();
             token.Register(() => stopRecognition.TrySetResult(0));
 
-            _client.Client._setCTS(token);
+            _client.Client.addCancellationToken(token);
             _client.Client.OnTranscription += (text, segs) =>
             {
                 OnRecognized.Invoke(this, new VoiceBoxSpeechRecognitionEventArgs(ResultReason.RecognizedSpeech, text));

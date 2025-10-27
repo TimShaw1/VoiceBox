@@ -14,3 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKey: 
   apiKeyJSONString: 
+  audioInputDeviceName: Default
+  audioInputEndpointNames:
+  - Default
+  - Microphone (Steam Streaming Microphone)
+  - Microphone (2- Shure MV7+)
+  - Microphone (2- Antlion Wireless Microphone)
+  - Microphone (Virtual Desktop Audio)
+  - Headset Microphone (Oculus Virtual Audio Device)
+  - Microphone (Logi C615 HD WebCam)
+  - MOTIV Mix Virtual Output (Shure Virtual Audio)
+  - Microphone (Realtek High Definition Audio)
+  - Microphone (Bigscreen Audio Stream 1.2)
+  - Microphone (DroidCam Virtual Audio)
+  - Microphone (Voicemod Virtual Audio Device (WDM))

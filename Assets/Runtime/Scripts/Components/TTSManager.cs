@@ -12,6 +12,9 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Components
 {
+    /// <summary>
+    /// An individual TTS service manager. Useful if working with multiple different TTS services or voices.
+    /// </summary>
     public class TTSManager : MonoBehaviour
     {
         [Tooltip("Path to the api keys json file. Defaults to Assets/keys.json")]
@@ -27,6 +30,14 @@ namespace TimShaw.VoiceBox.Components
         {
             LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
             TextToSpeechService = ServiceFactory.CreateTtsService(textToSpeechConfig);
+        }
+
+        /// <summary>
+        /// Unloads API key from config
+        /// </summary>
+        private void OnDestroy()
+        {
+            textToSpeechConfig.apiKey = "";
         }
 
         /// <summary>

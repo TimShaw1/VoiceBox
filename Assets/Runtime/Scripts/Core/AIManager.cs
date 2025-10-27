@@ -14,7 +14,11 @@ using static TimShaw.VoiceBox.Core.ChatUtils;
 
 /// <summary>
 /// Manages AI services, acting as a central hub for chat, speech-to-text (STT), and text-to-speech (TTS) functionalities.
+/// <br></br>
+/// <br></br>
 /// This class follows the Singleton pattern to ensure a single instance manages all AI interactions.
+/// <br></br>
+/// If you want to use multiple chat services or TTS services, see the <see cref="ChatManager"/> and <see cref="TTSManager"/> classes
 /// </summary>
 public class AIManager : MonoBehaviour
 {
@@ -48,7 +52,7 @@ public class AIManager : MonoBehaviour
     public ITextToSpeechService TextToSpeechService { get => _ttsService; set => _ttsService = value; }
 
     /// <summary>
-    /// Loads API keys from direct arguments, environment variables, or a JSON file.
+    /// Loads API keys from direct arguments, environment variables, or a JSON file (in that order of precedence)
     /// </summary>
     /// <param name="keysFile">Optional path to the JSON file with API keys.</param>
     /// <param name="chatKey">Optional, direct API key for the chat service.</param>

@@ -13,6 +13,9 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Components
 {
+    /// <summary>
+    /// An individual chat service manager. Useful if working with multiple different chat services.
+    /// </summary>
     public class ChatManager : MonoBehaviour
     {
         private readonly CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
@@ -33,11 +36,12 @@ namespace TimShaw.VoiceBox.Components
         }
 
         /// <summary>
-        /// Cancels all running tasks and unloads API keys when the application quits.
+        /// Cancels all running tasks and unloads API key when the application quits.
         /// </summary>
         private void OnDestroy()
         {
             internalCancellationTokenSource.Cancel();
+            chatServiceConfig.apiKey = "";
         }
 
         /// <summary>

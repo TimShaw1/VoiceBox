@@ -2,7 +2,9 @@
 
 using System.Linq;
 using TimShaw.VoiceBox.Core;
+#if UNITY_EDITOR
 using TimShaw.VoiceBox.Editor;
+#endif
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 using static TimShaw.VoiceBox.Core.STTUtils;

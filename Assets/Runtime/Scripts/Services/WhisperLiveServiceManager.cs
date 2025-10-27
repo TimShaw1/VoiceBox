@@ -18,7 +18,7 @@ using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
 {
-    public class Segment
+    public class WhisperDetectionSegment
     {
         public double Start { get; set; }
         public double End { get; set; }
@@ -26,6 +26,10 @@ namespace TimShaw.VoiceBox.Core
         public bool Completed { get; set; }
     }
 
+    /// <summary>
+    /// WhisperLive client implementation. 
+    /// Converted to c# from python implementation <see href="https://github.com/collabora/WhisperLive/blob/main/whisper_live/client.py">here</see>
+    /// </summary>
     public class Client : IDisposable
     {
         public const string END_OF_AUDIO = "END_OF_AUDIO";
@@ -54,15 +58,15 @@ namespace TimShaw.VoiceBox.Core
         private readonly bool _enableTranslation;
 
         private DateTime? _lastResponseReceived;
-        private Segment _lastSegment;
+        private WhisperDetectionSegment _lastSegment;
         private string _lastReceivedSegmentText;
 
-        private readonly List<Segment> _transcript = new List<Segment>();
-        private readonly List<Segment> _translatedTranscript = new List<Segment>();
+        private readonly List<WhisperDetectionSegment> _transcript = new List<WhisperDetectionSegment>();
+        private readonly List<WhisperDetectionSegment> _translatedTranscript = new List<WhisperDetectionSegment>();
 
-        public event Action<string, List<Segment>> OnPartialTranscription;
-        public event Action<string, List<Segment>> OnTranscription;
-        public event Action<string, List<Segment>> OnTranslation;
+        public event Action<string, List<WhisperDetectionSegment>> OnPartialTranscription;
+        public event Action<string, List<WhisperDetectionSegment>> OnTranscription;
+        public event Action<string, List<WhisperDetectionSegment>> OnTranslation;
 
         public double DisconnectIfNoResponseFor { get; set; } = 15;
 
@@ -215,10 +219,10 @@ namespace TimShaw.VoiceBox.Core
                 }
 
                 if (json["segments"] != null)
-                    ProcessSegments(json["segments"].ToObject<List<Segment>>(), false);
+                    ProcessSegments(json["segments"].ToObject<List<WhisperDetectionSegment>>(), false);
 
                 if (json["translated_segments"] != null)
-                    ProcessSegments(json["translated_segments"].ToObject<List<Segment>>(), true);
+                    ProcessSegments(json["translated_segments"].ToObject<List<WhisperDetectionSegment>>(), true);
             }
             catch (Exception ex)
             {
@@ -259,7 +263,7 @@ namespace TimShaw.VoiceBox.Core
         }
 
 
-        private async Task ProcessSegments(List<Segment> segs, bool translated)
+        private async Task ProcessSegments(List<WhisperDetectionSegment> segs, bool translated)
         {
             if (segs == null || segs.Count == 0) return;
 
@@ -395,7 +399,7 @@ namespace TimShaw.VoiceBox.Core
 
     public static class SrtUtils
     {
-        public static void CreateSrtFile(IEnumerable<Segment> segments, string path)
+        public static void CreateSrtFile(IEnumerable<WhisperDetectionSegment> segments, string path)
         {
             var list = segments.ToList();
             using var sw = new StreamWriter(path, false, new UTF8Encoding(false));

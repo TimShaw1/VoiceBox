@@ -2,6 +2,7 @@
 
 using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Core;
+using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
@@ -74,9 +75,9 @@ namespace TimShaw.VoiceBox.Tools
         /// <example>
         /// Example:
         /// <code>
-        /// <see cref="GeminiServiceConfig"/> myChatConfig = <see cref="ModdingTools"/>.<see cref="CreateGenericChatServiceConfig{T}">CreateGenericChatServiceConfig</see>&lt;<see cref="GeminiServiceConfig"/>&gt;(); <br></br>
-        /// <see cref="AzureSTTServiceConfig"/> mySTTConfig = <see cref="ModdingTools"/>.<see cref="CreateGenericSTTServiceConfig{T}">CreateGenericSTTServiceConfig</see>&lt;<see cref="AzureSTTServiceConfig"/>&gt;(); <br></br>
-        /// <see cref="ElevenlabsTTSServiceConfig"/> myTTSConfig = <see cref="ModdingTools"/>.<see cref="CreateGenericTTSServiceConfig{T}">CreateGenericTTSServiceConfig</see>&lt;<see cref="ElevenlabsTTSServiceConfig"/>&gt;(); <br></br>
+        /// GeminiServiceConfig myChatConfig = ModdingTools.CreateGenericChatServiceConfig&lt;GeminiServiceConfig&gt;(); <br></br>
+        /// AzureSTTServiceConfig mySTTConfig = ModdingTools.CreateGenericSTTServiceConfig&lt;AzureSTTServiceConfig&gt;(); <br></br>
+        /// ElevenlabsTTSServiceConfig myTTSConfig = ModdingTools.CreateGenericTTSServiceConfig&lt;ElevenlabsTTSServiceConfig&gt;(); <br></br>
         /// myChatConfig.modelName = "gemini-2.5-pro"; <br></br>
         /// CreateAIManagerObject(myChatConfig, mySTTConfig, myTTSConfig);
         /// </code>
@@ -85,6 +86,7 @@ namespace TimShaw.VoiceBox.Tools
         /// <param name="genericChatServiceConfig">An existing <see cref="GenericChatServiceConfig"/> object or null</param>
         /// <param name="genericSTTServiceConfig">An existing <see cref="GenericSTTServiceConfig"/> object or null</param>
         /// <param name="genericTTSServiceConfig">An existing <see cref="GenericTTSServiceConfig"/> object or null</param>
+        /// <param name="apiKeysJsonPath">Path to the api keys json file to load (Optional)</param>
         /// <returns>The instantiated <see cref="AIManager"/> object</returns>
         public static GameObject CreateAIManagerObject(
             GenericChatServiceConfig genericChatServiceConfig, 

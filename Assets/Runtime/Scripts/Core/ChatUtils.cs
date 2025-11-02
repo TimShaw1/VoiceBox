@@ -19,8 +19,14 @@ using System.Text.Json;
 
 namespace TimShaw.VoiceBox.Core
 {
+    /// <summary>
+    /// Provides various static utilities for chat services
+    /// </summary>
     public static class ChatUtils
     {
+        /// <summary>
+        /// Represents the various different roles a <see cref="VoiceBoxChatMessage"/> can have.
+        /// </summary>
         public readonly struct VoiceBoxChatRole
         {
             /// <summary>Gets the role that instructs or sets the behavior of the system.</summary>
@@ -35,8 +41,15 @@ namespace TimShaw.VoiceBox.Core
             /// <summary>Gets the role that provides additional information and references in response to tool use requests.</summary>
             public static VoiceBoxChatRole Tool { get; } = new VoiceBoxChatRole("tool");
 
+            /// <summary>
+            /// Gets the string value of the chat role
+            /// </summary>
             public string Value { get; }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="value"></param>
             public VoiceBoxChatRole(string value)
             {
                 Value = value;
@@ -44,9 +57,12 @@ namespace TimShaw.VoiceBox.Core
         }
 
         #region
+        /// <summary>
+        /// Represents a chat message in a conversation.
+        /// </summary>
         public class VoiceBoxChatMessage : ChatMessage
         {
-            /// <summary>Initializes a new instance of the <see cref="ChatMessage"/> class.</summary>
+            /// <summary>Initializes a new instance of the <see cref="VoiceBoxChatMessage"/> class.</summary>
             /// <param name="role">The role of the author of the message.</param>
             /// <param name="content">The text content of the message.</param>
             public VoiceBoxChatMessage(VoiceBoxChatRole role, string content)
@@ -55,6 +71,10 @@ namespace TimShaw.VoiceBox.Core
                 Contents = content is null ? new List<AIContent>() : new List<AIContent>() { new TextContent(content) };
             }
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="VoiceBoxChatMessage"/> class from a <see cref="ChatMessage"/>
+            /// </summary>
+            /// <param name="chatMessage"></param>
             public VoiceBoxChatMessage(ChatMessage chatMessage)
             {
                 Role = chatMessage.Role;
@@ -70,16 +90,32 @@ namespace TimShaw.VoiceBox.Core
 
         #region
 
+        /// <summary>
+        /// Implements a list with an add callback. Used to implement tool calling.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         public class VoiceBoxList<T> : IList<T>
         {
+            /// <summary>
+            /// 
+            /// </summary>
             public VoiceBoxList() { }
+            /// <summary>
+            /// Initializes a <see cref="VoiceBoxList{T}"/> with a callback that is called when an item is added.
+            /// </summary>
+            /// <param name="addCallback"></param>
             public VoiceBoxList(Action<T> addCallback)
             {
                 AddCallback = addCallback;
             }
+
+            /// <summary>
+            /// An action that is invoked when an item is added to the list.
+            /// </summary>
             public Action<T> AddCallback;
             private readonly List<T> _internalList = new List<T>();
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             public T this[int index]
             {
                 get => _internalList[index];
@@ -87,6 +123,7 @@ namespace TimShaw.VoiceBox.Core
             }
 
             public int Count => _internalList.Count;
+
 
             public bool IsReadOnly => false;
 
@@ -140,6 +177,7 @@ namespace TimShaw.VoiceBox.Core
             {
                 return GetEnumerator();
             }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         }
         #endregion
 
@@ -149,7 +187,14 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public class VoiceBoxChatCompletionOptions : ChatOptions
         {
+            /// <summary>
+            /// A list of chat tools that the <see cref="IChatService"/> can use
+            /// </summary>
             public VoiceBoxList<VoiceBoxChatTool> VoiceBoxTools = new VoiceBoxList<VoiceBoxChatTool>();
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="VoiceBoxChatCompletionOptions"/> class.
+            /// </summary>
             public VoiceBoxChatCompletionOptions()
             {
                 if (Tools == null)
@@ -162,15 +207,25 @@ namespace TimShaw.VoiceBox.Core
 
         #region
         /// <summary>
-        /// A wrapper for a <see cref="AIFunction"/> that enables specifying a calling object and a method to call (via <see cref="MethodInfo"/>). 
+        /// A wrapper for an <see cref="AIFunction"/> that enables specifying a calling object and a method to call (via <see cref="MethodInfo"/>). 
         /// Also enables serialization of <see cref="UnityEngine.Vector2"/>, <see cref="UnityEngine.Vector3"/>, <see cref="UnityEngine.Vector4"/>, and <see cref="UnityEngine.Quaternion"/>
         /// </summary>
         public class VoiceBoxChatTool
         {
+            /// <summary>
+            /// Internal tracking of the <see cref="AIFunction"/> provided by <see cref="Microsoft.Extensions.AI"/>. 
+            /// This approach enables cleaner user tool definition without needing to reference <see cref="Microsoft.Extensions.AI"/>.
+            /// </summary>
             public AIFunction InternalChatTool;
 
+            /// <summary>
+            /// The object that will invoke <see cref="Method"/>
+            /// </summary>
             public object Caller;
 
+            /// <summary>
+            /// The method the tool should call
+            /// </summary>
             public MethodInfo Method;
 
             /// <summary>
@@ -284,71 +339,12 @@ namespace TimShaw.VoiceBox.Core
         #endregion
 
         #region
-        public class SequenceBuilder<T>
-        {
-            Segment _first;
-            Segment _last;
-
-            public void Append(ReadOnlyMemory<T> data)
-            {
-                if (_first == null)
-                {
-                    Debug.Assert(_last == null);
-                    _first = new Segment(data);
-                    _last = _first;
-                }
-                else
-                {
-                    _last = _last!.Append(data);
-                }
-            }
-
-            public ReadOnlySequence<T> Build()
-            {
-                if (_first == null)
-                {
-                    Debug.Assert(_last == null);
-                    return ReadOnlySequence<T>.Empty;
-                }
-
-                if (_first == _last)
-                {
-                    Debug.Assert(_first.Next == null);
-                    return new ReadOnlySequence<T>(_first.Memory);
-                }
-
-                return new ReadOnlySequence<T>(_first, 0, _last!, _last!.Memory.Length);
-            }
-
-            private sealed class Segment : ReadOnlySequenceSegment<T>
-            {
-                public Segment(ReadOnlyMemory<T> items) : this(items, 0)
-                {
-                }
-
-                private Segment(ReadOnlyMemory<T> items, long runningIndex)
-                {
-                    Debug.Assert(runningIndex >= 0);
-                    Memory = items;
-                    RunningIndex = runningIndex;
-                }
-
-                public Segment Append(ReadOnlyMemory<T> items)
-                {
-                    long runningIndex;
-                    checked { runningIndex = RunningIndex + Memory.Length; }
-                    Segment segment = new Segment(items, runningIndex);
-                    Next = segment;
-                    return segment;
-                }
-            }
-        }
-        #endregion
-
-        #region
-
+        /// <summary>
+        /// Enables serialization of <see cref="UnityEngine.Vector2"/> for tool calling
+        /// </summary>
         public class Vector2JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector2>
         {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             public override bool CanConvert(Type typeToConvert)
             {
                 return typeToConvert == typeof(UnityEngine.Vector2);
@@ -408,6 +404,9 @@ namespace TimShaw.VoiceBox.Core
         #endregion
 
         #region
+        /// <summary>
+        /// Enables serialization of <see cref="UnityEngine.Vector3"/> for tool calling
+        /// </summary>
         public class Vector3JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector3>
         {
             public override bool CanConvert(Type typeToConvert)
@@ -474,6 +473,9 @@ namespace TimShaw.VoiceBox.Core
         #endregion
 
         #region
+        /// <summary>
+        /// Enables serialization of <see cref="UnityEngine.Vector4"/> for tool calling
+        /// </summary>
         public class Vector4JsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Vector4>
         {
             public override bool CanConvert(Type typeToConvert)
@@ -545,6 +547,9 @@ namespace TimShaw.VoiceBox.Core
         #endregion
 
         #region
+        /// <summary>
+        /// Enables serialization of <see cref="UnityEngine.Quaternion"/> for tool calling
+        /// </summary>
         public class QuaternionJsonConverter : System.Text.Json.Serialization.JsonConverter<UnityEngine.Quaternion>
         {
             public override bool CanConvert(Type typeToConvert)
@@ -615,4 +620,5 @@ namespace TimShaw.VoiceBox.Core
         }
         #endregion
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

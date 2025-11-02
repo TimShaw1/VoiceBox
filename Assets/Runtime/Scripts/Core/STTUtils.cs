@@ -8,24 +8,50 @@ using System.Linq;
 
 namespace TimShaw.VoiceBox.Core
 {
+    /// <summary>
+    /// Utilities for Speech-To-Text services
+    /// </summary>
     public class STTUtils
     {
+        /// <summary>
+        /// Represents a speech recognition with a <see cref="ResultReason"/> and text
+        /// </summary>
         public class RecognitionResult
         {
+            /// <summary>
+            /// Describes a recognition result
+            /// </summary>
             public ResultReason Reason { get; set; }
             
+            /// <summary>
+            /// The recognized text provided by the STT service
+            /// </summary>
             public string Text { get; set; }
         }
 
+        /// <summary>
+        /// Represents various arguments for a speech recognition event.
+        /// </summary>
         public class VoiceBoxSpeechRecognitionEventArgs
         {
+            /// <summary>
+            /// The recognition result. Provides a <see cref="ResultReason"/> and the recognized text
+            /// </summary>
             public RecognitionResult Result { get; set; }
 
+            /// <summary>
+            /// 
+            /// </summary>
             public VoiceBoxSpeechRecognitionEventArgs()
             {
                 Result = new RecognitionResult();
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="reason"></param>
+            /// <param name="text"></param>
             public VoiceBoxSpeechRecognitionEventArgs(ResultReason reason, string text)
             {
                 Result = new RecognitionResult();
@@ -33,6 +59,10 @@ namespace TimShaw.VoiceBox.Core
                 Result.Text = text;
             }
 
+            /// <summary>
+            /// Enables conversion from <see cref="SpeechRecognitionEventArgs"/> to <see cref="VoiceBoxSpeechRecognitionEventArgs"/> for usage with Azure STT
+            /// </summary>
+            /// <param name="args"></param>
             public static explicit operator VoiceBoxSpeechRecognitionEventArgs(SpeechRecognitionEventArgs args) => new VoiceBoxSpeechRecognitionEventArgs(args.Result.Reason, args.Result.Text);
         }
 
@@ -56,6 +86,12 @@ namespace TimShaw.VoiceBox.Core
             return deviceList;
         }
 
+        /// <summary>
+        /// Gets the device number for a provided device name
+        /// </summary>
+        /// <param name="deviceName">The name of the device</param>
+        /// <param name="audioInputEndpoints">The list of audio input endpoints</param>
+        /// <returns>The device number of the audio device, if found. Otherwise, -1</returns>
         public static int GetAudioInputDeviceNum(string deviceName, Dictionary<string, string> audioInputEndpoints)
         {
             if (deviceName == "Default") return 0;

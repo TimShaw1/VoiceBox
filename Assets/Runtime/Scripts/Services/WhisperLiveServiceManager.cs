@@ -18,12 +18,18 @@ using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
 {
+    /// <summary>
+    /// Represents a segment of speech recognized by whisper
+    /// </summary>
     public class WhisperDetectionSegment
     {
-        public double Start { get; set; }
-        public double End { get; set; }
+        // public double Start { get; set; }
+        // public double End { get; set; }
+        /// <summary>
+        /// The detected text
+        /// </summary>
         public string Text { get; set; }
-        public bool Completed { get; set; }
+        // public bool Completed { get; set; }
     }
 
     /// <summary>
@@ -32,6 +38,7 @@ namespace TimShaw.VoiceBox.Core
     /// </summary>
     public class Client : IDisposable
     {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public const string END_OF_AUDIO = "END_OF_AUDIO";
         public static readonly Dictionary<string, Client> INSTANCES = new Dictionary<string, Client>();
 
@@ -58,15 +65,13 @@ namespace TimShaw.VoiceBox.Core
         private readonly bool _enableTranslation;
 
         private DateTime? _lastResponseReceived;
-        private WhisperDetectionSegment _lastSegment;
-        private string _lastReceivedSegmentText;
 
         private readonly List<WhisperDetectionSegment> _transcript = new List<WhisperDetectionSegment>();
         private readonly List<WhisperDetectionSegment> _translatedTranscript = new List<WhisperDetectionSegment>();
 
         public event Action<string, List<WhisperDetectionSegment>> OnPartialTranscription;
         public event Action<string, List<WhisperDetectionSegment>> OnTranscription;
-        public event Action<string, List<WhisperDetectionSegment>> OnTranslation;
+        //public event Action<string, List<WhisperDetectionSegment>> OnTranslation;
 
         public double DisconnectIfNoResponseFor { get; set; } = 15;
 
@@ -121,7 +126,7 @@ namespace TimShaw.VoiceBox.Core
             Task.Run(() => ConnectAndRun(uri), _cts.Token);
         }
 
-        public void addCancellationToken(CancellationToken token) { _cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token); }
+        public void AddCancellationToken(CancellationToken token) { _cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token); }
 
         private async Task ConnectAndRun(Uri uri)
         {
@@ -219,10 +224,10 @@ namespace TimShaw.VoiceBox.Core
                 }
 
                 if (json["segments"] != null)
-                    ProcessSegments(json["segments"].ToObject<List<WhisperDetectionSegment>>(), false);
+                    _ = ProcessSegments(json["segments"].ToObject<List<WhisperDetectionSegment>>(), false);
 
                 if (json["translated_segments"] != null)
-                    ProcessSegments(json["translated_segments"].ToObject<List<WhisperDetectionSegment>>(), true);
+                    _ = ProcessSegments(json["translated_segments"].ToObject<List<WhisperDetectionSegment>>(), true);
             }
             catch (Exception ex)
             {
@@ -361,14 +366,6 @@ namespace TimShaw.VoiceBox.Core
             finally { _sendLock.Release(); }
         }
 
-        public void WriteSrtFile(string path = null)
-        {
-            if (path == null) path = SrtFilePath;
-            SrtUtils.CreateSrtFile(_transcript, path);
-            if (_enableTranslation)
-                SrtUtils.CreateSrtFile(_translatedTranscript, "translated_" + path);
-        }
-
         public void WaitBeforeDisconnect()
         {
             if (!_lastResponseReceived.HasValue) return;
@@ -395,30 +392,6 @@ namespace TimShaw.VoiceBox.Core
         }
 
         public string Uid => _uid;
-    }
-
-    public static class SrtUtils
-    {
-        public static void CreateSrtFile(IEnumerable<WhisperDetectionSegment> segments, string path)
-        {
-            var list = segments.ToList();
-            using var sw = new StreamWriter(path, false, new UTF8Encoding(false));
-            for (int i = 0; i < list.Count; i++)
-            {
-                var s = list[i];
-                sw.WriteLine(i + 1);
-                sw.WriteLine($"{Fmt(s.Start)} --> {Fmt(s.End)}");
-                sw.WriteLine(s.Text);
-                sw.WriteLine();
-            }
-            UnityEngine.Debug.Log($"[INFO]: Wrote SRT {path}");
-        }
-
-        private static string Fmt(double sec)
-        {
-            var t = TimeSpan.FromSeconds(sec);
-            return $"{(int)t.TotalHours:00}:{t.Minutes:00}:{t.Seconds:00},{t.Milliseconds:000}";
-        }
     }
 
     public class TranscriptionTeeClient
@@ -511,6 +484,7 @@ namespace TimShaw.VoiceBox.Core
             StartRecording();
         }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
     /// <summary>
     /// Manages the WhisperLive Speech-to-Text (STT) service.
@@ -520,6 +494,8 @@ namespace TimShaw.VoiceBox.Core
         private WhisperLiveServiceConfig _config;
         private TranscriptionClient _client;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS0067 // Event is never used
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
         public event EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
@@ -527,7 +503,13 @@ namespace TimShaw.VoiceBox.Core
         public event EventHandler<SessionEventArgs> OnSessionStopped;
         public event EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
         public event EventHandler<RecognitionEventArgs> OnSpeechEndDetected;
+#pragma warning restore CS0067 // Event is never used
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
+        /// <summary>
+        /// Initializes the WhisperLive service with the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the WhisperLive service.</param>
         public void Initialize(GenericSTTServiceConfig config)
         {
             _config = config as WhisperLiveServiceConfig;
@@ -539,12 +521,13 @@ namespace TimShaw.VoiceBox.Core
             _client.waveIn.DeviceNumber = deviceNum == -1 ? 0 : deviceNum;
         }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public async Task TranscribeAudioFromMic(CancellationToken token)
         {
             var stopRecognition = new TaskCompletionSource<int>();
             token.Register(() => stopRecognition.TrySetResult(0));
 
-            _client.Client.addCancellationToken(token);
+            _client.Client.AddCancellationToken(token);
             _client.Client.OnTranscription += (text, segs) =>
             {
                 OnRecognized.Invoke(this, new VoiceBoxSpeechRecognitionEventArgs(ResultReason.RecognizedSpeech, text));
@@ -558,5 +541,6 @@ namespace TimShaw.VoiceBox.Core
 
             UnityEngine.Debug.Log("WhisperLive Service Manager: Transcription stopped.");
         }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

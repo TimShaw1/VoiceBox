@@ -17,12 +17,18 @@ namespace TimShaw.VoiceBox.Data
     [CreateAssetMenu(fileName = "OllamaServiceConfig", menuName = "VoiceBox/Chat/OllamaService Configuration")]
     public class OllamaChatServiceConfig : GenericChatServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public OllamaChatServiceConfig()
         {
             serviceManagerType = typeof(OllamaChatServiceManager);
             apiKeyJSONString = "OLLAMA_API_KEY";
         }
 
+        /// <summary>
+        /// The endpoint to send requests to. Defaults to <see href="http://localhost:11434/"/>
+        /// </summary>
         public string serviceEndpoint = "http://localhost:11434/";
     }
 }

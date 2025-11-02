@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
+using static System.Net.WebRequestMethods;
 
 namespace TimShaw.VoiceBox.Data
 {
@@ -17,12 +18,18 @@ namespace TimShaw.VoiceBox.Data
     [CreateAssetMenu(fileName = "ClaudeServiceConfig", menuName = "VoiceBox/Chat/ClaudeService Configuration")]
     public class ClaudeServiceConfig : GenericChatServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public ClaudeServiceConfig()
         {
             serviceManagerType = typeof(ClaudeServiceManager);
             apiKeyJSONString = "ANTHROPIC_API_KEY";
         }
 
+        /// <summary>
+        /// The endpoint to send requests to. Defaults to <see href="https://api.anthropic.com/v1"/>
+        /// </summary>
         public string serviceEndpoint = "https://api.anthropic.com/v1";
     }
 }

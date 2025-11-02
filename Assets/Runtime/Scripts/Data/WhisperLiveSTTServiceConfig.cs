@@ -19,6 +19,9 @@ namespace TimShaw.VoiceBox.Data
     [CreateAssetMenu(fileName = "WhisperLiveSTTServiceConfig", menuName = "VoiceBox/STT/WhisperLiveSTTService Configuration")]
     public class WhisperLiveServiceConfig : GenericSTTServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public WhisperLiveServiceConfig()
         {
             serviceManagerType = typeof(WhisperLiveServiceManager);

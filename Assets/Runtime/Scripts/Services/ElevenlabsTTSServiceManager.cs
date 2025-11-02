@@ -34,7 +34,7 @@ namespace TimShaw.VoiceBox.Core
         /// Represents the request body for the ElevenLabs TTS API.
         /// </summary>
         [System.Serializable]
-        public class ElevenLabsTTSRequest
+        private class ElevenLabsTTSRequest
         {
             public string text;
             public string model_id;
@@ -47,10 +47,12 @@ namespace TimShaw.VoiceBox.Core
         /// Represents a streamed response from the ElevenLabs TTS API.
         /// </summary>
         [System.Serializable]
-        public class ElevenLabsStreamedResponse
+        private class ElevenLabsStreamedResponse
         {
+#pragma warning disable CS0649 // Field is never assigned to
             public string audio;
             public bool isFinal;
+#pragma warning restore CS0649 // Field is never assigned to
         }
 
         /// <summary>
@@ -135,6 +137,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="prompt">The text to be converted to speech.</param>
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
+        /// <param name="token"></param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token)
         {
@@ -315,6 +318,11 @@ namespace TimShaw.VoiceBox.Core
             await ReceiveAudioData(_webSocket, _mp3Decoder, token);
         }
 
+        /// <summary>
+        /// Sets the xi-api-key header and returns the generation endpoint Uri of the <see cref="ElevenlabsTTSServiceConfig.voiceId"/>
+        /// </summary>
+        /// <param name="webSocket">The websocket that should connect to Elevenlabs</param>
+        /// <returns>The endpoint Uri of the configured voiceId on Elevenlabs</returns>
         public Uri InitWebsocketAndGetUri(ClientWebSocket webSocket)
         {
             webSocket.Options.SetRequestHeader("xi-api-key", _config.apiKey);

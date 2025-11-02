@@ -130,6 +130,7 @@ namespace TimShaw.VoiceBox.Components
         /// </summary>
         /// <param name="text">The text to be converted to speech.</param>
         /// <param name="service">The text-to-speech service to use.</param>
+        /// <param name="token"></param>
         public void StartStreaming(string text, ITextToSpeechService service, CancellationToken token = default)
         {
             if (_webSocket != null && _webSocket.State == WebSocketState.Open)
@@ -205,8 +206,8 @@ namespace TimShaw.VoiceBox.Components
         }
 
         /// <summary>
-        // This method is called by Unity on the audio thread to request audio data.
-        // It fills the buffer with decoded audio samples.
+        /// This method is called by Unity on the audio thread to request audio data.
+        /// It fills the buffer with decoded audio samples.
         /// </summary>
         /// <param name="data">The array to fill with audio data.</param>
         /// <param name="channels">The number of channels in the audio data.</param>

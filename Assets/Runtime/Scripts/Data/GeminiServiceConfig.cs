@@ -18,6 +18,9 @@ namespace TimShaw.VoiceBox.Data
     [CreateAssetMenu(fileName = "GeminiServiceConfig", menuName = "VoiceBox/Chat/GeminiService Configuration")]
     public class GeminiServiceConfig : GenericChatServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public GeminiServiceConfig()
         {
             serviceManagerType = typeof(GeminiServiceManager);

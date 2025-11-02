@@ -25,6 +25,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="prompt">The text to be converted to speech.</param>
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
+        /// <param name="token"></param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         public Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token);
 
@@ -35,6 +36,11 @@ namespace TimShaw.VoiceBox.Core
         /// <returns>A task that represents the asynchronous operation, returning an AudioClip.</returns>
         public Task<AudioClip> RequestAudioClip(string prompt);
 
+        /// <summary>
+        /// Initializes a websocket (eg sets request headers) to interface with the TTS service and returns the endpoint Uri
+        /// </summary>
+        /// <param name="webSocket">The websocket that should connect to the TTS service</param>
+        /// <returns>The configured endpoint Uri of the TTS service</returns>
         public Uri InitWebsocketAndGetUri(ClientWebSocket webSocket);
 
         /// <summary>

@@ -6,8 +6,11 @@ using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
-namespace TimShaw.VoiceBox.Tools
+namespace TimShaw.VoiceBox.Modding
 {
+    /// <summary>
+    /// Provides various utilities for modders who want to integrate AI tools via VoiceBoxModLib
+    /// </summary>
     public static class ModdingTools
     {
         /// <summary>

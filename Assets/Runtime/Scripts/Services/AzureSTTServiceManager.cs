@@ -25,6 +25,7 @@ namespace TimShaw.VoiceBox.Core
         public SpeechRecognizer speechRecognizer;
         private Dictionary<string, string> audioEndpoints;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
         public event EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
@@ -32,6 +33,7 @@ namespace TimShaw.VoiceBox.Core
         public event EventHandler<SessionEventArgs> OnSessionStopped;
         public event EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
         public event EventHandler<RecognitionEventArgs> OnSpeechEndDetected;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         /// <summary>
         /// Transcribes audio from the microphone using the Azure STT service.

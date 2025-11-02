@@ -69,15 +69,20 @@ namespace TimShaw.VoiceBox.Data
     [CreateAssetMenu(fileName = "TTSServiceConfig", menuName = "VoiceBox/TTS/TTSService Configuration")]
     public class ElevenlabsTTSServiceConfig : GenericTTSServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public ElevenlabsTTSServiceConfig()
         {
             serviceManagerType = typeof(ElevenLabsTTSServiceManager);
             apiKeyJSONString = "ELEVENLABS_API_KEY";
         }
 
+#if UNITY_EDITOR
         [Header("Core Configuration")]
+#endif
         /// <summary>
-        /// The API endpoint for the text-to-speech service.
+        /// The API endpoint for the text-to-speech service. Defaults to <see href="https://api.elevenlabs.io/v1/text-to-speech/"/>
         /// </summary>
         [Tooltip("The API endpoint for the text-to-speech service.")]
         public string serviceEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/";
@@ -94,14 +99,18 @@ namespace TimShaw.VoiceBox.Data
         [Tooltip("The ID of the model to be used. Defaults to eleven_multilingual_v2.")]
         public string modelID = "eleven_multilingual_v2";
 
+#if UNITY_EDITOR
         [Header("Voice Settings")]
+#endif
         /// <summary>
         /// Voice settings that override the stored settings for the given voice.
         /// </summary>
         [Tooltip("Voice settings that override the stored settings for the given voice.")]
         public VoiceSettings voiceSettings;
 
+#if UNITY_EDITOR
         [Header("Audio Output")]
+#endif
         /// <summary>
         /// Output format for the generated audio. Currently only mp3 is supported. e.g., mp3_44100_128
         /// </summary>

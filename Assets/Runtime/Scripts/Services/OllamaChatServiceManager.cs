@@ -20,6 +20,11 @@ namespace TimShaw.VoiceBox.Core
     {
         IChatClient _client;
         OllamaChatServiceConfig _config;
+
+        /// <summary>
+        /// Initializes the Ollama service with the provided configuration.
+        /// </summary>
+        /// <param name="config">The ScriptableObject configuration for the Ollama service.</param>
         public void Initialize(GenericChatServiceConfig config)
         {
             _config = config as OllamaChatServiceConfig;
@@ -34,9 +39,11 @@ namespace TimShaw.VoiceBox.Core
         /// <summary>
         /// Sends a message to the Ollama service.
         /// </summary>
-        /// <param name="messageHistory">The history of messages in the conversation.</param>
-        /// <param name="onSuccess">Callback invoked when the message is successfully sent.</param>
-        /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <param name="messageHistory">The list of messages representing the conversation so far.</param>
+        /// <param name="options">Request-level settings.</param>
+        /// <param name="onSuccess">Callback invoked when a successful response is received. The ChatMessage will have the 'Model' role.</param>
+        /// <param name="onError">Callback invoked when an error occurs, providing an error message.</param>
+        /// <param name="token"></param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SendMessage(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
@@ -72,10 +79,12 @@ namespace TimShaw.VoiceBox.Core
         /// <summary>
         /// Sends a message to the Ollama service and streams the response.
         /// </summary>
-        /// <param name="messageHistory">The history of messages in the conversation.</param>
-        /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
-        /// <param name="onComplete">Callback invoked when the response is complete.</param>
-        /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <param name="messageHistory">The list of messages representing the conversation so far.</param>
+        /// <param name="options">Request-level settings.</param>
+        /// <param name="onChunkReceived">Callback invoked for each partial chunk of the response received from the stream.</param>
+        /// <param name="onComplete">Callback invoked when the entire stream has finished.</param>
+        /// <param name="onError">Callback invoked if an error occurs during the streaming process.</param>
+        /// <param name="token"></param>
         public async Task SendMessageStream(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
             ChatUtils.VoiceBoxChatCompletionOptions options,

@@ -7,7 +7,7 @@ using System.Threading;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
-using TimShaw.VoiceBox.Tools;
+using TimShaw.VoiceBox.Modding;
 using UnityEngine;
 using static TimShaw.VoiceBox.Core.STTUtils;
 
@@ -54,7 +54,7 @@ public class APITester : MonoBehaviour
     /// </summary>
     /// <param name="s">The source of the event.</param>
     /// <param name="e">The event arguments containing the recognition result.</param>
-    void logRecognizedSpeech(object s, VoiceBoxSpeechRecognitionEventArgs e)
+    void LogRecognizedSpeech(object s, VoiceBoxSpeechRecognitionEventArgs e)
     {
         if (e.Result.Reason == ResultReason.RecognizedSpeech)
         {
@@ -62,16 +62,30 @@ public class APITester : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="textToDisplay"></param>
     public void SampleTool(string textToDisplay)
     {
         Debug.Log("AI is displaying text! --> " + textToDisplay);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="dir"></param>
+    /// <param name="dir2"></param>
+    /// <param name="dir3"></param>
     public void SampleTool2(Vector2 dir, Vector3 dir2, Vector4 dir3)
     {
         Debug.Log("AI is displaying vectors! --> " + dir + " " + dir2 + " " + dir3);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="dir"></param>
     public void SampleTool3(Vector2 dir)
     {
         Debug.Log("AI is displaying a vector! --> " + dir);
@@ -89,7 +103,7 @@ public class APITester : MonoBehaviour
         }
         if (testSTT)
         {
-            AIManager.Instance.SpeechToTextService.OnRecognized += logRecognizedSpeech;
+            AIManager.Instance.SpeechToTextService.OnRecognized += LogRecognizedSpeech;
             AIManager.Instance.StartSpeechTranscription(internalCancellationTokenSource.Token);
         }
 

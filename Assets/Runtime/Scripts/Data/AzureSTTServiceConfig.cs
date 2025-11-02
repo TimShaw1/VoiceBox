@@ -18,6 +18,9 @@ namespace TimShaw.VoiceBox.Data
     [CreateAssetMenu(fileName = "AzureSTTServiceConfig", menuName = "VoiceBox/STT/AzureSTTService Configuration")]
     public class AzureSTTServiceConfig : GenericSTTServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public AzureSTTServiceConfig()
         {
             serviceManagerType = typeof(AzureSTTServiceManager);

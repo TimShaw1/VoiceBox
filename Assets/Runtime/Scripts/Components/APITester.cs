@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
@@ -111,7 +112,7 @@ public class APITester : MonoBehaviour
         {
             Debug.Log("VoiceBox: Testing Audio Streaming");
             AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +
-                "This approach reduces first-word latency tremendously.", audioSource);
+                "This approach reduces first-word latency tremendously.", audioSource.GetComponent<AudioStreamer>());
         }
 
         if (testChat)

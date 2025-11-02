@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TimShaw.VoiceBox.Core;
+using UnityEditor;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Components
@@ -115,6 +116,13 @@ namespace TimShaw.VoiceBox.Components
         private ConcurrentQueue<float> _audioBuffer = new ConcurrentQueue<float>();
 
         private StreamingMp3Decoder _mp3Decoder;
+
+        [MenuItem("GameObject/VoiceBox/Components/Streaming Audio Source", false, 11)]
+        static void CreateAudioStreamerObj()
+        {
+            var obj = new GameObject("StreamingAudioSource");
+            obj.AddComponent<AudioStreamer>();
+        }
 
         /// <summary>
         /// Called when the script instance is being loaded.

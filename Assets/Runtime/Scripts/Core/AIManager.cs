@@ -68,7 +68,9 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public ITextToSpeechService TextToSpeechService { get => _ttsService; set => _ttsService = value; }
 
+#if UNITY_EDITOR
         [MenuItem("GameObject/VoiceBox/AI Manager", false, 10)]
+#endif
         static void CreateAIManagerObj()
         {
             var manager = new GameObject("_AIManager");

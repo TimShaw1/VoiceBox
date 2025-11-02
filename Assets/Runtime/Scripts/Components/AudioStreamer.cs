@@ -117,7 +117,9 @@ namespace TimShaw.VoiceBox.Components
 
         private StreamingMp3Decoder _mp3Decoder;
 
+#if UNITY_EDITOR
         [MenuItem("GameObject/VoiceBox/Components/Streaming Audio Source", false, 11)]
+#endif
         static void CreateAudioStreamerObj()
         {
             var obj = new GameObject("StreamingAudioSource");

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab52e11552ed0734cb7d3bcac9b59b49, type: 3}
+  m_Name: GeminiServiceConfig
+  m_EditorClassIdentifier: 
+  apiKey: 
+  apiKeyJSONString: GEMINI_API_KEY
+  modelName: gemini-2.5-flash
+  serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/openai/

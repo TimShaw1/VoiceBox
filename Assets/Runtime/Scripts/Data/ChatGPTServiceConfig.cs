@@ -17,6 +17,7 @@ namespace TimShaw.VoiceBox.Data
         {
             serviceManagerType = typeof(ChatGPTServiceManager);
             apiKeyJSONString = "OPENAI_API_KEY";
+            modelName = "gpt-5-nano";
         }
 
         /// <summary>

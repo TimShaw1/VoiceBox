@@ -66,7 +66,7 @@ namespace TimShaw.VoiceBox.Data
     /// <br></br>
     /// This class sets <see cref="GenericTTSServiceConfig.apiKeyJSONString"/> to ELEVENLABS_API_KEY by default
     /// </summary>
-    [CreateAssetMenu(fileName = "TTSServiceConfig", menuName = "VoiceBox/TTS/TTSService Configuration")]
+    [CreateAssetMenu(fileName = "ElevenlabsServiceConfig", menuName = "VoiceBox/TTS/ElevenlabsService Configuration")]
     public class ElevenlabsTTSServiceConfig : GenericTTSServiceConfig
     {
         /// <summary>

@@ -25,6 +25,7 @@ namespace TimShaw.VoiceBox.Data
         {
             serviceManagerType = typeof(GeminiServiceManager);
             apiKeyJSONString = "GEMINI_API_KEY";
+            modelName = "gemini-2.5-flash";
         }
 
         /// <summary>

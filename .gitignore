@@ -99,3 +99,5 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 /Assets/keys.json
 /Assets/keys.json.meta
+/Assets/TestChatTTS.cs
+/Assets/TestChatTTS.cs.meta

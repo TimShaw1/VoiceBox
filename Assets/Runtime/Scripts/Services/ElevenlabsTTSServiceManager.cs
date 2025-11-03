@@ -302,17 +302,14 @@ namespace TimShaw.VoiceBox.Core
         {
             var initialMessage = new { text = " " };
             string jsonMessage = JsonConvert.SerializeObject(initialMessage);
-            Debug.Log(jsonMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
             var textMessage = new { text = text, try_trigger_generation = true };
             jsonMessage = JsonConvert.SerializeObject(textMessage);
-            Debug.Log(jsonMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
             var eosMessage = new { text = "" };
             jsonMessage = JsonConvert.SerializeObject(eosMessage);
-            Debug.Log(jsonMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
             await ReceiveAudioData(_webSocket, _mp3Decoder, token);

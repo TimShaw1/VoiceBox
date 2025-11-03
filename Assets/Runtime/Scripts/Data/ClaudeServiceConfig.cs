@@ -25,6 +25,7 @@ namespace TimShaw.VoiceBox.Data
         {
             serviceManagerType = typeof(ClaudeServiceManager);
             apiKeyJSONString = "ANTHROPIC_API_KEY";
+            modelName = "claude-haiku-4-5";
         }
 
         /// <summary>

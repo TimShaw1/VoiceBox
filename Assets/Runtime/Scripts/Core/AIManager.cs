@@ -73,6 +73,11 @@ namespace TimShaw.VoiceBox.Core
 #endif
         static void CreateAIManagerObj()
         {
+            if (FindFirstObjectByType<AIManager>())
+            {
+                Debug.LogError("Error creating AI Manager: only 1 AI manager can exist in a scene at a time.");
+                return;
+            }
             var manager = new GameObject("_AIManager");
             manager.AddComponent<AIManager>();
         }
@@ -173,11 +178,14 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         private void UnloadAPIKeys()
         {
-            chatServiceConfig.apiKey = "";
+            if (chatServiceConfig)
+                chatServiceConfig.apiKey = "";
 
-            speechToTextConfig.apiKey = "";
+            if (speechToTextConfig)
+                speechToTextConfig.apiKey = "";
 
-            textToSpeechConfig.apiKey = "";
+            if (textToSpeechConfig)
+                textToSpeechConfig.apiKey = "";
         }
 
         /// <summary>

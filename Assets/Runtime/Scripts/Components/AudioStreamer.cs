@@ -185,9 +185,7 @@ namespace TimShaw.VoiceBox.Components
         {
             try
             {
-                Debug.Log("Connecting to WebSocket...");
                 await _webSocket.ConnectAsync(uri, token);
-                Debug.Log("WebSocket Connected.");
 
                 await service.ConnectAndStream(text, _webSocket, _mp3Decoder, token);
 
@@ -210,7 +208,6 @@ namespace TimShaw.VoiceBox.Components
                     }
                     _webSocket.Dispose();
                     _webSocket = null;
-                    Debug.Log("WebSocket disconnected.");
                 }
             }
         }

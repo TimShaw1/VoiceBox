@@ -44,8 +44,6 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
-                Debug.Log("Azure Service Manager: Start transcribing audio...");
-
                 var stopRecognition = new TaskCompletionSource<int>();
 
                 token.Register(() => stopRecognition.TrySetResult(0));
@@ -140,13 +138,13 @@ namespace TimShaw.VoiceBox.Core
 
             speechRecognizer.SpeechStartDetected += (s, e) =>
             {
-                Debug.Log($"Azure Service Manager: Speech Start Detected.");
+                // Debug.Log($"Azure Service Manager: Speech Start Detected.");
                 OnSpeechStartDetected?.Invoke(this, e);
             };
 
             speechRecognizer.SpeechEndDetected += (s, e) =>
             {
-                Debug.Log($"Azure Service Manager: Speech End Detected.");
+                // Debug.Log($"Azure Service Manager: Speech End Detected.");
                 OnSpeechEndDetected?.Invoke(this, e);
             };
         }

@@ -40,6 +40,11 @@ namespace TimShaw.VoiceBox.Core
             public RecognitionResult Result { get; set; }
 
             /// <summary>
+            /// The recognized text
+            /// </summary>
+            public string Text { get => Result.Text; }
+
+            /// <summary>
             /// 
             /// </summary>
             public VoiceBoxSpeechRecognitionEventArgs()

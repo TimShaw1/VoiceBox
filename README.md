@@ -14,12 +14,13 @@ VoiceBox is a flexible and extensible framework for integrating various AI servi
 
 - **Chat**:
   - Google Gemini
-  - OpenAI ChatGPT WIP
-  - Anthropic TODO
-  - DeepSeek TODO
-  - Ollama TODO
+  - OpenAI ChatGPT
+  - Anthropic
+  - Ollama
+  - DeepSeek via Ollama
 - **Speech-to-Text (STT)**:
   - Microsoft Azure Cognitive Services
+  - Whisper via [WhisperLive](https://github.com/collabora/WhisperLive)
   - Google Chirp TODO
 - **Text-to-Speech (TTS)**:
   - ElevenLabs

@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKeysJsonPath: 
   chatServiceConfig: {fileID: 11400000, guid: c6ed122eb75d87e40984ceca66582d9c, type: 2}
-  speechToTextConfig: {fileID: 0}
+  speechToTextConfig: {fileID: 11400000, guid: a02c458165ed3b144862581f8e8e3c7e, type: 2}
   textToSpeechConfig: {fileID: 11400000, guid: d99db06dcaea8654abdb0bff4311a701, type: 2}
 --- !u!4 &323255145
 Transform:

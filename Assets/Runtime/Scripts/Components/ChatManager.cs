@@ -85,15 +85,15 @@ namespace TimShaw.VoiceBox.Components
         /// Sends a conversation history to the configured chat service.
         /// </summary>
         /// <param name="messageHistory">A list of chat messages representing the conversation history.</param>
-        /// <param name="options">Request-level settings.</param>
         /// <param name="onSuccess">Callback invoked when the message is successfully sent, returning the response.</param>
         /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <param name="options">(Optional) Request-level settings.</param>
         /// <param name="token"></param>
         public void SendChatMessage(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
-            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatMessage> onSuccess,
             Action<string> onError,
+            ChatUtils.VoiceBoxChatCompletionOptions options = null,
             CancellationToken token = default)
         {
             if (ChatService == null)
@@ -104,24 +104,24 @@ namespace TimShaw.VoiceBox.Components
 
             token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
-            Task.Run(() => ChatService.SendMessage(messageHistory, options, onSuccess, onError, token));
+            Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError, options, token));
         }
 
         /// <summary>
         /// Sends a message to the Chat service and streams the response.
         /// </summary>
         /// <param name="messageHistory">The history of messages in the conversation.</param>
-        /// <param name="options">Request-level settings.</param>
         /// <param name="onChunkReceived">Callback invoked when a chunk of the response is received.</param>
         /// <param name="onComplete">Callback invoked when the response is complete.</param>
         /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <param name="options">(Optional) Request-level settings.</param>
         /// <param name="token"></param>
         public void StreamChatMessage(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
-            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,
             Action<string> onError,
+            ChatUtils.VoiceBoxChatCompletionOptions options = null,
             CancellationToken token = default
         )
         {
@@ -133,7 +133,7 @@ namespace TimShaw.VoiceBox.Components
 
             token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
-            Task.Run(() => ChatService.SendMessageStream(messageHistory, options, onChunkReceived, onComplete, onError, token));
+            Task.Run(() => ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, options, token));
         }
     }
 }

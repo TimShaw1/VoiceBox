@@ -31,10 +31,11 @@ namespace TimShaw.VoiceBox.Core
 
         public async Task SendMessage(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
-            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatUtils.VoiceBoxChatMessage> onSuccess,
             Action<string> onError,
-            CancellationToken token)
+            ChatUtils.VoiceBoxChatCompletionOptions options,
+            CancellationToken token
+        )
         {
             if (_client == null || _config == null)
             {
@@ -56,11 +57,12 @@ namespace TimShaw.VoiceBox.Core
 
         public async Task SendMessageStream(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
-            ChatUtils.VoiceBoxChatCompletionOptions options,
             Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,
             Action<string> onError,
-            CancellationToken token)
+            ChatUtils.VoiceBoxChatCompletionOptions options,
+            CancellationToken token
+        )
         {
             try
             {

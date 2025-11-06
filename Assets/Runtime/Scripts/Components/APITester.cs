@@ -137,15 +137,15 @@ public class APITester : MonoBehaviour
 
             Debug.Log(options.Tools.Count);
 
-            //AIManager.Instance.SendChatMessage(chats, options, chatMessage => Debug.Log(chatMessage.Text), error => Debug.LogError(error));
-            
-            
+            //AIManager.Instance.SendChatMessage(chats, chatMessage => Debug.Log(chatMessage.Text), error => Debug.LogError(error), options);
+
+
             AIManager.Instance.StreamChatMessage(
                 chats,
-                options,
                 chunk => { Debug.Log(chunk.Role + ": " + chunk.Text); combinedResponse += chunk; },
                 () => { Debug.Log("Combined response: " + combinedResponse); },
-                error => Debug.LogError(error)
+                error => Debug.LogError(error),
+                options
             );
             
             

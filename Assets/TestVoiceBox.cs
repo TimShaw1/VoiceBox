@@ -30,7 +30,6 @@ public class TestVoiceBox : MonoBehaviour
         // Send the chat message to the chat service
         AIManager.Instance.SendChatMessage(
             chats,
-            null,
             response => Debug.Log("Assistant: " + response),    // print the response to the console
             error => Debug.LogError(error)                      // log any errors to the console
         );

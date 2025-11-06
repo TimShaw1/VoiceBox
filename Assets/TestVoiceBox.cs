@@ -25,14 +25,20 @@ public class TestVoiceBox : MonoBehaviour
         );
         chats.Add(chat);
 
+        // Print the user's chat to the console
         Debug.Log("User: " + chat);
 
-        // Send the chat message to the chat service
+        // Send the chat messages to the chat service
         AIManager.Instance.SendChatMessage(
             chats,
             response => Debug.Log("Assistant: " + response),    // print the response to the console
             error => Debug.LogError(error)                      // log any errors to the console
         );
+
+        // Register a lambda function to log the recognized speech. The registered function is called
+        // whenever the STT service finalizes a recognition.
+        AIManager.Instance.SpeechToTextService.OnRecognized += 
+            (senderObject, recognitionResult) => Debug.Log("TestVoiceBox recognized: " + recognitionResult.Text);
 
         // Start transcribing speech from the user's microphone
         AIManager.Instance.StartSpeechTranscription();

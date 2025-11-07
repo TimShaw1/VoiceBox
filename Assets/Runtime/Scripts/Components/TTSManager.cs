@@ -17,6 +17,7 @@ namespace TimShaw.VoiceBox.Components
     /// <summary>
     /// An individual TTS service manager. Useful if working with multiple different TTS services or voices.
     /// </summary>
+    [RequireComponent(typeof(AudioStreamer))]
     public class TTSManager : MonoBehaviour
     {
         /// <summary>
@@ -43,16 +44,6 @@ namespace TimShaw.VoiceBox.Components
         {
             var obj = new GameObject("TTSManager");
             obj.AddComponent<TTSManager>();
-        }
-
-#if UNITY_EDITOR
-        [MenuItem("GameObject/VoiceBox/Components/TTS Audio Source", false, 11)]
-#endif
-        static void CreateTTSAudioSourceObj()
-        {
-            var obj = new GameObject("TTSAudioSource");
-            obj.AddComponent<TTSManager>();
-            obj.AddComponent<AudioStreamer>();
         }
 
         /// <summary>
@@ -94,7 +85,7 @@ namespace TimShaw.VoiceBox.Components
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <param name="token"></param>
-        public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, CancellationToken token)
+        public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, CancellationToken token = default)
         {
             Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir, token));
         }

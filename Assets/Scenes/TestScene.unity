@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testSpawnManager: 0
   testSTT: 0
-  testTTS: 1
+  testTTS: 0
   testChat: 0
   audioSource: {fileID: 2085286909}
 --- !u!4 &897424585
@@ -229,6 +229,7 @@ GameObject:
   - component: {fileID: 1493601812}
   - component: {fileID: 1493601815}
   - component: {fileID: 1493601814}
+  - component: {fileID: 1493601816}
   m_Layer: 0
   m_Name: TTS Object
   m_TagString: Untagged
@@ -373,6 +374,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1493601816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493601811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01a5aabf7bb06bc44a509392d6d4c719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ttsManager: {fileID: 1493601812}
 --- !u!1 &1519555949
 GameObject:
   m_ObjectHideFlags: 0

@@ -135,7 +135,7 @@ namespace TimShaw.VoiceBox.Core
         /// Requests an audio file from the ElevenLabs TTS service.
         /// </summary>
         /// <param name="prompt">The text to be converted to speech.</param>
-        /// <param name="fileName">The name of the output audio file.</param>
+        /// <param name="fileName">The name of the output audio file, excluding the file extension.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <param name="token"></param>
         /// <returns>A task representing the asynchronous operation.</returns>
@@ -164,7 +164,7 @@ namespace TimShaw.VoiceBox.Core
                 Debug.Log("Success...");
 
                 using (Stream stream = await response.Content.ReadAsStreamAsync())
-                using (FileStream fileStream = System.IO.File.Create(dir + fileName.ToString() + fileExtension))
+                using (FileStream fileStream = System.IO.File.Create(Path.Combine(dir, fileName.ToString()) + fileExtension))
                 {
                     await stream.CopyToAsync(fileStream);
                     Debug.Log("Streamed");
@@ -175,7 +175,7 @@ namespace TimShaw.VoiceBox.Core
                 Debug.Log(ex.ToString());
             }
 
-            Debug.Log(dir + fileName.ToString() + fileExtension);
+            Debug.Log(Path.GetFullPath(Path.Combine(dir, fileName.ToString()) + fileExtension));
 
             return;
 

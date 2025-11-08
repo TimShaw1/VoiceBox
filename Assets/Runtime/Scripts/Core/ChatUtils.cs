@@ -10,11 +10,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO; 
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using UnityEngine;
 
 
 namespace TimShaw.VoiceBox.Core
@@ -234,7 +236,8 @@ namespace TimShaw.VoiceBox.Core
             /// <param name="caller">What object should call <paramref name="functionName"/> (usually <see langword="this"/> or <see langword="null"/> if the function is static)</param>
             /// <param name="functionName">The name of the function to call. Should be passed as <c><see langword="nameof"/>(MyFunc)</c></param>
             /// <param name="functionDescription">A description of the function to be provided to the LLM</param>
-            public VoiceBoxChatTool(object caller, string functionName, string functionDescription)
+            /// <param name="customConverters">A list of custom <see cref="System.Text.Json.Serialization.JsonConverter"/> objects. Enables serialization of custom types</param>
+            public VoiceBoxChatTool(object caller, string functionName, string functionDescription, IList<System.Text.Json.Serialization.JsonConverter> customConverters = default)
             {
                 Caller = caller;
                 Method = caller.GetType().GetMethod(functionName);
@@ -244,6 +247,10 @@ namespace TimShaw.VoiceBox.Core
                     Converters = { new Vector2JsonConverter(), new Vector3JsonConverter(), new Vector4JsonConverter(), new QuaternionJsonConverter() },
                     TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
                 };
+
+                if (customConverters != null)
+                    foreach (var converter in customConverters)
+                        options.Converters.Add(converter);  
 
                 InternalChatTool = AIFunctionFactory.Create(Method, Caller, functionName, functionDescription, options);
 
@@ -619,6 +626,98 @@ namespace TimShaw.VoiceBox.Core
             }
         }
         #endregion
+
+        /// <summary>
+        /// A custom JsonConverter for serializing and deserializing the Unity Color struct.
+        /// </summary>
+        public class ColorJsonConverter : System.Text.Json.Serialization.JsonConverter<Color>
+        {
+            /// <summary>
+            /// Specifies which types this converter can convert
+            /// </summary>
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert == typeof(Color);
+            }
+
+            /// <summary>
+            /// Reads and converts the JSON to a Color object.
+            /// Supports both object format {"r":1,"g":0,"b":0,"a":1} and string format "(1,0,0,1)".
+            /// </summary>
+            public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                // Handle string format e.g., "(1.0, 0.5, 0.0, 1.0)"
+                if (reader.TokenType == JsonTokenType.String)
+                {
+                    string value = reader.GetString();
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        return default;
+                    }
+
+                    value = value.Trim('(', ')', ' ');
+                    string[] components = value.Split(',');
+
+                    if (components.Length == 4 &&
+                        float.TryParse(components[0], out float r) &&
+                        float.TryParse(components[1], out float g) &&
+                        float.TryParse(components[2], out float b) &&
+                        float.TryParse(components[3], out float a))
+                    {
+                        return new Color(r, g, b, a);
+                    }
+                }
+                // Handle object format e.g., { "r": 1.0, "g": 0.5, "b": 0.0, "a": 1.0 }
+                else if (reader.TokenType == JsonTokenType.StartObject)
+                {
+                    float r = 0, g = 0, b = 0, a = 1; // Default alpha to 1 (opaque)
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonTokenType.EndObject)
+                        {
+                            return new Color(r, g, b, a);
+                        }
+
+                        if (reader.TokenType == JsonTokenType.PropertyName)
+                        {
+                            string propertyName = reader.GetString();
+                            reader.Read();
+                            switch (propertyName.ToLower())
+                            {
+                                case "r":
+                                    r = reader.GetSingle();
+                                    break;
+                                case "g":
+                                    g = reader.GetSingle();
+                                    break;
+                                case "b":
+                                    b = reader.GetSingle();
+                                    break;
+                                case "a":
+                                    a = reader.GetSingle();
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                throw new System.Text.Json.JsonException($"Unexpected token or format when parsing Color. Token: {reader.TokenType}");
+            }
+
+            /// <summary>
+            /// Writes a Color object to JSON in object format.
+            /// </summary>
+            public override void Write(Utf8JsonWriter writer, Color value, JsonSerializerOptions options)
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("r", value.r);
+                writer.WriteNumber("g", value.g);
+                writer.WriteNumber("b", value.b);
+                writer.WriteNumber("a", value.a);
+                writer.WriteEndObject();
+            }
+        }
+
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

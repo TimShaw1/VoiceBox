@@ -10,6 +10,7 @@ using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Modding;
 using UnityEngine;
+using static TimShaw.VoiceBox.Core.ChatUtils;
 using static TimShaw.VoiceBox.Core.STTUtils;
 
 /// <summary>
@@ -67,29 +68,24 @@ public class APITester : MonoBehaviour
     /// 
     /// </summary>
     /// <param name="textToDisplay"></param>
-    public void SampleTool(string textToDisplay)
+    public void SampleTool1(string textToDisplay)
     {
         Debug.Log("AI is displaying text! --> " + textToDisplay);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="dir"></param>
-    /// <param name="dir2"></param>
-    /// <param name="dir3"></param>
-    public void SampleTool2(Vector2 dir, Vector3 dir2, Vector4 dir3)
+    public void SampleTool2(Color color)
     {
-        Debug.Log("AI is displaying vectors! --> " + dir + " " + dir2 + " " + dir3);
+        Debug.Log("AI is displaying a color! --> " + color);
     }
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="dir"></param>
-    public void SampleTool3(Vector2 dir)
+    /// <param name="rot"></param>
+    public void SampleTool3(Vector2 dir, Quaternion rot)
     {
-        Debug.Log("AI is displaying a vector! --> " + dir);
+        Debug.Log("AI is displaying a Vector2 and a Quaternion! --> " + dir + " -- " + rot );
     }
 
     /// <summary>
@@ -120,26 +116,36 @@ public class APITester : MonoBehaviour
             var chats = new List<ChatUtils.VoiceBoxChatMessage>();
             var chat = new ChatUtils.VoiceBoxChatMessage(
                 ChatUtils.VoiceBoxChatRole.User,
-                "Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
-                //"Display a vector2 (1.00, 3.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
+                //"Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
+                //"Display a vector2 (1.00, 3.00) and quaternion (1.00, 2.00, 3.00, 4.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
+                "Display the color red to the console with 0.5 alpha"
                 );
             chats.Add(chat);
 
-            ChatUtils.VoiceBoxChatTool tool = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool), "Displays provided text in the console");
-            ChatUtils.VoiceBoxChatTool tool2 = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool3), "Displays a provided vector2 to the console.");
+            var converters = new List<System.Text.Json.Serialization.JsonConverter>();
+            converters.Add(new ColorJsonConverter());
+
+            ChatUtils.VoiceBoxChatTool tool = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool1), "Displays provided text in the console");
+            ChatUtils.VoiceBoxChatTool tool2 = new VoiceBoxChatTool(
+                this, 
+                nameof(SampleTool2), 
+                "Displays an RGBA color (with color values represented as floats between 0 and 1) to the console",
+                converters
+            );
+            ChatUtils.VoiceBoxChatTool tool3 = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool3), "Displays a provided vector2 and quaternion to the console.", converters);
 
             string combinedResponse = "";
 
             ChatUtils.VoiceBoxChatCompletionOptions options = new ChatUtils.VoiceBoxChatCompletionOptions()
             {
-                VoiceBoxTools = { tool, tool2 }
+                VoiceBoxTools = { tool2 }
             };
 
             Debug.Log(options.Tools.Count);
 
-            //AIManager.Instance.SendChatMessage(chats, chatMessage => Debug.Log(chatMessage.Text), error => Debug.LogError(error), options);
+            AIManager.Instance.SendChatMessage(chats, chatMessage => Debug.Log(chatMessage.Role + ": " + chatMessage.Text), error => Debug.LogError(error), options);
 
-
+            /*
             AIManager.Instance.StreamChatMessage(
                 chats,
                 chunk => { Debug.Log(chunk.Role + ": " + chunk.Text); combinedResponse += chunk; },
@@ -147,6 +153,7 @@ public class APITester : MonoBehaviour
                 error => Debug.LogError(error),
                 options
             );
+            */
             
             
         }

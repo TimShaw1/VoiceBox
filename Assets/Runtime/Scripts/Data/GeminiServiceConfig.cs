@@ -1,9 +1,6 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Generics;
-using OpenAI.Chat;
 
 namespace TimShaw.VoiceBox.Data
 {

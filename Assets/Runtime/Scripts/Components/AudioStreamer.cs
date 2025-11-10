@@ -199,6 +199,7 @@ namespace TimShaw.VoiceBox.Components
         {
             try
             {
+                _audioSource.Play();
                 await service.ConnectAndStream(text, _webSocket, token);
             }
             catch (OperationCanceledException)

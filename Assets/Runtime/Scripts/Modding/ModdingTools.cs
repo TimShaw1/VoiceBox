@@ -2,7 +2,6 @@
 
 using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Core;
-using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
@@ -14,31 +13,31 @@ namespace TimShaw.VoiceBox.Modding
     public static class ModdingTools
     {
         /// <summary>
-        /// Creates a generic chat service config object. Useful for modders who want to generate configs at runtime.
+        /// Creates a chat service config object. Useful for modders who want to generate configs at runtime.
         /// </summary>
         /// <typeparam name="T">The type of <see cref="GenericChatServiceConfig"/> to create</typeparam>
         /// <returns></returns>
-        public static T CreateGenericChatServiceConfig<T>() where T : GenericChatServiceConfig
+        public static T CreateChatServiceConfig<T>() where T : GenericChatServiceConfig
         {
             return GenericChatServiceConfig.CreateInstance<T>();
         }
 
         /// <summary>
-        /// Creates a generic STT service config object. Useful for modders who want to generate configs at runtime.
+        /// Creates a STT service config object. Useful for modders who want to generate configs at runtime.
         /// </summary>
         /// <typeparam name="T">The type of <see cref="GenericSTTServiceConfig"/> to create</typeparam>
         /// <returns></returns>
-        public static T CreateGenericSTTServiceConfig<T>() where T : GenericSTTServiceConfig
+        public static T CreateSTTServiceConfig<T>() where T : GenericSTTServiceConfig
         {
             return GenericSTTServiceConfig.CreateInstance<T>();
         }
 
         /// <summary>
-        /// Creates a generic TTS service config object. Useful for modders who want to generate configs at runtime.
+        /// Creates a TTS service config object. Useful for modders who want to generate configs at runtime.
         /// </summary>
         /// <typeparam name="T">The type of <see cref="GenericTTSServiceConfig"/> to create</typeparam>
         /// <returns></returns>
-        public static T CreateGenericTTSServiceConfig<T>() where T : GenericTTSServiceConfig
+        public static T CreateTTSServiceConfig<T>() where T : GenericTTSServiceConfig
         {
             return GenericTTSServiceConfig.CreateInstance<T>();
         }
@@ -63,9 +62,9 @@ namespace TimShaw.VoiceBox.Modding
             where TTSConfigType : GenericTTSServiceConfig
         {
             return CreateAIManagerObject(
-                CreateGenericChatServiceConfig<ChatConfigType>(),
-                CreateGenericSTTServiceConfig<STTConfigType>(),
-                CreateGenericTTSServiceConfig<TTSConfigType>(),
+                CreateChatServiceConfig<ChatConfigType>(),
+                CreateSTTServiceConfig<STTConfigType>(),
+                CreateTTSServiceConfig<TTSConfigType>(),
                 apiKeysJsonPath
             );
         }
@@ -124,10 +123,10 @@ namespace TimShaw.VoiceBox.Modding
         }
 
         /// <summary>
-        /// Initializes a <see cref="ChatManager"/> component with a <see cref="GenericChatServiceConfig"/>. Also loads Chat API key.
+        /// Initializes a <see cref="ChatManager"/> component with a <see cref="GenericChatServiceConfig"/> and creates the associated chat service. Also loads Chat API key.
         /// </summary>
         /// <param name="manager">The <see cref="ChatManager"/> to initialize</param>
-        /// <param name="config">A <see cref="GenericChatServiceConfig"/> that specifies how to set up the Chat manager. See <see cref="CreateGenericChatServiceConfig{T}"/></param>
+        /// <param name="config">A <see cref="GenericChatServiceConfig"/> that specifies how to set up the Chat manager. See <see cref="CreateChatServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
         /// <returns></returns>
         public static void InitChatManagerObject(ChatManager manager, GenericChatServiceConfig config, string apiKeysJsonPath = "")
@@ -139,10 +138,10 @@ namespace TimShaw.VoiceBox.Modding
         }
 
         /// <summary>
-        /// Initializes a <see cref="TTSManager"/> component with a <see cref="GenericTTSServiceConfig"/>. Also loads TTS API key.
+        /// Initializes a <see cref="TTSManager"/> component with a <see cref="GenericTTSServiceConfig"/> and creates the associated TTS service. Also loads TTS API key.
         /// </summary>
         /// <param name="manager">The <see cref="TTSManager"/> to initialize</param>
-        /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager. See <see cref="CreateGenericTTSServiceConfig{T}"/></param>
+        /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager. See <see cref="CreateTTSServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
         /// <returns></returns>
         public static void InitTTSManagerObject(TTSManager manager, GenericTTSServiceConfig config, string apiKeysJsonPath = "")

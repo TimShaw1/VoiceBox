@@ -136,12 +136,11 @@ namespace TimShaw.VoiceBox.Components
         }
 
         /// <summary>
-        /// Starts streaming speech for the given text using the specified service.
+        /// Initializes streaming speech for the given text using the specified service.
         /// </summary>
-        /// <param name="text">The text to be converted to speech.</param>
         /// <param name="service">The text-to-speech service to use.</param>
         /// <param name="token"></param>
-        public void StartStreaming(string text, ITextToSpeechService service, CancellationToken token = default)
+        public void InitStreaming(ITextToSpeechService service, CancellationToken token = default)
         {
             if (_webSocket != null && _webSocket.State == WebSocketState.Open)
             {
@@ -149,19 +148,26 @@ namespace TimShaw.VoiceBox.Components
                 return;
             }
 
-            _mp3Decoder = new StreamingMp3Decoder();
-            _cancellationSource = new CancellationTokenSource();
+            if (_mp3Decoder == null)
+                _mp3Decoder = new StreamingMp3Decoder();
+
+            if (_cancellationSource == null)
+                _cancellationSource = new CancellationTokenSource();
 
             while (_audioBuffer.TryDequeue(out _)) { }
 
-            _webSocket = new ClientWebSocket();
+            if (_webSocket == null)
+                _webSocket = new ClientWebSocket();
 
-            Uri uri = service.InitWebsocketAndGetUri(_webSocket);
+            // Aborted websockets cannot be reused, so we create a new one
+            if (_webSocket.State == WebSocketState.Aborted)
+            {
+                _webSocket.Dispose();
+                _webSocket = new ClientWebSocket();
+            }
 
             token = CancellationTokenSource.CreateLinkedTokenSource(token, _cancellationSource.Token).Token;
-
-            Task.Run(() => ConnectAndStream(text, uri, service, token));
-            _audioSource.Play();
+            service.InitWebsocket(_webSocket, _mp3Decoder, token);
 
         }
 
@@ -171,24 +177,29 @@ namespace TimShaw.VoiceBox.Components
         public void StopStreaming()
         {
             _cancellationSource?.Cancel();
+            if (_webSocket != null)
+            {
+                if (_webSocket.State == WebSocketState.Open)
+                {
+                    _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Finished", CancellationToken.None);
+                }
+                _webSocket.Dispose();
+                _webSocket = null;
+            }
         }
 
         /// <summary>
         /// Connects to the WebSocket and streams the audio data.
         /// </summary>
         /// <param name="text">The text to be streamed.</param>
-        /// <param name="uri">The WebSocket URI.</param>
         /// <param name="service">The text-to-speech service.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task ConnectAndStream(string text, Uri uri, ITextToSpeechService service, CancellationToken token)
+        public async void ConnectAndStream(string text, ITextToSpeechService service, CancellationToken token)
         {
             try
             {
-                await _webSocket.ConnectAsync(uri, token);
-
-                await service.ConnectAndStream(text, _webSocket, _mp3Decoder, token);
-
+                await service.ConnectAndStream(text, _webSocket, token);
             }
             catch (OperationCanceledException)
             {
@@ -197,18 +208,6 @@ namespace TimShaw.VoiceBox.Components
             catch (Exception e)
             {
                 Debug.LogError($"WebSocket Error: {e.Message}");
-            }
-            finally
-            {
-                if (_webSocket != null)
-                {
-                    if (_webSocket.State == WebSocketState.Open)
-                    {
-                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Finished", CancellationToken.None);
-                    }
-                    _webSocket.Dispose();
-                    _webSocket = null;
-                }
             }
         }
 
@@ -221,6 +220,7 @@ namespace TimShaw.VoiceBox.Components
         void OnAudioFilterRead(float[] data, int channels)
         {
             if (_mp3Decoder == null) return;
+            //if (!_mp3Decoder.HasSamples) return;
 
             // The decoder provides a perfectly formatted stream (correct sample rate AND channel count),
             // so we just copy it directly into Unity's buffer.

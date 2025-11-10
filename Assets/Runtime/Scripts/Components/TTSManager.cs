@@ -120,7 +120,10 @@ namespace TimShaw.VoiceBox.Components
         {
             AudioStreamer audioStreamer = GetComponent<AudioStreamer>();
             if (audioStreamer)
-                audioStreamer.StartStreaming(prompt, TextToSpeechService);
+            {
+                audioStreamer.InitStreaming(TextToSpeechService);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, destroyCancellationToken);
+            }
             else
                 Debug.LogError("TTS Manager object does not have an AudioStreamer attached to it!");
 
@@ -134,7 +137,10 @@ namespace TimShaw.VoiceBox.Components
         public void RequestAudioAndStream(string prompt, AudioStreamer audioStreamer)
         {
             if (audioStreamer)
-                audioStreamer.StartStreaming(prompt, TextToSpeechService);
+            {
+                audioStreamer.InitStreaming(TextToSpeechService);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, destroyCancellationToken);
+            }
             else
                 Debug.LogError("Audio Streamer is null");
         }

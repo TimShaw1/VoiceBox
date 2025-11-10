@@ -40,17 +40,17 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes a websocket (eg sets request headers) to interface with the TTS service and returns the endpoint Uri
         /// </summary>
         /// <param name="webSocket">The websocket that should connect to the TTS service</param>
-        /// <returns>The configured endpoint Uri of the TTS service</returns>
-        public Uri InitWebsocketAndGetUri(ClientWebSocket webSocket);
+        /// <param name="mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="token"></param>
+        public void InitWebsocket(ClientWebSocket webSocket, StreamingMp3Decoder mp3Decoder, CancellationToken token);
 
         /// <summary>
         /// Connects to a WebSocket and streams audio data.
         /// </summary>
         /// <param name="text">The text to be streamed as audio.</param>
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
-        /// <param name="_mp3Decoder">The MP3 decoder to process the audio stream.</param>
         /// <param name="token">A cancellation token to stop the streaming.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public Task ConnectAndStream(string text, WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token);
+        public Task ConnectAndStream(string text, WebSocket _webSocket, CancellationToken token);
     }
 }

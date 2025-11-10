@@ -345,7 +345,10 @@ namespace TimShaw.VoiceBox.Core
         public void RequestAudioAndStream(string prompt, AudioStreamer audioStreamer, CancellationToken token = default)
         {
             if (audioStreamer)
-                audioStreamer.StartStreaming(prompt, TextToSpeechService, token);
+            {
+                audioStreamer.InitStreaming(TextToSpeechService);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, destroyCancellationToken);
+            }
             else
                 Debug.LogError("Audio Streamer is null.");
         }

@@ -8,10 +8,10 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Components;
-using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Data;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -25,10 +25,12 @@ namespace TimShaw.VoiceBox.Core
 
         private HttpClient client;
         /// <summary>
-        /// The configuration for the ElevenLabs TTS service.
+        /// The configuration for the ElevenLabs TTS service. 
         /// </summary>
         private ElevenlabsTTSServiceConfig _config;
         private string fileExtension;
+
+        private Task _recieveAudioTask;
 
         /// <summary>
         /// Represents the request body for the ElevenLabs TTS API.
@@ -295,10 +297,9 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         /// <param name="text">The text to be streamed as audio.</param>
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
-        /// <param name="_mp3Decoder">The MP3 decoder to process the audio stream.</param>
         /// <param name="token">A cancellation token to stop the streaming.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task ConnectAndStream(string text, WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token)
+        public async Task ConnectAndStream(string text, WebSocket _webSocket, CancellationToken token)
         {
             var initialMessage = new { text = " " };
             string jsonMessage = JsonConvert.SerializeObject(initialMessage);
@@ -308,22 +309,49 @@ namespace TimShaw.VoiceBox.Core
             jsonMessage = JsonConvert.SerializeObject(textMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
-            var eosMessage = new { text = "" };
-            jsonMessage = JsonConvert.SerializeObject(eosMessage);
+            var flushMessage = new { text = " ", flush = true };
+            jsonMessage = JsonConvert.SerializeObject(flushMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
-            await ReceiveAudioData(_webSocket, _mp3Decoder, token);
+            //var eosMessage = new { text = "" };
+            //jsonMessage = JsonConvert.SerializeObject(eosMessage);
+            //await SendSocketMessage(jsonMessage, _webSocket, token);
+
+            //await ReceiveAudioData(_webSocket, _mp3Decoder, token);
         }
 
         /// <summary>
         /// Sets the xi-api-key header and returns the generation endpoint Uri of the <see cref="ElevenlabsTTSServiceConfig.voiceId"/>
         /// </summary>
         /// <param name="webSocket">The websocket that should connect to Elevenlabs</param>
-        /// <returns>The endpoint Uri of the configured voiceId on Elevenlabs</returns>
-        public Uri InitWebsocketAndGetUri(ClientWebSocket webSocket)
+        /// <param name="mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="token"></param>
+        public void InitWebsocket(ClientWebSocket webSocket, StreamingMp3Decoder mp3Decoder, CancellationToken token)
         {
-            webSocket.Options.SetRequestHeader("xi-api-key", _config.apiKey);
-            return new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id=eleven_multilingual_v2");
+            if (webSocket.State == WebSocketState.Closed)
+            {
+                Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id=eleven_multilingual_v2");
+                Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
+                if (_recieveAudioTask != null)
+                    _recieveAudioTask.Dispose();
+                _recieveAudioTask = ReceiveAudioData(webSocket, mp3Decoder, token);
+                return;
+            }
+            else if (webSocket.State != WebSocketState.Open && webSocket.State != WebSocketState.Connecting)
+            {
+                webSocket.Options.SetRequestHeader("xi-api-key", _config.apiKey);
+                Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id=eleven_multilingual_v2");
+                Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
+                if (_recieveAudioTask != null)
+                    _recieveAudioTask.Dispose();
+                _recieveAudioTask = ReceiveAudioData(webSocket, mp3Decoder, token);
+                return;
+            }
+            else
+            {
+                Debug.LogWarning("Websocket already initialized!");
+                return;
+            }
         }
     }
 }

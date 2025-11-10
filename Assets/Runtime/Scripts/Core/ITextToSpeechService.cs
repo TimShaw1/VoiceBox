@@ -37,7 +37,7 @@ namespace TimShaw.VoiceBox.Core
         public Task<AudioClip> RequestAudioClip(string prompt);
 
         /// <summary>
-        /// Initializes a websocket (eg sets request headers) to interface with the TTS service and returns the endpoint Uri
+        /// Initializes a websocket (eg sets request headers) to interface with the TTS service
         /// </summary>
         /// <param name="webSocket">The websocket that should connect to the TTS service</param>
         /// <param name="mp3Decoder">The MP3 decoder to process the audio stream.</param>

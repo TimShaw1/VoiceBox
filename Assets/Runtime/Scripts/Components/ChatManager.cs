@@ -74,9 +74,7 @@ namespace TimShaw.VoiceBox.Components
         /// </summary>
         /// <param name="keysFile">Optional path to the JSON file with API keys.</param>
         /// <param name="chatKey">Optional, direct API key for the chat service.</param>
-        /// <param name="sttKey">Optional, direct API key for the Speech-to-Text service.</param>
-        /// <param name="ttsKey">Optional, direct API key for the Text-to-Speech service.</param>
-        public void LoadAPIKey(string keysFile = null, string chatKey = null, string sttKey = null, string ttsKey = null)
+        public void LoadAPIKey(string keysFile = null, string chatKey = null)
         {
             // Load from JSON file if provided
             Dictionary<string, string> apiKeysFromFile = null;

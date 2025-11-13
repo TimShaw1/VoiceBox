@@ -129,12 +129,14 @@ namespace TimShaw.VoiceBox.Modding
         /// <param name="config">A <see cref="GenericChatServiceConfig"/> that specifies how to set up the Chat manager. See <see cref="CreateChatServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
         /// <returns></returns>
-        public static void InitChatManagerObject(ChatManager manager, GenericChatServiceConfig config, string apiKeysJsonPath = "")
+        public static void InitChatManagerObject(ChatManager manager, GenericChatServiceConfig config, string apiKeysJsonPath = "", string chatKey = null)
         {
             manager.chatServiceConfig = config;
 
             if (apiKeysJsonPath.Length > 0)
                 manager.LoadAPIKey(apiKeysJsonPath);
+            else if (chatKey != null)
+                manager.LoadAPIKey(chatKey: chatKey);
             else
                 manager.LoadAPIKey();
             manager.ChatService = ServiceFactory.CreateChatService(manager.chatServiceConfig);
@@ -147,12 +149,14 @@ namespace TimShaw.VoiceBox.Modding
         /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager. See <see cref="CreateTTSServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
         /// <returns></returns>
-        public static void InitTTSManagerObject(TTSManager manager, GenericTTSServiceConfig config, string apiKeysJsonPath = "")
+        public static void InitTTSManagerObject(TTSManager manager, GenericTTSServiceConfig config, string apiKeysJsonPath = "", string ttsKey = null)
         {
             manager.textToSpeechConfig = config;
 
             if (apiKeysJsonPath.Length > 0)
                 manager.LoadAPIKey(apiKeysJsonPath);
+            else if (ttsKey != null)
+                manager.LoadAPIKey(ttsKey: ttsKey);
             else
                 manager.LoadAPIKey();
             manager.TextToSpeechService = ServiceFactory.CreateTtsService(manager.textToSpeechConfig);

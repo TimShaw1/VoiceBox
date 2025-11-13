@@ -23,7 +23,7 @@ namespace TimShaw.VoiceBox.Components
         /// <summary>
         /// Path to the api keys json file.
         /// </summary>
-        [Tooltip("Path to the api keys json file.")]
+        [Tooltip("Path to the api keys json file (Optional).")]
         [SerializeField] public string apiKeysJsonPath = "";
 
         /// <summary>
@@ -51,7 +51,10 @@ namespace TimShaw.VoiceBox.Components
         /// </summary>
         public void Awake()
         {
-            LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+            if (apiKeysJsonPath.Length > 0)
+                LoadAPIKey(apiKeysJsonPath);
+            else
+                LoadAPIKey();
             TextToSpeechService = ServiceFactory.CreateTtsService(textToSpeechConfig);
         }
 
@@ -74,7 +77,7 @@ namespace TimShaw.VoiceBox.Components
         {
             // Load from JSON file if provided
             Dictionary<string, string> apiKeysFromFile = null;
-            if (!string.IsNullOrEmpty(keysFile) && File.Exists(keysFile))
+            if (!string.IsNullOrEmpty(keysFile))
             {
                 apiKeysFromFile = LoadKeysFromFile(keysFile);
             }

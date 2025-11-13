@@ -201,7 +201,10 @@ namespace TimShaw.VoiceBox.Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : null);
+            if (apiKeysJsonPath.Length > 0)
+                LoadAPIKeys(apiKeysJsonPath);
+            else
+                LoadAPIKeys();
 
             ChatService = ServiceFactory.CreateChatService(chatServiceConfig);
             SpeechToTextService = ServiceFactory.CreateSttService(speechToTextConfig);

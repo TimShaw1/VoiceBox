@@ -150,7 +150,7 @@ namespace TimShaw.VoiceBox.Components
         /// <param name="token"></param>
         public void SendChatMessage(
             List<ChatUtils.VoiceBoxChatMessage> messageHistory,
-            Action<ChatMessage> onSuccess,
+            Action<ChatUtils.VoiceBoxChatMessage> onSuccess,
             Action<string> onError,
             ChatUtils.VoiceBoxChatCompletionOptions options = null,
             CancellationToken token = default)

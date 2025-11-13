@@ -144,7 +144,6 @@ namespace TimShaw.VoiceBox.Core
         public async Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token)
         {
             string url = _config.serviceEndpoint + _config.voiceId;
-            Debug.Log(url);
 
             var payload = new ElevenLabsTTSRequest
             {
@@ -191,7 +190,6 @@ namespace TimShaw.VoiceBox.Core
         public async Task<AudioClip> RequestAudioClip(string prompt)
         {
             string url = _config.serviceEndpoint + _config.voiceId;
-            Debug.Log("Requesting audio from: " + url);
 
             var payload = new ElevenLabsTTSRequest
             {

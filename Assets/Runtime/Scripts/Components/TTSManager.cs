@@ -74,7 +74,7 @@ namespace TimShaw.VoiceBox.Components
         {
             // Load from JSON file if provided
             Dictionary<string, string> apiKeysFromFile = null;
-            if (!string.IsNullOrEmpty(keysFile))
+            if (!string.IsNullOrEmpty(keysFile) && File.Exists(keysFile))
             {
                 apiKeysFromFile = LoadKeysFromFile(keysFile);
             }
@@ -99,12 +99,12 @@ namespace TimShaw.VoiceBox.Components
             }
             catch (FileNotFoundException)
             {
-                Debug.LogWarning($"[AI Manager] API keys json file not found at: {keysFile}");
+                Debug.LogWarning($"[TTS Manager] API keys json file not found at: {keysFile}");
                 return null;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[AI Manager] Error reading API keys file: {ex.Message}");
+                Debug.LogError($"[TTS Manager] Error reading API keys file: {ex.Message}");
                 return null;
             }
         }

@@ -146,7 +146,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 897424583}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 021a684688135dc4c95b89d9982fd8ab, type: 3}
   m_Name: 
@@ -154,7 +154,7 @@ MonoBehaviour:
   testSpawnManager: 0
   testSTT: 0
   testTTS: 0
-  testChat: 1
+  testChat: 0
   audioSource: {fileID: 2085286909}
 --- !u!4 &897424585
 Transform:
@@ -181,6 +181,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1374051559}
   - component: {fileID: 1374051558}
+  - component: {fileID: 1374051560}
   m_Layer: 0
   m_Name: Chat Object
   m_TagString: Untagged
@@ -217,6 +218,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1374051560
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1374051557}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a83de9dd7461ae34985e15837cbd317f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chatManager: {fileID: 1374051558}
 --- !u!1 &1493601811
 GameObject:
   m_ObjectHideFlags: 0
@@ -229,6 +243,7 @@ GameObject:
   - component: {fileID: 1493601812}
   - component: {fileID: 1493601815}
   - component: {fileID: 1493601814}
+  - component: {fileID: 1493601816}
   m_Layer: 0
   m_Name: TTS Object
   m_TagString: Untagged
@@ -373,6 +388,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1493601816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493601811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01a5aabf7bb06bc44a509392d6d4c719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ttsManager: {fileID: 1493601812}
 --- !u!1 &1519555949
 GameObject:
   m_ObjectHideFlags: 0

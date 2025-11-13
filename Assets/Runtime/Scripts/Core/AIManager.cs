@@ -93,7 +93,7 @@ namespace TimShaw.VoiceBox.Core
         {
             // Load from JSON file if provided
             Dictionary<string, string> apiKeysFromFile = null;
-            if (!string.IsNullOrEmpty(keysFile))
+            if (!string.IsNullOrEmpty(keysFile) && File.Exists(keysFile))
             {
                 apiKeysFromFile = LoadKeysFromFile(keysFile);
             }

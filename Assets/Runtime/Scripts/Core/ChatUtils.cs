@@ -64,6 +64,11 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public class VoiceBoxChatMessage : ChatMessage
         {
+            /// <summary>
+            /// 
+            /// </summary>
+            public new string Text => ConcatText(Contents);
+
             /// <summary>Initializes a new instance of the <see cref="VoiceBoxChatMessage"/> class.</summary>
             /// <param name="role">The role of the author of the message.</param>
             /// <param name="content">The text content of the message.</param>
@@ -86,6 +91,49 @@ namespace TimShaw.VoiceBox.Core
                 RawRepresentation = chatMessage.RawRepresentation;
                 MessageId = chatMessage.MessageId;
                 AuthorName = chatMessage.AuthorName;
+            }
+
+            private static string ConcatText(IEnumerable<AIContent> contents)
+            {
+                if (contents is IList<AIContent> list)
+                {
+                    int count = list.Count;
+                    switch (count)
+                    {
+                        case 0:
+                            return string.Empty;
+
+                        case 1:
+                            return (list[0] as TextContent)?.Text ?? string.Empty;
+
+                        default:
+#if NET
+                    DefaultInterpolatedStringHandler builder = new(count, 0, null, stackalloc char[512]);
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (list[i] is TextContent text)
+                        {
+                            builder.AppendLiteral(text.Text);
+                        }
+                    }
+
+                    return builder.ToStringAndClear();
+#else
+                            StringBuilder builder = new StringBuilder();
+                            for (int i = 0; i < count; i++)
+                            {
+                                if (list[i] is TextContent text)
+                                {
+                                    builder.Append(text.Text);
+                                }
+                            }
+
+                            return builder.ToString();
+#endif
+                    }
+                }
+
+                return string.Concat(contents.OfType<TextContent>());
             }
         }
         #endregion

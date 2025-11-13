@@ -133,7 +133,10 @@ namespace TimShaw.VoiceBox.Modding
         {
             manager.chatServiceConfig = config;
 
-            manager.LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+            if (apiKeysJsonPath.Length > 0)
+                manager.LoadAPIKey(apiKeysJsonPath);
+            else
+                manager.LoadAPIKey();
             manager.ChatService = ServiceFactory.CreateChatService(manager.chatServiceConfig);
         }
 
@@ -148,7 +151,10 @@ namespace TimShaw.VoiceBox.Modding
         {
             manager.textToSpeechConfig = config;
 
-            manager.LoadAPIKey(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+            if (apiKeysJsonPath.Length > 0)
+                manager.LoadAPIKey(apiKeysJsonPath);
+            else
+                manager.LoadAPIKey();
             manager.TextToSpeechService = ServiceFactory.CreateTtsService(manager.textToSpeechConfig);
         }
 

@@ -11,8 +11,11 @@ namespace TimShaw.VoiceBox.Data
     /// This class sets <see cref="GenericChatServiceConfig.apiKeyJSONString"/> to OPENAI_API_KEY by default
     /// </summary>
     [CreateAssetMenu(fileName = "ChatGPTServiceConfig", menuName = "VoiceBox/Chat/ChatGPTService Configuration")]
-    class ChatGPTServiceConfig : GenericChatServiceConfig
+    public class ChatGPTServiceConfig : GenericChatServiceConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public ChatGPTServiceConfig()
         {
             serviceManagerType = typeof(ChatGPTServiceManager);

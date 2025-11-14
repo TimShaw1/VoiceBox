@@ -105,7 +105,10 @@ namespace TimShaw.VoiceBox.Modding
                 aiManagerComponent.speechToTextConfig = genericSTTServiceConfig;
                 aiManagerComponent.textToSpeechConfig = genericTTSServiceConfig;
 
-                AIManager.Instance.LoadAPIKeys(apiKeysJsonPath.Length > 0 ? apiKeysJsonPath : Application.dataPath + "/keys.json");
+                if (apiKeysJsonPath.Length > 0)
+                    AIManager.Instance.LoadAPIKeys(apiKeysJsonPath);
+                else
+                    AIManager.Instance.LoadAPIKeys();
 
                 aiManagerComponent.ChatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
                 aiManagerComponent.SpeechToTextService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);

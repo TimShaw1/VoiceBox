@@ -30,7 +30,8 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public static AIManager Instance { get; private set; }
 
-        private readonly CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource internalChatCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource internalSttCancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Path to an api keys json file.
@@ -216,7 +217,8 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         private void OnDestroy()
         {
-            internalCancellationTokenSource.Cancel();
+            internalChatCancellationTokenSource.Cancel();
+            internalSttCancellationTokenSource.Cancel();
             UnloadAPIKeys();
         }
 
@@ -235,13 +237,15 @@ namespace TimShaw.VoiceBox.Core
             ChatUtils.VoiceBoxChatCompletionOptions options = null,
             CancellationToken token = default)
         {
+            if (internalChatCancellationTokenSource.IsCancellationRequested)
+                internalChatCancellationTokenSource = new CancellationTokenSource();
             if (ChatService == null)
             {
                 onError?.Invoke("Chat service is not initialized. Check AIManager configuration.");
                 return;
             }
 
-            token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
+            token = CancellationTokenSource.CreateLinkedTokenSource(token, internalChatCancellationTokenSource.Token).Token;
 
             Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError, options, token));
         }
@@ -264,13 +268,15 @@ namespace TimShaw.VoiceBox.Core
             CancellationToken token = default
         )
         {
+            if (internalChatCancellationTokenSource.IsCancellationRequested)
+                internalChatCancellationTokenSource = new CancellationTokenSource();
             if (ChatService == null)
             {
                 onError?.Invoke("Chat service is not initialized. Check AIManager configuration.");
                 return;
             }
 
-            token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
+            token = CancellationTokenSource.CreateLinkedTokenSource(token, internalChatCancellationTokenSource.Token).Token;
 
             try
             {
@@ -287,12 +293,14 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public void StartSpeechTranscription(CancellationToken token = default)
         {
+            if (internalSttCancellationTokenSource.IsCancellationRequested)
+                internalSttCancellationTokenSource = new CancellationTokenSource();
             if (SpeechToTextService == null)
             {
                 Debug.Log("STT Service not initialized. Check AIManager configuration.");
                 return;
             }
-            token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
+            token = CancellationTokenSource.CreateLinkedTokenSource(token, internalSttCancellationTokenSource.Token).Token;
             Debug.Log("VoiceBox: Starting speech recognition.");
             Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(token));
         }
@@ -302,7 +310,7 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public void StopSpeechTranscription()
         {
-            internalCancellationTokenSource.Cancel();
+            internalSttCancellationTokenSource.Cancel();
         }
 
         /// <summary>

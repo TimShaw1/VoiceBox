@@ -311,10 +311,11 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="prompt">The text to be converted to speech.</param>
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
+        /// <param name="onSuccess">Callback for when file is created. Should return the path to the file.</param>
         /// <param name="token"></param>
-        public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, CancellationToken token)
+        public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, Action<string> onSuccess, CancellationToken token)
         {
-            Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir, token));
+            Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir, onSuccess, token));
         }
 
         /// <summary>

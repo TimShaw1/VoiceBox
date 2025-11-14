@@ -131,6 +131,7 @@ namespace TimShaw.VoiceBox.Modding
         /// <param name="manager">The <see cref="ChatManager"/> to initialize</param>
         /// <param name="config">A <see cref="GenericChatServiceConfig"/> that specifies how to set up the Chat manager. See <see cref="CreateChatServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
+        /// <param name="chatKey">Direct chat api key</param>
         /// <returns></returns>
         public static void InitChatManagerObject(ChatManager manager, GenericChatServiceConfig config, string apiKeysJsonPath = "", string chatKey = null)
         {
@@ -151,6 +152,7 @@ namespace TimShaw.VoiceBox.Modding
         /// <param name="manager">The <see cref="TTSManager"/> to initialize</param>
         /// <param name="config">A <see cref="GenericTTSServiceConfig"/> that specifies how to set up the TTS manager. See <see cref="CreateTTSServiceConfig{T}"/></param>
         /// <param name="apiKeysJsonPath">Path where the api keys json file is located</param>
+        /// <param name="ttsKey">Direct api key</param>
         /// <returns></returns>
         public static void InitTTSManagerObject(TTSManager manager, GenericTTSServiceConfig config, string apiKeysJsonPath = "", string ttsKey = null)
         {

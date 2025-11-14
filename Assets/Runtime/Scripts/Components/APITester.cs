@@ -73,6 +73,10 @@ public class APITester : MonoBehaviour
         Debug.Log("AI is displaying text! --> " + textToDisplay);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="color"></param>
     public void SampleTool2(Color color)
     {
         Debug.Log("AI is displaying a color! --> " + color);

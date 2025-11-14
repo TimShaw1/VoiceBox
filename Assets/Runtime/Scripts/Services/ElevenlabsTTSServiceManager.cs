@@ -139,9 +139,10 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="prompt">The text to be converted to speech.</param>
         /// <param name="fileName">The name of the output audio file, excluding the file extension.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
+        /// <param name="onSuccess">Callback for when file is created. Should return the path to the file.</param>
         /// <param name="token"></param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token)
+        /// <returns>The path to the file</returns>
+        public async Task RequestAudioFile(string prompt, string fileName, string dir, Action<string> onSuccess, CancellationToken token)
         {
             string url = _config.serviceEndpoint + _config.voiceId;
 
@@ -176,8 +177,7 @@ namespace TimShaw.VoiceBox.Core
                 Debug.Log(ex.ToString());
             }
 
-            Debug.Log(Path.GetFullPath(Path.Combine(dir, fileName.ToString()) + fileExtension));
-
+            onSuccess.Invoke(Path.GetFullPath(Path.Combine(dir, fileName.ToString()) + fileExtension));
             return;
 
         }

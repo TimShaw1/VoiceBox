@@ -25,9 +25,10 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="prompt">The text to be converted to speech.</param>
         /// <param name="fileName">The name of the output audio file, excluding the file extension.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
+        /// <param name="onSuccess">Callback for when file is created. Should return the path to the file.</param>
         /// <param name="token"></param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public Task RequestAudioFile(string prompt, string fileName, string dir, CancellationToken token);
+        public Task RequestAudioFile(string prompt, string fileName, string dir, Action<string> onSuccess, CancellationToken token);
 
         /// <summary>
         /// Requests an AudioClip from a text prompt.

@@ -175,6 +175,7 @@ namespace TimShaw.VoiceBox.Core
             catch (Exception ex)
             {
                 Debug.Log(ex.ToString());
+                return;
             }
 
             onSuccess.Invoke(Path.GetFullPath(Path.Combine(dir, fileName.ToString()) + fileExtension));

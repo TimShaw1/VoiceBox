@@ -146,13 +146,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 897424583}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 021a684688135dc4c95b89d9982fd8ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   testSpawnManager: 0
-  testSTT: 0
+  testSTT: 1
   testTTS: 0
   testChat: 0
   audioSource: {fileID: 2085286909}
@@ -188,7 +188,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1374051558
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -250,7 +250,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1493601812
 MonoBehaviour:
   m_ObjectHideFlags: 0

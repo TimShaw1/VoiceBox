@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TimShaw.VoiceBox.Components;  // Import useful components from VoiceBox
 using TimShaw.VoiceBox.Core;        // Import core classes from VoiceBox
 using UnityEngine;
-using static UnityEditor.Progress;
 
 public class TestChatManager : MonoBehaviour
 {

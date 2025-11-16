@@ -1,0 +1,462 @@
+namespace TimShaw.VoiceBox.GUI
+{
+    using System;
+    using System.Collections; // Needed for audio analysis
+    using TimShaw.VoiceBox.Components;
+    using TimShaw.VoiceBox.Core;
+    using TimShaw.VoiceBox.Generics;
+    using UnityEngine;
+    using UnityEngine.Windows;
+
+    /// <summary>
+    /// This script creates a full-screen GUI with API key inputs
+    /// and microphone recording controls.
+    /// </summary>
+    public class GUIManager : MonoBehaviour
+    {
+        public static GUIManager Instance { get; private set; }
+
+        [Header("GUI Settings")]
+
+        [Tooltip("The global scale for all GUI elements.")]
+        public float guiScale = 1.5f; // 1.5f = 150% size
+
+        [Tooltip("Pixel padding from the screen edges (before scaling).")]
+        public float padding = 10f;
+
+        [Tooltip("The color for our background.")]
+        public Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.75f);
+
+        [Header("API Keys")]
+        private string chatApiKey = "";
+        private string sttApiKey = "";
+        private string ttsApiKey = "";
+
+        [Header("Microphone")]
+        [Tooltip("How sensitive the audio indicator is. Increase this if the bar is too low.")]
+        public float audioSensitivity = 8.5f; // Was 5.0f
+
+        [Tooltip("The height of the audio level bar in scaled pixels.")]
+        public float audioBarHeight = 20f;
+
+        [Tooltip("The max height of the microphone selection box in scaled pixels.")]
+        public float micListMaxHeight = 100f;
+
+        private static string[] micDevices;
+        private static int selectedMicIndex = 0;
+        private static bool isRecording = false;
+        private static AudioClip recordingClip;
+
+        // --- Audio Level Detection ---
+        private float currentAudioLevel = 0f;
+        private float[] audioSampleData;
+        private int sampleWindow = 256; // How many samples to analyze for volume
+
+        // --- State ---
+        public bool isGuiVisible = true;
+        private Vector2 micScrollPosition;
+
+        // --- Styles ---
+        private GUIStyle indicatorBoxStyle;
+        private GUIStyle titleStyle;
+
+        // --- Managers ---
+        private GenericChatServiceConfig chatServiceConfig;
+        private GenericSTTServiceConfig sttServiceConfig;
+        private GenericTTSServiceConfig ttsServiceConfig;
+
+        /// <summary>
+        /// Creates a new gameobject with a <see cref="GUIManager"/> component.
+        /// </summary>
+        /// <returns></returns>
+        public static GameObject CreateGUIManagerObject()
+        {
+            if (Instance != null) return Instance.gameObject;
+
+            var manager = new GameObject("_VoiceBoxGUIManager");
+            manager.AddComponent<GUIManager>();
+
+            return manager;
+        }
+
+        private void Awake()
+        {
+            // --- Singleton Pattern ---
+            if (Instance != null && Instance != this)
+            {
+                // If an instance already exists, destroy this new one
+                Destroy(gameObject);
+                return;
+            }
+            // This is the first instance, so set it
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
+
+        /// <summary>
+        /// Called when the script first loads.
+        /// </summary>
+        void Start()
+        {
+            // Get all available microphone devices
+            micDevices = Microphone.devices;
+
+            // Initialize the buffer for audio sample data
+            audioSampleData = new float[sampleWindow];
+
+            // Default to a message if no mics are found
+            if (micDevices.Length == 0)
+            {
+                Debug.LogWarning("No microphone devices found!");
+                micDevices = new string[] { "No microphones available" };
+            }
+
+            Debug.Log("[GUIManager] GUI Manager created!");
+        }
+
+        /// <summary>
+        /// Called every frame. Used for non-GUI logic like audio processing.
+        /// </summary>
+        void Update()
+        {
+            // --- Audio processing ---
+            if (isRecording && recordingClip != null)
+            {
+                // Analyze the audio level
+                currentAudioLevel = GetAudioLevel();
+            }
+            else
+            {
+                currentAudioLevel = 0f;
+            }
+        }
+
+        /// <summary>
+        /// OnGUI is called for rendering and handling GUI events.
+        /// </summary>
+        void OnGUI()
+        {
+            // --- 0. CHECK VISIBILITY ---
+            if (!isGuiVisible)
+            {
+                return;
+            }
+
+            // --- 1. APPLY SCALING ---
+            Matrix4x4 oldMatrix = GUI.matrix;
+            GUI.matrix = Matrix4x4.Scale(new Vector3(guiScale, guiScale, 1.0f));
+            float scaledPadding = padding / guiScale;
+            float scaledScreenWidth = Screen.width / guiScale;
+            float scaledScreenHeight = Screen.height / guiScale;
+
+            Rect screenRect = new Rect(
+                scaledPadding,
+                scaledPadding,
+                scaledScreenWidth - (scaledPadding * 2),
+                scaledScreenHeight - (scaledPadding * 2)
+            );
+
+            // --- 2. DRAW THE BACKGROUND ---
+            Color originalColor = GUI.backgroundColor;
+            GUI.backgroundColor = backgroundColor;
+            GUI.Box(screenRect, GUIContent.none);
+            GUI.backgroundColor = originalColor;
+
+            // --- Lazy initialize our styles ---
+            if (indicatorBoxStyle == null)
+            {
+                indicatorBoxStyle = new GUIStyle(GUI.skin.box);
+                indicatorBoxStyle.alignment = TextAnchor.MiddleLeft;
+            }
+
+            if (titleStyle == null)
+            {
+                // Copy the default label style
+                titleStyle = new GUIStyle(GUI.skin.label);
+
+                // Make it bold
+                titleStyle.fontStyle = FontStyle.Bold;
+
+                // Read the font size from the *source style* (GUI.skin.label),
+                // not the new one we just created.
+
+                // Get the base font size from the default skin's label
+                int baseFontSize = GUI.skin.label.fontSize;
+
+                // Add a fallback in case the base font size is 0
+                if (baseFontSize <= 0)
+                {
+                    baseFontSize = 12; // A sensible default size
+                }
+
+                // Now, set the new style's font size
+                titleStyle.fontSize = baseFontSize * 2;
+
+                // (Optional) Center it
+                // titleStyle.alignment = TextAnchor.MiddleCenter;
+            }
+
+            // --- 3. BEGIN LAYOUT AREA ---
+            GUILayout.BeginArea(screenRect);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace(); // This pushes the button to the right
+
+            // We can set a fixed (scaled) size for the button
+            if (GUILayout.Button("Hide", GUILayout.Width(60), GUILayout.Height(25)))
+            {
+                isGuiVisible = false;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label("VoiceBox Utilities GUI", titleStyle);
+            GUILayout.Label("");
+
+            // --- Section: API Keys ---
+            GUILayout.Label("API Keys");
+            if (GUILayout.Button("Load API Keys"))
+            {
+                // CHAT
+                if (AIManager.Instance != null && AIManager.Instance.chatServiceConfig != null)
+                {
+                    chatServiceConfig = AIManager.Instance.chatServiceConfig;
+                    chatApiKey = AIManager.Instance.chatServiceConfig.apiKey;
+                }
+                else if (FindFirstObjectByType<ChatManager>() != null)
+                {
+                    var chatManager = FindFirstObjectByType<ChatManager>();
+                    chatServiceConfig = chatManager.chatServiceConfig;
+                    chatApiKey = chatManager.chatServiceConfig?.apiKey;
+                }
+
+                // STT
+                if (AIManager.Instance != null && AIManager.Instance.speechToTextConfig != null)
+                {
+                    sttServiceConfig = AIManager.Instance.speechToTextConfig;
+                    sttApiKey = AIManager.Instance.speechToTextConfig.apiKey;
+                }
+
+                // TTS
+                if (AIManager.Instance != null && AIManager.Instance.textToSpeechConfig != null)
+                {
+                    ttsServiceConfig = AIManager.Instance.textToSpeechConfig;
+                    ttsApiKey = AIManager.Instance.textToSpeechConfig.apiKey;
+                }
+                else if (FindFirstObjectByType<TTSManager>() != null)
+                {
+                    var ttsManager = FindFirstObjectByType<TTSManager>();
+                    ttsServiceConfig = ttsManager.textToSpeechConfig;
+                    chatApiKey = ttsManager.textToSpeechConfig?.apiKey;
+                }
+            }
+
+            // Use GUILayout.PasswordField for basic masking (displays as '*')
+            // CHAT
+            if (chatServiceConfig != null)
+            {
+                GUILayout.Label("Chat (" + chatServiceConfig.serviceManagerType + ")");
+            }
+            else
+                GUILayout.Label("Chat (Not Initialized)");
+            chatApiKey = GUILayout.PasswordField(chatApiKey, '*');
+
+            // STT
+            if (sttServiceConfig != null)
+            {
+                GUILayout.Label("Speech to Text (" + sttServiceConfig.serviceManagerType + ")");
+            }
+            else
+                GUILayout.Label("Speech to Text (Not Initialized)");
+            sttApiKey = GUILayout.PasswordField(sttApiKey, '*');
+
+            // TTS
+            if (ttsServiceConfig != null)
+            {
+                GUILayout.Label("Text to Speech (" + ttsServiceConfig.serviceManagerType + ")");
+            }
+            else
+                GUILayout.Label("Text to Speech (Not Initialized)");
+            ttsApiKey = GUILayout.PasswordField(ttsApiKey, '*');
+
+
+            if (GUILayout.Button("Save API Keys (TODO)"))
+            {
+                // For now, just print to the console
+                Debug.Log($"Chat Key: {chatApiKey}");
+                Debug.Log($"STT Key: {sttApiKey}");
+                Debug.Log($"TTS Key: {ttsApiKey}");
+            }
+
+            // --- Section: Microphone ---
+            GUILayout.Space(20); // Add some visual separation
+            GUILayout.Label("Microphone Controls");
+
+            if (micDevices.Length > 0)
+            {
+                // --- Mic Selection ---
+                GUILayout.Label("Select a microphone:");
+
+                // --- Scrollable Mic List (Dropdown style) ---
+                micScrollPosition = GUILayout.BeginScrollView(micScrollPosition, GUILayout.Height(micListMaxHeight));
+                selectedMicIndex = GUILayout.SelectionGrid(selectedMicIndex, micDevices, 1);
+                GUILayout.EndScrollView();
+
+
+                GUILayout.Space(10);
+
+                // --- Record Button ---
+                string recordButtonText = isRecording ? "Stop Recording" : "Start Recording";
+                if (GUILayout.Button(recordButtonText))
+                {
+                    if (isRecording)
+                    {
+                        StopRecording();
+                    }
+                    else
+                    {
+                        StartRecording();
+                    }
+                }
+
+                GUILayout.Space(5); // Padding for the bar
+
+                // --- Audio Level Indicator ---
+                if (isRecording)
+                {
+                    // --- 1. Calculate the visual level ---
+                    float visualLevel = Mathf.Clamp01(currentAudioLevel * audioSensitivity);
+                    if (visualLevel < 0.02f) visualLevel = 0f;
+
+                    // --- 2. Draw the text label ---
+                    GUILayout.Label($"Listening... Level: {(visualLevel * 100).ToString("F0")}%");
+
+                    // --- 3. Draw the horizontal bar ---
+                    // --- 3. Draw the horizontal bar ---
+
+                    // Reserve a rectangle for our bar using the 'box' style for layout
+                    Rect barRect = GUILayoutUtility.GetRect(GUIContent.none,
+                                                            indicatorBoxStyle,
+                                                            GUILayout.Height(audioBarHeight),
+                                                            GUILayout.ExpandWidth(true));
+
+                    // Store original colors
+                    Color oldBackgroundColor = GUI.backgroundColor;
+                    Color oldContentColor = GUI.color;
+
+                    // --- Draw the dark background of the bar ---
+                    // Using GUI.backgroundColor with GUI.Box is fine for the background
+                    GUI.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.8f); // Dark grey
+                    GUI.Box(barRect, GUIContent.none, indicatorBoxStyle);
+
+                    // --- Draw the fill ---
+                    // Calculate the rectangle for the "fill" part of the bar
+                    Rect fillRect = new Rect(barRect.x,
+                                            barRect.y,
+                                            barRect.width * visualLevel, // This is the key part!
+                                            barRect.height);
+
+                    // Draw the fill, fading from green to red based on level
+                    Color fillColor = Color.Lerp(Color.green, Color.red, visualLevel);
+
+                    // Use GUI.color and DrawTexture for a solid rectangle
+                    GUI.color = fillColor;
+                    GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
+
+                    // Restore the original colors for other GUI elements
+                    GUI.color = oldContentColor;
+                    GUI.backgroundColor = oldBackgroundColor;
+                }
+                else
+                {
+                    // "Not Recording" box
+                    GUILayout.Box("Not Recording", indicatorBoxStyle);
+                }
+            }
+            else
+            {
+                // Show if no mics were found
+                GUILayout.Label("No microphone devices found.");
+            }
+
+            GUILayout.EndArea();
+
+            // --- 4. RESTORE THE MATRIX ---
+            GUI.matrix = oldMatrix;
+        }
+
+        /// <summary>
+        /// Starts the microphone recording.
+        /// </summary>
+        public static void StartRecording()
+        {
+            if (micDevices.Length == 0) return;
+
+            string selectedDevice = micDevices[selectedMicIndex];
+            // Start recording with a 1-second looping clip
+            recordingClip = Microphone.Start(selectedDevice, true, 1, 44100);
+            isRecording = true;
+            Debug.Log($"Started recording from: {selectedDevice}");
+        }
+
+        /// <summary>
+        /// Stops the microphone recording.
+        /// </summary>
+        public static void StopRecording()
+        {
+            if (micDevices.Length == 0) return;
+
+            string selectedDevice = micDevices[selectedMicIndex];
+            Microphone.End(selectedDevice);
+            isRecording = false;
+            recordingClip = null;
+            Debug.Log($"Stopped recording from: {selectedDevice}");
+        }
+
+        /// <summary>
+        /// Analyzes the last 'sampleWindow' samples and returns the RMS volume.
+        /// </summary>
+        /// <returns>A float (0-1) representing the average volume.</returns>
+        float GetAudioLevel()
+        {
+            if (recordingClip == null) return 0f;
+
+            // Get the current position in the recording clip
+            int micPosition = Microphone.GetPosition(micDevices[selectedMicIndex]);
+
+            // Read sample data from the clip
+            int readPosition = micPosition - sampleWindow;
+            if (readPosition < 0)
+            {
+                readPosition = 0;
+            }
+
+            // Get the data from the clip
+            recordingClip.GetData(audioSampleData, readPosition);
+
+            // --- Calculate RMS (Root Mean Square) ---
+            float sum = 0;
+            for (int i = 0; i < sampleWindow; i++)
+            {
+                sum += audioSampleData[i] * audioSampleData[i]; // Sum of squares
+            }
+            float rms = Mathf.Sqrt(sum / sampleWindow); // Square root of the average
+
+            return rms;
+        }
+
+        /// <summary>
+        /// On disable, make sure we stop recording.
+        /// </summary>
+        void OnDisable()
+        {
+            if (isRecording)
+            {
+                StopRecording();
+            }
+        }
+    }
+}

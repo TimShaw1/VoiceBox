@@ -264,7 +264,7 @@ namespace TimShaw.VoiceBox.Core
             Action<ChatResponseUpdate> onChunkReceived,
             Action onComplete,
             Action<string> onError,
-            ChatUtils.VoiceBoxChatCompletionOptions options,
+            ChatUtils.VoiceBoxChatCompletionOptions options = null,
             CancellationToken token = default
         )
         {
@@ -321,7 +321,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <param name="onSuccess">Callback for when file is created. Should return the path to the file.</param>
         /// <param name="token"></param>
-        public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, Action<string> onSuccess, CancellationToken token)
+        public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, Action<string> onSuccess, CancellationToken token = default)
         {
             Task.Run(() => TextToSpeechService.RequestAudioFile(prompt, fileName, dir, onSuccess, token));
         }

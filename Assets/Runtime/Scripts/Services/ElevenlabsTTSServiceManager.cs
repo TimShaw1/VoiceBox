@@ -147,6 +147,7 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
+                fileName = Path.GetFileNameWithoutExtension(fileName);
                 string url = _config.serviceEndpoint + _config.voiceId;
 
                 var payload = new ElevenLabsTTSRequest

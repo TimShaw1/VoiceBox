@@ -176,7 +176,7 @@ public class APITester : MonoBehaviour
         Debug.Log("[Test: Text To Speech 1] Generate audio file");
         AIManager.Instance.GenerateSpeechFileFromText(
             "Hello World",
-            "helloworld",
+            "helloworld.wav",   // .wav to see if TTS service fixes it
             Application.dataPath,
             path =>
             {
@@ -208,7 +208,7 @@ public class APITester : MonoBehaviour
 
         // This will play while next test runs
         Debug.Log("[Test: Text To Speech 3] Stream audio");
-        while (waitingForTTS) yield return new WaitForSeconds(0.1f);
+        while (waitingForTTS || audioSource.isPlaying) yield return new WaitForSeconds(0.1f);
         AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +
             "This approach reduces first-word latency tremendously.", audioSource.GetComponent<AudioStreamer>());
 

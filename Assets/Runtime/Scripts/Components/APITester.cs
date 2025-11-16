@@ -1,6 +1,7 @@
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.Extensions.AI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -51,6 +52,8 @@ public class APITester : MonoBehaviour
 
     private CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
 
+    private bool testIsRunning = false;
+
     /// <summary>
     /// Callback method to log recognized speech from the Speech-to-Text service.
     /// </summary>
@@ -100,67 +103,243 @@ public class APITester : MonoBehaviour
     {
         if (testSpawnManager)
         {
-            ModdingTools.CreateAIManagerObject<GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsTTSServiceConfig>();
+            StartCoroutine(TestModdingTools());
         }
         if (testSTT)
         {
-            AIManager.Instance.SpeechToTextService.OnRecognized += LogRecognizedSpeech;
-            AIManager.Instance.StartSpeechTranscription(internalCancellationTokenSource.Token);
+            StartCoroutine(TestSpeechToText());
         }
 
         if (testTTS)
         {
-            Debug.Log("VoiceBox: Testing Audio Streaming");
-            AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +
-                "This approach reduces first-word latency tremendously.", audioSource.GetComponent<AudioStreamer>());
+            StartCoroutine(TestTextToSpeech());
         }
 
         if (testChat)
         {
-            var chats = new List<ChatUtils.VoiceBoxChatMessage>();
-            var chat = new ChatUtils.VoiceBoxChatMessage(
-                ChatUtils.VoiceBoxChatRole.User,
-                //"Write a 1 paragraph essay about huskies. Then, display the first sentence to the console."
-                //"Display a vector2 (1.00, 3.00) and quaternion (1.00, 2.00, 3.00, 4.00) to the console. Use SampleTool3. Then, display 1 sentence about huskies to the console using SampleTool."
-                "Display the color red to the console with 0.5 alpha"
-                );
-            chats.Add(chat);
 
-            var converters = new List<System.Text.Json.Serialization.JsonConverter>();
-            converters.Add(new ColorJsonConverter());
-
-            ChatUtils.VoiceBoxChatTool tool = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool1), "Displays provided text in the console");
-            ChatUtils.VoiceBoxChatTool tool2 = new VoiceBoxChatTool(
-                this, 
-                nameof(SampleTool2), 
-                "Displays an RGBA color (with color values represented as floats between 0 and 1) to the console",
-                converters
-            );
-            ChatUtils.VoiceBoxChatTool tool3 = new ChatUtils.VoiceBoxChatTool(this, nameof(SampleTool3), "Displays a provided vector2 and quaternion to the console.", converters);
-
-            string combinedResponse = "";
-
-            ChatUtils.VoiceBoxChatCompletionOptions options = new ChatUtils.VoiceBoxChatCompletionOptions()
-            {
-                VoiceBoxTools = { tool2 }
-            };
-
-            Debug.Log(options.Tools.Count);
-
-            AIManager.Instance.SendChatMessage(chats, chatMessage => Debug.Log(chatMessage.Role + ": " + chatMessage.Text), error => Debug.LogError(error), options);
-
-            /*
-            AIManager.Instance.StreamChatMessage(
-                chats,
-                chunk => { Debug.Log(chunk.Role + ": " + chunk.Text); combinedResponse += chunk; },
-                () => { Debug.Log("Combined response: " + combinedResponse); },
-                error => Debug.LogError(error),
-                options
-            );
-            */
-            
+            StartCoroutine(TestChat());
             
         }
+    }
+
+    private IEnumerator TestModdingTools()
+    {
+        while (testIsRunning) yield return new WaitForSeconds(0.1f);
+        testIsRunning = true;
+
+        Debug.Log("VoiceBox: Testing Modding Tools");
+        Debug.Log("[Test: ModdingTools] Create AIManager using ModdingTools");
+        ModdingTools.CreateAIManagerObject<GeminiServiceConfig, AzureSTTServiceConfig, ElevenlabsTTSServiceConfig>();
+
+        Debug.Log("VoiceBox: Finished Testing Modding Tools");
+        testIsRunning = false;
+        yield return null;
+    }
+
+    private IEnumerator TestSpeechToText()
+    {
+        while (testIsRunning) yield return new WaitForSeconds(0.1f);
+        testIsRunning = true;
+
+        Debug.Log("VoiceBox: Testing Speech To Text");
+        Debug.Log("[Test: Speech To Text 1] Start Speech Transcription for 10s...");
+        AIManager.Instance.SpeechToTextService.OnRecognized += LogRecognizedSpeech;
+        AIManager.Instance.StartSpeechTranscription(internalCancellationTokenSource.Token);
+
+        yield return new WaitForSeconds(10f);
+
+        Debug.Log("[Test: Speech To Text 1] Stop Speech Transcription after 10s...");
+        AIManager.Instance.StopSpeechTranscription();
+
+        Debug.Log("[Test: Speech To Text 2] Wait 2s then Start Speech Transcription for 10s after previous stop...");
+        yield return new WaitForSeconds(2);
+        AIManager.Instance.StartSpeechTranscription();
+        yield return new WaitForSeconds(10);
+
+        Debug.Log("[Test: Speech To Text 2] Stop Speech Transcription again after 10s...");
+        AIManager.Instance.StopSpeechTranscription();
+
+        Debug.Log("VoiceBox: Finished Testing Speech To Text");
+        testIsRunning = false;
+        yield return null;
+    }
+
+    private IEnumerator TestTextToSpeech()
+    {
+        while (testIsRunning) yield return new WaitForSeconds(0.1f);
+        testIsRunning = true;
+
+        bool waitingForTTS = true;
+
+        Debug.Log("VoiceBox: Testing Text To Speech");
+        Debug.Log("[Test: Text To Speech 1] Generate audio file");
+        AIManager.Instance.GenerateSpeechFileFromText(
+            "Hello World", 
+            "helloworld", 
+            Application.dataPath, 
+            path => { 
+                Debug.Log("[Test: Text To Speech 1] Generated audio file at " + path);
+                waitingForTTS = false;
+            }
+        );
+
+        
+
+        while (waitingForTTS) yield return new WaitForSeconds(0.1f);
+        Debug.Log("[Test: Text To Speech 2] Generating audioclip");
+
+        waitingForTTS = true;
+        AIManager.Instance.GenerateSpeechAudioClipFromText(
+            "Hello World!",
+            audioClip =>
+            {
+                Debug.Log("[Test: Text To Speech 2] Generated audioclip and playing...");
+                audioSource.PlayOneShot(audioClip);
+                waitingForTTS = false;
+            },
+            err => {
+                Debug.LogError(err);
+                waitingForTTS = false;
+            }
+        );
+
+        // This will play while next test runs
+        Debug.Log("[Test: Text To Speech 3] Stream audio");
+        while (waitingForTTS) yield return new WaitForSeconds(0.1f);
+        AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +
+            "This approach reduces first-word latency tremendously.", audioSource.GetComponent<AudioStreamer>());
+
+        Debug.Log("VoiceBox: Finished Testing Text To Speech");
+        testIsRunning = false;
+        yield return null;
+    }
+
+    private IEnumerator TestChat()
+    {
+        while (testIsRunning) yield return new WaitForSeconds(0.1f);
+        testIsRunning = true;
+
+        bool waitingForResponse = false;
+
+        Debug.Log("VoiceBox: Testing Chat");
+        #region Test 1: Simple Chat Request
+        Debug.Log("[Test: Chat 1] Simple chat request");
+
+        var chats = new List<ChatUtils.VoiceBoxChatMessage>();
+        var chat = new ChatUtils.VoiceBoxChatMessage(
+            ChatUtils.VoiceBoxChatRole.User,
+            "Write a 1 paragraph essay about huskies. "
+            );
+        chats.Add(chat);
+
+        waitingForResponse = true;
+        AIManager.Instance.SendChatMessage(
+            chats, 
+            chatMessage => { 
+                Debug.Log(chatMessage.Role + ": " + chatMessage.Text); 
+                waitingForResponse = false; 
+            }, 
+            error => { 
+                Debug.LogError(error); 
+                waitingForResponse = false; 
+            }
+        );
+        #endregion
+
+        #region Test 2: Simple streaming chat request
+        while (waitingForResponse) yield return new WaitForSeconds(0.1f);
+        string combinedResponse = "";
+        Debug.Log("[Test: Chat 2] Simple streaming chat request");
+        waitingForResponse = true;
+        AIManager.Instance.StreamChatMessage(
+            chats,
+            chunk => { Debug.Log(chunk.Role + ": " + chunk.Text); combinedResponse += chunk; },
+            () => { Debug.Log("Combined response: " + combinedResponse); waitingForResponse = false; },
+            error => { Debug.LogError(error); waitingForResponse = false; }
+        );
+        #endregion
+
+        #region Test 3: Simple chat request with tool
+        while (waitingForResponse) yield return new WaitForSeconds(0.1f);
+        Debug.Log("[Test: Chat 3] Simple chat request with tool");
+        ChatUtils.VoiceBoxChatTool tool = new ChatUtils.VoiceBoxChatTool(
+            this, 
+            nameof(SampleTool1), 
+            "Displays provided text in the console"
+        );
+
+        ChatUtils.VoiceBoxChatCompletionOptions options = new ChatUtils.VoiceBoxChatCompletionOptions()
+        {
+            VoiceBoxTools = { tool }
+        };
+
+        Debug.Log(options.Tools.Count);
+
+        var chat2 = new ChatUtils.VoiceBoxChatMessage(
+            ChatUtils.VoiceBoxChatRole.User,
+            "Write a 1 paragraph essay about huskies. Then, display the first sentence to the console. Only display one sentence to the console."
+        );
+        chats.Clear();
+        chats.Add(chat2);
+
+        waitingForResponse = true;
+        AIManager.Instance.SendChatMessage(
+            chats,
+            chatMessage => {
+                Debug.Log(chatMessage.Role + ": " + chatMessage.Text);
+                waitingForResponse = false;
+            },
+            error => {
+                Debug.LogError(error);
+                waitingForResponse = false;
+            },
+            options
+        );
+        #endregion
+
+        #region Test 4: Simple chat request with complex tool
+        while (waitingForResponse) yield return new WaitForSeconds(0.1f);
+        Debug.Log("[Test: Chat 4] Simple chat request with complex tool");
+        var chat3 = new ChatUtils.VoiceBoxChatMessage(
+            ChatUtils.VoiceBoxChatRole.User,
+            "Display a Vector2 (1.00, 2.00) and a Quaterion (4.00, 4.00, 4.00) to the console"
+        );
+        chats.Clear();
+        chats.Add(chat3);
+
+        var converters = new List<System.Text.Json.Serialization.JsonConverter>();
+        converters.Add(new ColorJsonConverter());
+
+        ChatUtils.VoiceBoxChatTool tool3 = new ChatUtils.VoiceBoxChatTool(
+            this, 
+            nameof(SampleTool3), 
+            "Displays a provided vector2 and quaternion to the console.", 
+            converters
+        );
+
+        ChatUtils.VoiceBoxChatCompletionOptions options2 = new ChatUtils.VoiceBoxChatCompletionOptions()
+        {
+            VoiceBoxTools = { tool3 }
+        };
+
+        waitingForResponse = true;
+        AIManager.Instance.SendChatMessage(
+            chats,
+            chatMessage => {
+                Debug.Log(chatMessage.Role + ": " + chatMessage.Text);
+                waitingForResponse = false;
+            },
+            error => {
+                Debug.LogError(error);
+                waitingForResponse = false;
+            },
+            options2
+        );
+        #endregion
+
+        Debug.Log("VoiceBox: Finished Testing Chat");
+        yield return null;
     }
 
     private void OnDestroy()

@@ -176,11 +176,11 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (Exception ex)
             {
-                onError.Invoke(ex.ToString());
+                onError?.Invoke(ex.ToString());
                 return;
             }
 
-            onSuccess.Invoke(Path.GetFullPath(Path.Combine(dir, fileName.ToString()) + fileExtension));
+            onSuccess?.Invoke(Path.GetFullPath(Path.Combine(dir, fileName.ToString()) + fileExtension));
             return;
 
         }

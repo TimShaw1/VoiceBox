@@ -140,26 +140,28 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="fileName">The name of the output audio file, excluding the file extension.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <param name="onSuccess">Callback for when file is created. Should return the path to the file.</param>
+        /// <param name="onError">Callback for when an error occurs</param>
         /// <param name="token"></param>
         /// <returns>The path to the file</returns>
-        public async Task RequestAudioFile(string prompt, string fileName, string dir, Action<string> onSuccess, CancellationToken token)
+        public async Task RequestAudioFile(string prompt, string fileName, string dir, Action<string> onSuccess, Action<string> onError, CancellationToken token)
         {
-            string url = _config.serviceEndpoint + _config.voiceId;
-
-            var payload = new ElevenLabsTTSRequest
-            {
-                text = prompt,
-                model_id = _config.modelID,
-                voice_settings = _config.voiceSettings
-            };
-
-            string json = JsonUtility.ToJson(payload);
-            StringContent httpContent = new StringContent(json, System.Text.Encoding.Default, "application/json");
-
-            Debug.Log("Requesting audio...");
-
             try
             {
+                string url = _config.serviceEndpoint + _config.voiceId;
+
+                var payload = new ElevenLabsTTSRequest
+                {
+                    text = prompt,
+                    model_id = _config.modelID,
+                    voice_settings = _config.voiceSettings
+                };
+
+                string json = JsonUtility.ToJson(payload);
+                StringContent httpContent = new StringContent(json, System.Text.Encoding.Default, "application/json");
+
+                Debug.Log("Requesting audio...");
+
+            
                 var response = await client.PostAsync(url, httpContent);
                 Debug.Log("Got response...");
                 response.EnsureSuccessStatusCode();
@@ -174,7 +176,7 @@ namespace TimShaw.VoiceBox.Core
             }
             catch (Exception ex)
             {
-                Debug.Log(ex.ToString());
+                onError.Invoke(ex.ToString());
                 return;
             }
 

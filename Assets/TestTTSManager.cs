@@ -18,7 +18,8 @@ public class TestTTSManager : MonoBehaviour
             "Hello World!", 
             "helloWorld", 
             Application.dataPath,
-            path => Debug.Log("File created at: " + path)
+            path => Debug.Log("File created at: " + path),
+            err => Debug.LogError(err)
         );
 
         // Request an audio clip and play it through the TTS manager's audio source

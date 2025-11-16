@@ -175,13 +175,15 @@ public class APITester : MonoBehaviour
         Debug.Log("VoiceBox: Testing Text To Speech");
         Debug.Log("[Test: Text To Speech 1] Generate audio file");
         AIManager.Instance.GenerateSpeechFileFromText(
-            "Hello World", 
-            "helloworld", 
-            Application.dataPath, 
-            path => { 
+            "Hello World",
+            "helloworld",
+            Application.dataPath,
+            path =>
+            {
                 Debug.Log("[Test: Text To Speech 1] Generated audio file at " + path);
                 waitingForTTS = false;
-            }
+            },
+            err => Debug.LogError(err)
         );
 
         

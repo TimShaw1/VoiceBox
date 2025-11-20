@@ -2,10 +2,12 @@ namespace TimShaw.VoiceBox.GUI
 {
     using System;
     using System.Collections; // Needed for audio analysis
+    using System.ComponentModel;
     using TimShaw.VoiceBox.Components;
     using TimShaw.VoiceBox.Core;
     using TimShaw.VoiceBox.Generics;
     using UnityEngine;
+    using UnityEngine.Networking;
     using UnityEngine.Windows;
 
     /// <summary>
@@ -42,6 +44,9 @@ namespace TimShaw.VoiceBox.GUI
         [Tooltip("The max height of the microphone selection box in scaled pixels.")]
         public float micListMaxHeight = 100f;
 
+        private float sliderValue = 60;
+        private DateTime recordingStartTime = DateTime.Now;
+
         private static string[] micDevices;
         private static int selectedMicIndex = 0;
         private static bool isRecording = false;
@@ -64,6 +69,11 @@ namespace TimShaw.VoiceBox.GUI
         private GenericChatServiceConfig chatServiceConfig;
         private GenericSTTServiceConfig sttServiceConfig;
         private GenericTTSServiceConfig ttsServiceConfig;
+
+        private ChatManager[] chatManagers = null;
+        private TTSManager[] tTSManagers = null;
+
+        public Action<AudioClip> onRecordingStopped;
 
         /// <summary>
         /// Creates a new gameobject with a <see cref="GUIManager"/> component.
@@ -117,6 +127,15 @@ namespace TimShaw.VoiceBox.GUI
             }
 
             Debug.Log("[GUIManager] GUI Manager created!");
+
+            onRecordingStopped = clip => 
+            {
+                if (clip != null && clip.LoadAudioData())
+                {
+                    Debug.Log("loaded");
+                    FindFirstObjectByType<AudioSource>()?.PlayOneShot(clip);
+                }
+            };
         }
 
         /// <summary>
@@ -221,16 +240,16 @@ namespace TimShaw.VoiceBox.GUI
             if (GUILayout.Button("Load API Keys"))
             {
                 // CHAT
+                if (FindFirstObjectByType<ChatManager>() != null)
+                {
+                    chatManagers = FindObjectsByType<ChatManager>(FindObjectsSortMode.None);
+                    chatServiceConfig = chatManagers[0].chatServiceConfig;
+                    chatApiKey = chatManagers[0].chatServiceConfig?.apiKey;
+                }
                 if (AIManager.Instance != null && AIManager.Instance.chatServiceConfig != null)
                 {
                     chatServiceConfig = AIManager.Instance.chatServiceConfig;
                     chatApiKey = AIManager.Instance.chatServiceConfig.apiKey;
-                }
-                else if (FindFirstObjectByType<ChatManager>() != null)
-                {
-                    var chatManager = FindFirstObjectByType<ChatManager>();
-                    chatServiceConfig = chatManager.chatServiceConfig;
-                    chatApiKey = chatManager.chatServiceConfig?.apiKey;
                 }
 
                 // STT
@@ -241,16 +260,16 @@ namespace TimShaw.VoiceBox.GUI
                 }
 
                 // TTS
+                if (FindFirstObjectByType<TTSManager>() != null)
+                {
+                    tTSManagers = FindObjectsByType<TTSManager>(FindObjectsSortMode.None);
+                    ttsServiceConfig = tTSManagers[0].textToSpeechConfig;
+                    ttsApiKey = tTSManagers[0].textToSpeechConfig?.apiKey;
+                }
                 if (AIManager.Instance != null && AIManager.Instance.textToSpeechConfig != null)
                 {
                     ttsServiceConfig = AIManager.Instance.textToSpeechConfig;
                     ttsApiKey = AIManager.Instance.textToSpeechConfig.apiKey;
-                }
-                else if (FindFirstObjectByType<TTSManager>() != null)
-                {
-                    var ttsManager = FindFirstObjectByType<TTSManager>();
-                    ttsServiceConfig = ttsManager.textToSpeechConfig;
-                    chatApiKey = ttsManager.textToSpeechConfig?.apiKey;
                 }
             }
 
@@ -258,7 +277,12 @@ namespace TimShaw.VoiceBox.GUI
             // CHAT
             if (chatServiceConfig != null)
             {
-                GUILayout.Label("Chat (" + chatServiceConfig.serviceManagerType + ")");
+                GUILayout.Label(
+                    "Chat (Type: " 
+                    + chatServiceConfig.serviceManagerType + ") (Manager Count: "
+                    + chatManagers?.Length + ") ("
+                    + (AIManager.Instance != null && AIManager.Instance.chatServiceConfig != null ? "AIManager)" : ")")
+                );
             }
             else
                 GUILayout.Label("Chat (Not Initialized)");
@@ -267,7 +291,7 @@ namespace TimShaw.VoiceBox.GUI
             // STT
             if (sttServiceConfig != null)
             {
-                GUILayout.Label("Speech to Text (" + sttServiceConfig.serviceManagerType + ")");
+                GUILayout.Label("Speech to Text (Type: " + sttServiceConfig.serviceManagerType + ")");
             }
             else
                 GUILayout.Label("Speech to Text (Not Initialized)");
@@ -276,7 +300,12 @@ namespace TimShaw.VoiceBox.GUI
             // TTS
             if (ttsServiceConfig != null)
             {
-                GUILayout.Label("Text to Speech (" + ttsServiceConfig.serviceManagerType + ")");
+                GUILayout.Label(
+                    "Text to Speech (Type: "
+                    + ttsServiceConfig.serviceManagerType + ") (Manager Count: " 
+                    + tTSManagers?.Length + ") (" 
+                    + (AIManager.Instance != null && AIManager.Instance.textToSpeechConfig != null ? "AIManager)" : ")")
+                );
             }
             else
                 GUILayout.Label("Text to Speech (Not Initialized)");
@@ -307,6 +336,8 @@ namespace TimShaw.VoiceBox.GUI
 
 
                 GUILayout.Space(10);
+                GUILayout.Label("Clip length: " + sliderValue + " seconds");
+                sliderValue = (int)Math.Round(GUILayout.HorizontalSlider(sliderValue, 1, 600), 0);
 
                 // --- Record Button ---
                 string recordButtonText = isRecording ? "Stop Recording" : "Start Recording";
@@ -314,15 +345,24 @@ namespace TimShaw.VoiceBox.GUI
                 {
                     if (isRecording)
                     {
-                        StopRecording();
+                        var clip = StopRecording();
+                        onRecordingStopped?.Invoke(clip);
                     }
                     else
                     {
+                        recordingStartTime = DateTime.Now;
                         StartRecording();
                     }
                 }
 
                 GUILayout.Space(5); // Padding for the bar
+
+                if (isRecording && (DateTime.Now - recordingStartTime).Seconds >= sliderValue)
+                { 
+                    var clip = StopRecording();
+                    onRecordingStopped?.Invoke(clip);
+                    Debug.Log($"[GUIManager] Clip size maximum of {sliderValue} reached. Stopped recording.");
+                }
 
                 // --- Audio Level Indicator ---
                 if (isRecording)
@@ -369,6 +409,8 @@ namespace TimShaw.VoiceBox.GUI
                     // Restore the original colors for other GUI elements
                     GUI.color = oldContentColor;
                     GUI.backgroundColor = oldBackgroundColor;
+
+                    GUILayout.Label("Recording length: " + (DateTime.Now - recordingStartTime).Seconds + " seconds");
                 }
                 else
                 {
@@ -397,7 +439,7 @@ namespace TimShaw.VoiceBox.GUI
 
             string selectedDevice = micDevices[selectedMicIndex];
             // Start recording with a 1-second looping clip
-            recordingClip = Microphone.Start(selectedDevice, true, 1, 44100);
+            recordingClip = Microphone.Start(selectedDevice, false, 60, 44100);
             isRecording = true;
             Debug.Log($"Started recording from: {selectedDevice}");
         }
@@ -405,15 +447,17 @@ namespace TimShaw.VoiceBox.GUI
         /// <summary>
         /// Stops the microphone recording.
         /// </summary>
-        public static void StopRecording()
+        public static AudioClip StopRecording()
         {
-            if (micDevices.Length == 0) return;
+            if (micDevices.Length == 0) return null;
 
             string selectedDevice = micDevices[selectedMicIndex];
             Microphone.End(selectedDevice);
             isRecording = false;
+            var returnClip = recordingClip;
             recordingClip = null;
             Debug.Log($"Stopped recording from: {selectedDevice}");
+            return returnClip;
         }
 
         /// <summary>

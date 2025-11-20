@@ -276,7 +276,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1374051557}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a83de9dd7461ae34985e15837cbd317f, type: 3}
   m_Name: 
@@ -446,7 +446,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1493601811}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01a5aabf7bb06bc44a509392d6d4c719, type: 3}
   m_Name: 
@@ -654,7 +654,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1681442661
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -668,7 +668,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   apiKeysJsonPath: Assets/keys.json
-  chatServiceConfig: {fileID: 0}
+  chatServiceConfig: {fileID: 11400000, guid: 53d397a345776c445ab503c0ebbe61d2, type: 2}
   speechToTextConfig: {fileID: 11400000, guid: 3f9f42a6f9997884db1b63609ed2ba55, type: 2}
   textToSpeechConfig: {fileID: 11400000, guid: 989c424a9b8380844a4adebcdfea0254, type: 2}
 --- !u!4 &1681442662
@@ -715,7 +715,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 0
+  m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
   Loop: 0

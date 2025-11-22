@@ -24,7 +24,7 @@ namespace TimShaw.VoiceBox.Core
         /// <summary>
         /// Initializes the Ollama service with the provided configuration.
         /// </summary>
-        /// <param name="config">The ScriptableObject configuration for the Ollama service.</param>
+        /// <param name="config">The ScriptableObject configuration for the Gemini service.</param>
         public void Initialize(GenericChatServiceConfig config)
         {
             _config = config as OllamaChatServiceConfig;

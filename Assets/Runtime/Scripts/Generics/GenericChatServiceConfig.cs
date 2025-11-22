@@ -28,6 +28,11 @@ namespace TimShaw.VoiceBox.Generics
         /// The name of the model to use.
         /// </summary>
         public string modelName;
+
+        /// <summary>
+        /// Whether to enable function invokation (tool calling)
+        /// </summary>
+        public bool useFunctionInvokation = true;
     }
 
 }

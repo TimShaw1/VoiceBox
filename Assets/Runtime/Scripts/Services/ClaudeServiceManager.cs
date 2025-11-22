@@ -13,6 +13,7 @@ namespace TimShaw.VoiceBox.Core
     {
         IChatClient _client;
         ClaudeServiceConfig _config;
+
         public void Initialize(GenericChatServiceConfig config)
         {
             _config = config as ClaudeServiceConfig;
@@ -23,9 +24,18 @@ namespace TimShaw.VoiceBox.Core
                 Endpoint = new Uri(_config.serviceEndpoint)
             };
 
-            _client = new ChatClientBuilder(
-                    new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "claude-haiku-4-5").AsIChatClient()
-                ).UseFunctionInvocation().Build();
+            if (_config.useFunctionInvokation)
+            {
+                _client = new ChatClientBuilder(
+                        new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "claude-haiku-4-5").AsIChatClient()
+                    ).UseFunctionInvocation().Build();
+            }
+            else
+            {
+                _client = new ChatClientBuilder(
+                        new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "claude-haiku-4-5").AsIChatClient()
+                    ).Build();
+            }
 
         }
 

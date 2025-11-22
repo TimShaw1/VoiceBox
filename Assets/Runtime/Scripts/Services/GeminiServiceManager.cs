@@ -33,9 +33,18 @@ namespace TimShaw.VoiceBox.Core
                     Endpoint = new Uri(_config.serviceEndpoint)
                 };
 
-                _client = new ChatClientBuilder(
-                    new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gemini-2.5-flash").AsIChatClient()
-                ).UseFunctionInvocation().Build();
+                if (_config.useFunctionInvokation)
+                {
+                    _client = new ChatClientBuilder(
+                        new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gemini-2.5-flash").AsIChatClient()
+                    ).UseFunctionInvocation().Build();
+                }
+                else
+                {
+                    _client = new ChatClientBuilder(
+                        new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gemini-2.5-flash").AsIChatClient()
+                    ).Build();
+                }
             }
             else
             {

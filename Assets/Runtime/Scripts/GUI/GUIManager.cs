@@ -69,6 +69,7 @@ namespace TimShaw.VoiceBox.GUI
         // --- Styles ---
         private GUIStyle indicatorBoxStyle;
         private GUIStyle titleStyle;
+        private GUIStyle subtitleStyle;
 
         // --- Managers ---
         private GenericChatServiceConfig chatServiceConfig;
@@ -230,6 +231,33 @@ namespace TimShaw.VoiceBox.GUI
                 // titleStyle.alignment = TextAnchor.MiddleCenter;
             }
 
+            if (subtitleStyle == null)
+            {
+                // Copy the default label style
+                subtitleStyle = new GUIStyle(GUI.skin.label);
+
+                // Make it bold
+                subtitleStyle.fontStyle = FontStyle.Bold;
+
+                // Read the font size from the *source style* (GUI.skin.label),
+                // not the new one we just created.
+
+                // Get the base font size from the default skin's label
+                int baseFontSize = GUI.skin.label.fontSize;
+
+                // Add a fallback in case the base font size is 0
+                if (baseFontSize <= 0)
+                {
+                    baseFontSize = 12; // A sensible default size
+                }
+
+                // Now, set the new style's font size
+                subtitleStyle.fontSize = Mathf.FloorToInt(baseFontSize * 1.2f);
+
+                // (Optional) Center it
+                // titleStyle.alignment = TextAnchor.MiddleCenter;
+            }
+
             // --- 3. BEGIN LAYOUT AREA ---
             GUILayout.BeginArea(screenRect);
             GUILayout.BeginHorizontal();
@@ -248,7 +276,7 @@ namespace TimShaw.VoiceBox.GUI
             GUILayout.Label("");
 
             // --- Section: API Keys ---
-            GUILayout.Label("API Keys");
+            GUILayout.Label("API Keys", subtitleStyle);
             if (GUILayout.Button("Load API Keys"))
             {
                 // CHAT
@@ -327,12 +355,12 @@ namespace TimShaw.VoiceBox.GUI
 
             // --- Section: Microphone ---
             GUILayout.Space(20); // Add some visual separation
-            GUILayout.Label("Microphone Controls");
+            GUILayout.Label("Microphone Utilities", subtitleStyle);
 
             if (micDevices.Length > 0)
             {
                 // --- Mic Selection ---
-                GUILayout.Label("Select a microphone:");
+                GUILayout.Label("Select a microphone (does not affect services):");
 
                 // --- Scrollable Mic List (Dropdown style) ---
                 micScrollPosition = GUILayout.BeginScrollView(micScrollPosition, GUILayout.Height(micListMaxHeight));
@@ -346,8 +374,8 @@ namespace TimShaw.VoiceBox.GUI
 
                 GUILayout.EndScrollView();
 
-
                 GUILayout.Space(10);
+                GUILayout.Label("Record an AudioClip", subtitleStyle);
                 GUILayout.Label("Clip length: " + sliderValue + " seconds");
                 sliderValue = (int)Math.Round(GUILayout.HorizontalSlider(sliderValue, 1, 600), 0);
 

@@ -28,7 +28,7 @@ namespace TimShaw.VoiceBox.Core
             {
                 if (config != null)
                 {
-                    if (config.modelName.Length == 0)
+                    if (config.modelName?.Length == 0)
                         Debug.LogError("[ServiceFactory] No model name specified for chat model.");
 
                     if (config.serviceManagerType != null && ex.GetType() == typeof(NullReferenceException))

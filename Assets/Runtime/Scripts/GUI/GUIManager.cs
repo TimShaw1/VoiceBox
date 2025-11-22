@@ -311,14 +311,14 @@ namespace TimShaw.VoiceBox.GUI
                     chatServiceConfig = chatManagers[0].chatServiceConfig;
                     chatApiKey = chatManagers[0].chatServiceConfig?.apiKey;
                 }
-                if (AIManager.Instance != null && AIManager.Instance.chatServiceConfig != null)
+                if (AIManager.Instance != null && AIManager.Instance.ChatService != null)
                 {
                     chatServiceConfig = AIManager.Instance.chatServiceConfig;
                     chatApiKey = AIManager.Instance.chatServiceConfig.apiKey;
                 }
 
                 // STT
-                if (AIManager.Instance != null && AIManager.Instance.speechToTextConfig != null)
+                if (AIManager.Instance != null && AIManager.Instance.SpeechToTextService != null)
                 {
                     sttServiceConfig = AIManager.Instance.speechToTextConfig;
                     sttApiKey = AIManager.Instance.speechToTextConfig.apiKey;
@@ -331,7 +331,7 @@ namespace TimShaw.VoiceBox.GUI
                     ttsServiceConfig = tTSManagers[0].textToSpeechConfig;
                     ttsApiKey = tTSManagers[0].textToSpeechConfig?.apiKey;
                 }
-                if (AIManager.Instance != null && AIManager.Instance.textToSpeechConfig != null)
+                if (AIManager.Instance != null && AIManager.Instance.TextToSpeechService != null)
                 {
                     ttsServiceConfig = AIManager.Instance.textToSpeechConfig;
                     ttsApiKey = AIManager.Instance.textToSpeechConfig.apiKey;
@@ -353,7 +353,7 @@ namespace TimShaw.VoiceBox.GUI
             }
             else
                 GUILayout.Label("Chat (Not Initialized)");
-            chatApiKey = GUILayout.PasswordField(chatApiKey, '*');
+            chatApiKey = GUILayout.PasswordField(chatApiKey == null ? "" : chatApiKey, '*');
 
             // STT
             if (sttServiceConfig != null)
@@ -362,7 +362,7 @@ namespace TimShaw.VoiceBox.GUI
             }
             else
                 GUILayout.Label("Speech to Text (Not Initialized)");
-            sttApiKey = GUILayout.PasswordField(sttApiKey, '*');
+            sttApiKey = GUILayout.PasswordField(sttApiKey == null ? "" : sttApiKey, '*');
 
             // TTS
             if (ttsServiceConfig != null)
@@ -376,7 +376,7 @@ namespace TimShaw.VoiceBox.GUI
             }
             else
                 GUILayout.Label("Text to Speech (Not Initialized)");
-            ttsApiKey = GUILayout.PasswordField(ttsApiKey, '*');
+            ttsApiKey = GUILayout.PasswordField(ttsApiKey == null ? "" : ttsApiKey, '*');
 
             // --- Section: Microphone ---
             GUILayout.Space(20); // Add some visual separation

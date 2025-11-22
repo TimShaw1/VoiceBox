@@ -172,7 +172,6 @@ namespace TimShaw.VoiceBox.Core
                 using (FileStream fileStream = System.IO.File.Create(Path.Combine(dir, fileName.ToString()) + fileExtension))
                 {
                     await stream.CopyToAsync(fileStream);
-                    Debug.Log("Streamed");
                 }
             }
             catch (Exception ex)

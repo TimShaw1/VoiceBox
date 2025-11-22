@@ -62,7 +62,7 @@ namespace TimShaw.VoiceBox.GUI
         private int sampleWindow = 256; // How many samples to analyze for volume
 
         // --- State ---
-        public bool isGuiVisible = true;
+        public bool isGuiVisible = false;
         private Vector2 micScrollPosition;
 
         // --- Styles ---

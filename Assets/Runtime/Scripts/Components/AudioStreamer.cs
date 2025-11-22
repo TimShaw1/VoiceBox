@@ -117,6 +117,11 @@ namespace TimShaw.VoiceBox.Components
 
         private StreamingMp3Decoder _mp3Decoder;
 
+        /// <summary>
+        /// Invoked when an audio sample is played during <see cref="OnAudioFilterRead(float[], int)"/>
+        /// </summary>
+        public EventHandler<float[]> OnAudioSamplePlayed;
+
 #if UNITY_EDITOR
         [MenuItem("GameObject/VoiceBox/Components/Streaming Audio Source", false, 11)]
 #endif
@@ -237,6 +242,8 @@ namespace TimShaw.VoiceBox.Components
                     data[i] = 0.0f;
                 }
             }
+
+            OnAudioSamplePlayed?.Invoke(this, data);
         }
 
         /// <summary>

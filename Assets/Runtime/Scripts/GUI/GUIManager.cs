@@ -16,10 +16,14 @@ namespace TimShaw.VoiceBox.GUI
     /// </summary>
     public class GUIManager : MonoBehaviour
     {
+        /// <summary>
+        /// Singleton instance of GUI Manager
+        /// </summary>
         public static GUIManager Instance { get; private set; }
 
         [Header("GUI Settings")]
 
+#pragma warning disable CS1591 // Missing XML comment
         [Tooltip("The global scale for all GUI elements.")]
         public float guiScale = 1.5f; // 1.5f = 150% size
 
@@ -72,8 +76,12 @@ namespace TimShaw.VoiceBox.GUI
 
         private ChatManager[] chatManagers = null;
         private TTSManager[] tTSManagers = null;
+#pragma warning restore CS1591 // Missing XML comment
 
-        public Action<AudioClip> onRecordingStopped;
+        /// <summary>
+        /// Callback for when mic recording is stopped
+        /// </summary>
+        public EventHandler<AudioClip> onRecordingStopped;
 
         /// <summary>
         /// Creates a new gameobject with a <see cref="GUIManager"/> component.
@@ -128,7 +136,7 @@ namespace TimShaw.VoiceBox.GUI
 
             Debug.Log("[GUIManager] GUI Manager created!");
 
-            onRecordingStopped = clip => 
+            onRecordingStopped = (obj, clip) => 
             {
                 if (clip != null && clip.LoadAudioData())
                 {
@@ -346,7 +354,7 @@ namespace TimShaw.VoiceBox.GUI
                     if (isRecording)
                     {
                         var clip = StopRecording();
-                        onRecordingStopped?.Invoke(clip);
+                        onRecordingStopped?.Invoke(this, clip);
                     }
                     else
                     {
@@ -360,7 +368,7 @@ namespace TimShaw.VoiceBox.GUI
                 if (isRecording && (DateTime.Now - recordingStartTime).Seconds >= sliderValue)
                 { 
                     var clip = StopRecording();
-                    onRecordingStopped?.Invoke(clip);
+                    onRecordingStopped?.Invoke(this, clip);
                     Debug.Log($"[GUIManager] Clip size maximum of {sliderValue} reached. Stopped recording.");
                 }
 

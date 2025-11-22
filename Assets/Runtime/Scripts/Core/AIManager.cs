@@ -320,6 +320,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="fileName">The name of the output audio file.</param>
         /// <param name="dir">The directory to save the audio file in.</param>
         /// <param name="onSuccess">Callback for when file is created. Should return the path to the file.</param>
+        /// <param name="onError">Callback for when an error ocurrs</param>
         /// <param name="token"></param>
         public void GenerateSpeechFileFromText(string prompt, string fileName, string dir, Action<string> onSuccess, Action<string> onError, CancellationToken token = default)
         {

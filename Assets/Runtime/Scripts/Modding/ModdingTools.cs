@@ -55,8 +55,12 @@ namespace TimShaw.VoiceBox.Modding
         /// <typeparam name="ChatConfigType">The type of <see cref="GenericChatServiceConfig"/> to attach to the AI Manager</typeparam>
         /// <typeparam name="STTConfigType">The type of <see cref="GenericSTTServiceConfig"/> to attach to the AI Manager</typeparam>
         /// <typeparam name="TTSConfigType">The type of <see cref="GenericTTSServiceConfig"/> to attach to the AI Manager</typeparam>
+        /// <param name="keysFile">Path to the api keys json file to load (Optional)</param>
+        /// <param name="chatKey">Chat api key (Optional)</param>
+        /// <param name="sttKey">STT api key (Optional)</param>
+        /// <param name="ttsKey">TTS api key (Optional)</param>
         /// <returns>The instantiated <see cref="AIManager"/> object</returns>
-        public static GameObject CreateAIManagerObject<ChatConfigType, STTConfigType, TTSConfigType>(string apiKeysJsonPath = "")
+        public static GameObject CreateAIManagerObject<ChatConfigType, STTConfigType, TTSConfigType>(string keysFile = "", string chatKey = null, string sttKey = null, string ttsKey = null)
             where ChatConfigType : GenericChatServiceConfig
             where STTConfigType : GenericSTTServiceConfig
             where TTSConfigType : GenericTTSServiceConfig
@@ -65,7 +69,7 @@ namespace TimShaw.VoiceBox.Modding
                 CreateChatServiceConfig<ChatConfigType>(),
                 CreateSTTServiceConfig<STTConfigType>(),
                 CreateTTSServiceConfig<TTSConfigType>(),
-                apiKeysJsonPath
+                keysFile, chatKey, sttKey, ttsKey
             );
         }
 
@@ -88,13 +92,19 @@ namespace TimShaw.VoiceBox.Modding
         /// <param name="genericChatServiceConfig">An existing <see cref="GenericChatServiceConfig"/> object or null</param>
         /// <param name="genericSTTServiceConfig">An existing <see cref="GenericSTTServiceConfig"/> object or null</param>
         /// <param name="genericTTSServiceConfig">An existing <see cref="GenericTTSServiceConfig"/> object or null</param>
-        /// <param name="apiKeysJsonPath">Path to the api keys json file to load (Optional)</param>
+        /// <param name="keysFile">Path to the api keys json file to load (Optional)</param>
+        /// <param name="chatKey">Chat api key (Optional)</param>
+        /// <param name="sttKey">STT api key (Optional)</param>
+        /// <param name="ttsKey">TTS api key (Optional)</param>
         /// <returns>The instantiated <see cref="AIManager"/> object</returns>
         public static GameObject CreateAIManagerObject(
             GenericChatServiceConfig genericChatServiceConfig, 
             GenericSTTServiceConfig genericSTTServiceConfig, 
             GenericTTSServiceConfig genericTTSServiceConfig,
-            string apiKeysJsonPath = ""
+            string keysFile = "", 
+            string chatKey = null, 
+            string sttKey = null, 
+            string ttsKey = null
         )
         {
             if (AIManager.Instance == null)
@@ -105,10 +115,7 @@ namespace TimShaw.VoiceBox.Modding
                 aiManagerComponent.speechToTextConfig = genericSTTServiceConfig;
                 aiManagerComponent.textToSpeechConfig = genericTTSServiceConfig;
 
-                if (apiKeysJsonPath.Length > 0)
-                    AIManager.Instance.LoadAPIKeys(apiKeysJsonPath);
-                else
-                    AIManager.Instance.LoadAPIKeys();
+                AIManager.Instance.LoadAPIKeys(keysFile, chatKey, sttKey, ttsKey);
 
                 aiManagerComponent.ChatService = ServiceFactory.CreateChatService(aiManagerComponent.chatServiceConfig);
                 aiManagerComponent.SpeechToTextService = ServiceFactory.CreateSttService(aiManagerComponent.speechToTextConfig);

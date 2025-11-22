@@ -12,7 +12,7 @@ namespace TimShaw.VoiceBox.GUI
     using UnityEngine.Windows;
 
     /// <summary>
-    /// This script creates a full-screen GUI with API key inputs
+    /// This script creates a full-screen GUI with API key loading, service information
     /// and microphone recording controls.
     /// </summary>
     public class GUIManager : MonoBehaviour
@@ -87,7 +87,7 @@ namespace TimShaw.VoiceBox.GUI
 #pragma warning restore CS1591 // Missing XML comment
 
         /// <summary>
-        /// Callback for when mic recording is stopped
+        /// Called when mic recording is stopped and provides the AudioClip the recording created.
         /// </summary>
         public EventHandler<AudioClip> onRecordingStopped;
 
@@ -97,7 +97,7 @@ namespace TimShaw.VoiceBox.GUI
         public EventHandler onApiKeysLoaded;
 
         /// <summary>
-        /// Called when a microphone is selected.
+        /// Called when a microphone is selected and provides the name of the microphone.
         /// </summary>
         public EventHandler<string> onMicrophoneSelected;
 

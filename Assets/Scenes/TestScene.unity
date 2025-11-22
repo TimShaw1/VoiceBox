@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testSpawnManager: 0
-  testGUI: 1
+  testGUI: 0
   testSTT: 0
   testTTS: 0
   testChat: 0

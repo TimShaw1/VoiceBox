@@ -9,6 +9,7 @@ using TimShaw.VoiceBox.Components;
 using TimShaw.VoiceBox.Core;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
+using TimShaw.VoiceBox.GUI;
 using TimShaw.VoiceBox.Modding;
 using UnityEngine;
 using static TimShaw.VoiceBox.Core.ChatUtils;
@@ -25,6 +26,12 @@ public class APITester : MonoBehaviour
     /// </summary>
     [SerializeField]
     public bool testSpawnManager = false;
+
+    /// <summary>
+    /// If true, shows GUI and assigns callbacks
+    /// </summary>
+    [SerializeField]
+    public bool testGUI = false;
 
     /// <summary>
     /// If true, tests the Azure Speech-to-Text service on start.
@@ -105,6 +112,18 @@ public class APITester : MonoBehaviour
         {
             StartCoroutine(TestModdingTools());
         }
+
+        if (testGUI)
+        {
+            if (GUIManager.Instance != null)
+            {
+                GUIManager.Instance.visible = true;
+                GUIManager.Instance.onApiKeysLoaded += (obj, e) => Debug.Log("Api keys loaded!");
+                GUIManager.Instance.onMicrophoneSelected += (obj, mic) => Debug.Log("Mic selected: " + mic);
+                GUIManager.Instance.onRecordingStopped += (obj, clip) => Debug.Log("Clip recorded!");
+            }
+        }
+
         if (testSTT)
         {
             StartCoroutine(TestSpeechToText());

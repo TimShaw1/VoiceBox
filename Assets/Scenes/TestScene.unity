@@ -154,7 +154,7 @@ MonoBehaviour:
   testSpawnManager: 0
   testSTT: 0
   testTTS: 0
-  testChat: 1
+  testChat: 0
   audioSource: {fileID: 2085286909}
 --- !u!4 &897424585
 Transform:

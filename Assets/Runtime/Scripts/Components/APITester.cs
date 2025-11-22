@@ -192,13 +192,15 @@ public class APITester : MonoBehaviour
         Debug.Log("[Test: Text To Speech 2] Generating audioclip");
 
         waitingForTTS = true;
+        float clipLength = 0f;
         AIManager.Instance.GenerateSpeechAudioClipFromText(
             "Hello World!",
             audioClip =>
             {
                 Debug.Log("[Test: Text To Speech 2] Generated audioclip and playing...");
+                clipLength = audioClip.length;
+                waitingForTTS = false;      // first because we await it later
                 audioSource.PlayOneShot(audioClip);
-                waitingForTTS = false;
             },
             err => {
                 Debug.LogError(err);
@@ -206,9 +208,10 @@ public class APITester : MonoBehaviour
             }
         );
 
-        // This will play while next test runs
+        // This will not play while next test runs
+        while (waitingForTTS) yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(clipLength);
         Debug.Log("[Test: Text To Speech 3] Stream audio");
-        while (waitingForTTS || audioSource.isPlaying) yield return new WaitForSeconds(0.1f);
         AIManager.Instance.RequestAudioAndStream("This audio is streaming instead of waiting for the full response. " +
             "This approach reduces first-word latency tremendously.", audioSource.GetComponent<AudioStreamer>());
 

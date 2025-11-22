@@ -2,6 +2,7 @@ namespace TimShaw.VoiceBox.GUI
 {
     using System;
     using System.Collections; // Needed for audio analysis
+    using System.Collections.Generic;
     using System.ComponentModel;
     using TimShaw.VoiceBox.Components;
     using TimShaw.VoiceBox.Core;
@@ -62,6 +63,7 @@ namespace TimShaw.VoiceBox.GUI
         private int sampleWindow = 256; // How many samples to analyze for volume
 
         // --- State ---
+        public bool enableKeyboardShortcut = true;
         public bool visible = false;
         private Vector2 windowScrollPosition;
         private Vector2 micScrollPosition;
@@ -78,6 +80,10 @@ namespace TimShaw.VoiceBox.GUI
 
         private ChatManager[] chatManagers = null;
         private TTSManager[] tTSManagers = null;
+
+        // --- Keyboard input ---
+        private HashSet<KeyCode> currentlyPressedKeys = new HashSet<KeyCode>();
+
 #pragma warning restore CS1591 // Missing XML comment
 
         /// <summary>
@@ -171,6 +177,25 @@ namespace TimShaw.VoiceBox.GUI
         /// </summary>
         void OnGUI()
         {
+            if (enableKeyboardShortcut)
+            {
+                if (Event.current.isKey && Event.current.keyCode != KeyCode.None)
+                {
+                    if (Event.current.type == EventType.KeyDown)
+                    {
+                        currentlyPressedKeys.Add(Event.current.keyCode);
+                    }
+                    else if (Event.current.type == EventType.KeyUp)
+                    {
+                        currentlyPressedKeys.Remove(Event.current.keyCode);
+                    }
+                }
+
+                // Shift + V + B
+                if (Event.current.shift && currentlyPressedKeys.Contains(KeyCode.V) && currentlyPressedKeys.Contains(KeyCode.B))
+                    visible = true;
+            }
+
             // --- 0. CHECK VISIBILITY ---
             if (!visible)
             {

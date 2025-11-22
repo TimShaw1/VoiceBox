@@ -152,6 +152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testSpawnManager: 0
+  testGUI: 1
   testSTT: 0
   testTTS: 0
   testChat: 0
@@ -206,7 +207,7 @@ MonoBehaviour:
   audioSensitivity: 8.5
   audioBarHeight: 20
   micListMaxHeight: 100
-  isGuiVisible: 1
+  visible: 0
 --- !u!4 &1076252465
 Transform:
   m_ObjectHideFlags: 0

@@ -62,7 +62,8 @@ namespace TimShaw.VoiceBox.GUI
         private int sampleWindow = 256; // How many samples to analyze for volume
 
         // --- State ---
-        public bool isGuiVisible = false;
+        public bool visible = false;
+        private Vector2 windowScrollPosition;
         private Vector2 micScrollPosition;
 
         // --- Styles ---
@@ -82,6 +83,16 @@ namespace TimShaw.VoiceBox.GUI
         /// Callback for when mic recording is stopped
         /// </summary>
         public EventHandler<AudioClip> onRecordingStopped;
+
+        /// <summary>
+        /// Called when the load api keys button is pressed
+        /// </summary>
+        public EventHandler onApiKeysLoaded;
+
+        /// <summary>
+        /// Called when a microphone is selected.
+        /// </summary>
+        public EventHandler<string> onMicrophoneSelected;
 
         /// <summary>
         /// Creates a new gameobject with a <see cref="GUIManager"/> component.
@@ -135,15 +146,6 @@ namespace TimShaw.VoiceBox.GUI
             }
 
             Debug.Log("[GUIManager] GUI Manager created!");
-
-            onRecordingStopped = (obj, clip) => 
-            {
-                if (clip != null && clip.LoadAudioData())
-                {
-                    Debug.Log("loaded");
-                    FindFirstObjectByType<AudioSource>()?.PlayOneShot(clip);
-                }
-            };
         }
 
         /// <summary>
@@ -169,7 +171,7 @@ namespace TimShaw.VoiceBox.GUI
         void OnGUI()
         {
             // --- 0. CHECK VISIBILITY ---
-            if (!isGuiVisible)
+            if (!visible)
             {
                 return;
             }
@@ -236,9 +238,11 @@ namespace TimShaw.VoiceBox.GUI
             // We can set a fixed (scaled) size for the button
             if (GUILayout.Button("Hide", GUILayout.Width(60), GUILayout.Height(25)))
             {
-                isGuiVisible = false;
+                visible = false;
             }
             GUILayout.EndHorizontal();
+
+            windowScrollPosition = GUILayout.BeginScrollView(windowScrollPosition, false, true);
 
             GUILayout.Label("VoiceBox Utilities GUI", titleStyle);
             GUILayout.Label("");
@@ -279,6 +283,8 @@ namespace TimShaw.VoiceBox.GUI
                     ttsServiceConfig = AIManager.Instance.textToSpeechConfig;
                     ttsApiKey = AIManager.Instance.textToSpeechConfig.apiKey;
                 }
+
+                onApiKeysLoaded?.Invoke(this, default);
             }
 
             // Use GUILayout.PasswordField for basic masking (displays as '*')
@@ -319,15 +325,6 @@ namespace TimShaw.VoiceBox.GUI
                 GUILayout.Label("Text to Speech (Not Initialized)");
             ttsApiKey = GUILayout.PasswordField(ttsApiKey, '*');
 
-
-            if (GUILayout.Button("Save API Keys (TODO)"))
-            {
-                // For now, just print to the console
-                Debug.Log($"Chat Key: {chatApiKey}");
-                Debug.Log($"STT Key: {sttApiKey}");
-                Debug.Log($"TTS Key: {ttsApiKey}");
-            }
-
             // --- Section: Microphone ---
             GUILayout.Space(20); // Add some visual separation
             GUILayout.Label("Microphone Controls");
@@ -339,7 +336,14 @@ namespace TimShaw.VoiceBox.GUI
 
                 // --- Scrollable Mic List (Dropdown style) ---
                 micScrollPosition = GUILayout.BeginScrollView(micScrollPosition, GUILayout.Height(micListMaxHeight));
+
+                var previousSelectedMicIndex = selectedMicIndex;
+
                 selectedMicIndex = GUILayout.SelectionGrid(selectedMicIndex, micDevices, 1);
+
+                if (previousSelectedMicIndex != selectedMicIndex)
+                    onMicrophoneSelected?.Invoke(this, micDevices[selectedMicIndex]);
+
                 GUILayout.EndScrollView();
 
 
@@ -431,6 +435,8 @@ namespace TimShaw.VoiceBox.GUI
                 // Show if no mics were found
                 GUILayout.Label("No microphone devices found.");
             }
+
+            GUILayout.EndScrollView();
 
             GUILayout.EndArea();
 

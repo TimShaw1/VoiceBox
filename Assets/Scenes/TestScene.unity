@@ -207,6 +207,7 @@ MonoBehaviour:
   audioSensitivity: 8.5
   audioBarHeight: 20
   micListMaxHeight: 100
+  enableKeyboardShortcut: 1
   visible: 0
 --- !u!4 &1076252465
 Transform:

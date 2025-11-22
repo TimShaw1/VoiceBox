@@ -348,7 +348,7 @@ namespace TimShaw.VoiceBox.GUI
                     "Chat (Type: " 
                     + chatServiceConfig.serviceManagerType + ") (Manager Count: "
                     + chatManagers?.Length + ") ("
-                    + (AIManager.Instance != null && AIManager.Instance.chatServiceConfig != null ? "AIManager)" : ")")
+                    + (AIManager.Instance != null && AIManager.Instance.ChatService != null ? "AIManager)" : ")")
                 );
             }
             else
@@ -358,7 +358,7 @@ namespace TimShaw.VoiceBox.GUI
             // STT
             if (sttServiceConfig != null)
             {
-                GUILayout.Label("Speech to Text (Type: " + sttServiceConfig.serviceManagerType + ")");
+                GUILayout.Label("Speech to Text (Type: " + sttServiceConfig.serviceManagerType + ") (AIManager)");
             }
             else
                 GUILayout.Label("Speech to Text (Not Initialized)");
@@ -371,7 +371,7 @@ namespace TimShaw.VoiceBox.GUI
                     "Text to Speech (Type: "
                     + ttsServiceConfig.serviceManagerType + ") (Manager Count: " 
                     + tTSManagers?.Length + ") (" 
-                    + (AIManager.Instance != null && AIManager.Instance.textToSpeechConfig != null ? "AIManager)" : ")")
+                    + (AIManager.Instance != null && AIManager.Instance.TextToSpeechService != null ? "AIManager)" : ")")
                 );
             }
             else

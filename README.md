@@ -21,3 +21,6 @@ VoiceBox is a flexible and extensible framework for integrating various AI servi
 	- Whisper via [WhisperLive](https://github.com/collabora/WhisperLive)
 - **Text to Speech**
 	- Elevenlabs
+
+## Docs
+You can find the docs here: [https://voicebox.timshaw.dev/](https://voicebox.timshaw.dev/)

@@ -11,101 +11,180 @@ using UnityEngine;
 
 namespace TimShaw.VoiceBox.Components
 {
-    /// <summary>
-    /// Decodes a streaming MP3 audio feed into raw audio samples.
-    /// </summary>
-    public class StreamingMp3Decoder
+    public class StreamingAudioDecoder : System.IDisposable
     {
-        /// <summary>
-        /// Gets a value indicating whether there are decoded samples available.
-        /// </summary>
         public bool HasSamples => !_decodedSamples.IsEmpty;
+
+        // Thread-safe queue for Unity's audio thread
         private readonly ConcurrentQueue<float> _decodedSamples = new ConcurrentQueue<float>();
-        private MemoryStream _mp3Stream;
-        private Mp3FileReader _mp3Reader;
-        private IWaveProvider _resampler;
+
+        // Input Streams
+        private Stream _inputStream; // Generic stream (was _mp3Stream)
+        private WaveStream _waveReader; // Generic reader (was _mp3Reader)
+        private MediaFoundationResampler _resampler;
+
+        // Buffers
         private readonly byte[] _conversionBuffer;
         private const int BufferSize = 4096;
-        private int _sampleRate = AudioSettings.outputSampleRate;
-        private AudioSpeakerMode speakerMode = AudioSettings.speakerMode;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StreamingMp3Decoder"/> class.
-        /// </summary>
-        public StreamingMp3Decoder()
+        // Unity Settings
+        private readonly int _sampleRate = AudioSettings.outputSampleRate;
+        private readonly AudioSpeakerMode _speakerMode = AudioSettings.speakerMode;
+
+        public StreamingAudioDecoder()
         {
-            _mp3Stream = new MemoryStream();
             _conversionBuffer = new byte[BufferSize];
         }
 
         /// <summary>
-        /// Feeds MP3 data into the decoder.
+        /// Feed raw file bytes (MP3 or WAV) into the decoder.
         /// </summary>
-        /// <param name="mp3Data">The byte array of MP3 data.</param>
-        public void Feed(byte[] mp3Data)
+        /// <param name="fileData">The raw bytes of the file.</param>
+        /// <param name="isMp3">True for MP3, False for WAV.</param>
+        public void Feed(byte[] fileData, bool isMp3 = true)
         {
-            long originalPosition = _mp3Stream.Position;
-            _mp3Stream.Seek(0, SeekOrigin.End);
-            _mp3Stream.Write(mp3Data, 0, mp3Data.Length);
-            _mp3Stream.Position = originalPosition;
+            // 1. Setup the stream
+            if (_inputStream == null)
+            {
+                _inputStream = new MemoryStream();
+            }
 
-            if (_mp3Reader == null && _mp3Stream.Length > 0)
+            // Write data to the stream
+            long originalPosition = _inputStream.Position;
+            _inputStream.Seek(0, SeekOrigin.End);
+            _inputStream.Write(fileData, 0, fileData.Length);
+            _inputStream.Position = originalPosition;
+
+            // 2. Initialize the Reader if we haven't yet
+            if (_waveReader == null && _inputStream.Length > 0)
             {
                 try
                 {
-                    _mp3Reader = new Mp3FileReader(_mp3Stream);
+                    if (isMp3)
+                    {
+                        _waveReader = new Mp3FileReader(_inputStream);
+                    }
+                    else
+                    {
+                        // For WAV, we assume the header is present in the first chunk
+                        _waveReader = new WaveFileReader(_inputStream);
+                    }
 
-                    int unitySampleRate = _sampleRate;
-
-                    // Determine Unity's channel count based on the current speaker mode.
-                    int unityChannelCount = (speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
-
-                    // Create an output format that EXACTLY matches Unity's configuration.
-                    var outputFormat = new WaveFormat(unitySampleRate, unityChannelCount);
-
-                    _resampler = new MediaFoundationResampler(_mp3Reader, outputFormat);
+                    InitializeResampler(_waveReader);
                 }
-                catch (InvalidDataException) { _mp3Reader = null; return; }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Error initializing audio reader: {e.Message}");
+                    _waveReader = null;
+                    return;
+                }
             }
 
+            // 3. Process
             if (_resampler != null) ReadAndEnqueueAvailableSamples();
         }
 
         /// <summary>
-        /// Reads and enqueues available audio samples from the resampler.
+        /// Feeds a Unity AudioClip directly into the decoder.
         /// </summary>
+        public void Feed(AudioClip clip)
+        {
+            // 1. Extract Float Data from Unity AudioClip
+            float[] samples = new float[clip.samples * clip.channels];
+            clip.GetData(samples, 0);
+
+            // 2. Convert Float Array to 16-bit PCM Byte Array
+            // We do this to maintain compatibility with the existing ReadAndEnqueue logic 
+            // which expects Little Endian 16-bit bytes.
+            byte[] pcmData = new byte[samples.Length * 2];
+            for (int i = 0; i < samples.Length; i++)
+            {
+                // Convert float (-1 to 1) to short (-32768 to 32767)
+                short shortSample = (short)(Mathf.Clamp(samples[i], -1f, 1f) * 32767);
+
+                // Bit manipulation to store as Little Endian bytes
+                pcmData[i * 2] = (byte)(shortSample & 0xFF);
+                pcmData[i * 2 + 1] = (byte)((shortSample >> 8) & 0xFF);
+            }
+
+            // 3. Create a WaveProvider for this PCM data
+            // Unity clips are usually PCM, so we create a RawSourceWaveStream
+            var format = new WaveFormat(clip.frequency, clip.channels);
+            var memoryStream = new MemoryStream(pcmData);
+
+            // Reset previous streams if any
+            Reset();
+
+            _inputStream = memoryStream;
+            _waveReader = new RawSourceWaveStream(memoryStream, format);
+
+            // 4. Initialize Resampler and Process
+            InitializeResampler(_waveReader);
+            ReadAndEnqueueAvailableSamples();
+        }
+
+        private void InitializeResampler(WaveStream reader)
+        {
+            int unityChannelCount = (_speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
+
+            // Create an output format that EXACTLY matches Unity's configuration (16-bit PCM)
+            var outputFormat = new WaveFormat(_sampleRate, 16, unityChannelCount);
+
+            _resampler = new MediaFoundationResampler(reader, outputFormat)
+            {
+                ResamplerQuality = 60 // Optional: Set quality (1-60)
+            };
+        }
+
         private void ReadAndEnqueueAvailableSamples()
         {
+            if (_resampler == null) return;
+
             int bytesRead;
+            // Keep reading until the resampler buffer is empty
             while ((bytesRead = _resampler.Read(_conversionBuffer, 0, _conversionBuffer.Length)) > 0)
             {
                 for (int i = 0; i < bytesRead; i += 2)
                 {
+                    // Convert 16-bit PCM bytes back to Float for Unity
                     short sample = (short)((_conversionBuffer[i + 1] << 8) | _conversionBuffer[i]);
                     _decodedSamples.Enqueue(sample / 32768.0f);
                 }
             }
         }
 
-        /// <summary>
-        /// Tries to get the next audio sample from the queue.
-        /// </summary>
-        /// <param name="sample">The retrieved audio sample.</param>
-        /// <returns>True if a sample was retrieved, otherwise false.</returns>
-        public bool TryGetSample(out float sample) { return _decodedSamples.TryDequeue(out sample); }
+        public bool TryGetSample(out float sample)
+        {
+            return _decodedSamples.TryDequeue(out sample);
+        }
 
         /// <summary>
-        /// Disposes the MP3 reader and memory stream.
+        /// Clears current readers/streams to prepare for a new audio source.
         /// </summary>
-        public void Dispose() { _mp3Reader?.Dispose(); _mp3Stream?.Dispose(); }
+        public void Reset()
+        {
+            _waveReader?.Dispose();
+            _inputStream?.Dispose(); // Be careful disposing this if it's shared, but here it's local
+            _resampler?.Dispose();
+
+            _waveReader = null;
+            _inputStream = null;
+            _resampler = null;
+        }
+
+        public void Dispose()
+        {
+            Reset();
+        }
+
     }
 
 
-    /// <summary>
-    /// Manages streaming audio from a WebSocket and playing it through an AudioSource.
-    /// It uses a streaming MP3 decoder to handle the audio data.
-    /// </summary>
-    [RequireComponent(typeof(AudioSource))]
+        /// <summary>
+        /// Manages streaming audio from a WebSocket and playing it through an AudioSource.
+        /// It uses a streaming MP3 decoder to handle the audio data.
+        /// </summary>
+        [RequireComponent(typeof(AudioSource))]
     public class AudioStreamer : MonoBehaviour
     {
 
@@ -115,7 +194,7 @@ namespace TimShaw.VoiceBox.Components
 
         private ConcurrentQueue<float> _audioBuffer = new ConcurrentQueue<float>();
 
-        private StreamingMp3Decoder _mp3Decoder;
+        private StreamingAudioDecoder _audioDecoder;
 
         /// <summary>
         /// Invoked when an audio sample is played during <see cref="OnAudioFilterRead(float[], int)"/>
@@ -153,8 +232,8 @@ namespace TimShaw.VoiceBox.Components
                 return;
             }
 
-            if (_mp3Decoder == null)
-                _mp3Decoder = new StreamingMp3Decoder();
+            if (_audioDecoder == null)
+                _audioDecoder = new StreamingAudioDecoder();
 
             if (_cancellationSource == null)
                 _cancellationSource = new CancellationTokenSource();
@@ -172,7 +251,7 @@ namespace TimShaw.VoiceBox.Components
             }
 
             token = CancellationTokenSource.CreateLinkedTokenSource(token, _cancellationSource.Token).Token;
-            service.InitWebsocket(_webSocket, _mp3Decoder, token);
+            service.InitWebsocket(_webSocket, _audioDecoder, token);
 
         }
 
@@ -225,14 +304,14 @@ namespace TimShaw.VoiceBox.Components
         /// <param name="channels">The number of channels in the audio data.</param>
         void OnAudioFilterRead(float[] data, int channels)
         {
-            if (_mp3Decoder == null) return;
+            if (_audioDecoder == null) return;
             //if (!_mp3Decoder.HasSamples) return;
 
             // The decoder provides a perfectly formatted stream (correct sample rate AND channel count),
             // so we just copy it directly into Unity's buffer.
             for (int i = 0; i < data.Length; i++)
             {
-                if (_mp3Decoder.TryGetSample(out float sample))
+                if (_audioDecoder.TryGetSample(out float sample))
                 {
                     data[i] = sample;
                 }

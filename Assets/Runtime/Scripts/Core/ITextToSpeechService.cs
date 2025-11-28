@@ -42,9 +42,9 @@ namespace TimShaw.VoiceBox.Core
         /// Initializes a websocket (eg sets request headers) to interface with the TTS service
         /// </summary>
         /// <param name="webSocket">The websocket that should connect to the TTS service</param>
-        /// <param name="mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="audioDecoder">The audio decoder to process the audio stream.</param>
         /// <param name="token"></param>
-        public void InitWebsocket(ClientWebSocket webSocket, StreamingMp3Decoder mp3Decoder, CancellationToken token);
+        public void InitWebsocket(ClientWebSocket webSocket, StreamingAudioDecoder audioDecoder, CancellationToken token);
 
         /// <summary>
         /// Connects to a WebSocket and streams audio data.

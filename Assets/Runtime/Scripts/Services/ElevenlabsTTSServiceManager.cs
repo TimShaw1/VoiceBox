@@ -249,10 +249,10 @@ namespace TimShaw.VoiceBox.Core
         /// Receives audio data from a WebSocket connection.
         /// </summary>
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
-        /// <param name="_mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="_audioDecoder">The audio decoder to process the audio stream.</param>
         /// <param name="token">A cancellation token to stop the operation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task ReceiveAudioData(WebSocket _webSocket, StreamingMp3Decoder _mp3Decoder, CancellationToken token)
+        private async Task ReceiveAudioData(WebSocket _webSocket, StreamingAudioDecoder _audioDecoder, CancellationToken token)
         {
             var receiveBuffer = new byte[8192];
             var messageBuilder = new StringBuilder();
@@ -277,7 +277,7 @@ namespace TimShaw.VoiceBox.Core
                             {
                                 byte[] audioBytes = Convert.FromBase64String(response.audio);
 
-                                _mp3Decoder.Feed(audioBytes);
+                                _audioDecoder.Feed(audioBytes, true);
                             }
                         }
 
@@ -322,12 +322,12 @@ namespace TimShaw.VoiceBox.Core
         }
 
         /// <summary>
-        /// Sets the xi-api-key header and starts the <see cref="ReceiveAudioData(WebSocket, StreamingMp3Decoder, CancellationToken)"/> loop
+        /// Sets the xi-api-key header and starts the <see cref="ReceiveAudioData(WebSocket, StreamingAudioDecoder, CancellationToken)"/> loop
         /// </summary>
         /// <param name="webSocket">The websocket that should connect to Elevenlabs</param>
-        /// <param name="mp3Decoder">The MP3 decoder to process the audio stream.</param>
+        /// <param name="audioDecoder">The MP3 decoder to process the audio stream.</param>
         /// <param name="token"></param>
-        public void InitWebsocket(ClientWebSocket webSocket, StreamingMp3Decoder mp3Decoder, CancellationToken token)
+        public void InitWebsocket(ClientWebSocket webSocket, StreamingAudioDecoder audioDecoder, CancellationToken token)
         {
             if (webSocket.State == WebSocketState.Closed) // Reconnect WebSocket if it was closed
             {
@@ -335,7 +335,7 @@ namespace TimShaw.VoiceBox.Core
                 Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
                 if (_recieveAudioTask != null)
                     _recieveAudioTask.Dispose();
-                _recieveAudioTask = ReceiveAudioData(webSocket, mp3Decoder, token);
+                _recieveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
                 return;
             }
             else if (webSocket.State != WebSocketState.Open && webSocket.State != WebSocketState.Connecting) // Initialize WebSocket
@@ -345,7 +345,7 @@ namespace TimShaw.VoiceBox.Core
                 Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
                 if (_recieveAudioTask != null)
                     _recieveAudioTask.Dispose();
-                _recieveAudioTask = ReceiveAudioData(webSocket, mp3Decoder, token);
+                _recieveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
                 return;
             }
             else

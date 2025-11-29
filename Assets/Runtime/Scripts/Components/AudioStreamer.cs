@@ -89,50 +89,49 @@ namespace TimShaw.VoiceBox.Components
         /// </summary>
         public void Feed(AudioClip clip)
         {
-            // 1. Extract Float Data from Unity AudioClip
+            if (clip.loadState != AudioDataLoadState.Loaded)
+            {
+                Debug.LogError("StreamingAudioDecoder: Audio clip is not loaded!");
+                return;
+            }
+
+            // 1. Extract Float Data
             float[] samples = new float[clip.samples * clip.channels];
             clip.GetData(samples, 0);
 
-            // 2. Convert Float Array to 16-bit PCM Byte Array
-            // We do this to maintain compatibility with the existing ReadAndEnqueue logic 
-            // which expects Little Endian 16-bit bytes.
-            byte[] pcmData = new byte[samples.Length * 2];
-            for (int i = 0; i < samples.Length; i++)
-            {
-                // Convert float (-1 to 1) to short (-32768 to 32767)
-                short shortSample = (short)(Mathf.Clamp(samples[i], -1f, 1f) * 32767);
+            // 2. Convert Float[] directly to Byte[] (IEEE Float)
+            // This is significantly faster than the manual loop and avoids precision loss.
+            byte[] bytes = new byte[samples.Length * 4]; // 4 bytes per float
+            System.Buffer.BlockCopy(samples, 0, bytes, 0, bytes.Length);
 
-                // Bit manipulation to store as Little Endian bytes
-                pcmData[i * 2] = (byte)(shortSample & 0xFF);
-                pcmData[i * 2 + 1] = (byte)((shortSample >> 8) & 0xFF);
-            }
+            // 3. Create a WaveStream that understands this is 32-bit Float data
+            var format = WaveFormat.CreateIeeeFloatWaveFormat(clip.frequency, clip.channels);
+            var memoryStream = new MemoryStream(bytes);
 
-            // 3. Create a WaveProvider for this PCM data
-            // Unity clips are usually PCM, so we create a RawSourceWaveStream
-            var format = new WaveFormat(clip.frequency, clip.channels);
-            var memoryStream = new MemoryStream(pcmData);
-
-            // Reset previous streams if any
             Reset();
 
             _inputStream = memoryStream;
             _waveReader = new RawSourceWaveStream(memoryStream, format);
 
-            // 4. Initialize Resampler and Process
+            // 4. Initialize Resampler
+            // MediaFoundationResampler will handle the Float -> 16-bit conversion automatically
+            // as long as InitializeResampler sets the output to 16-bit.
             InitializeResampler(_waveReader);
+
             ReadAndEnqueueAvailableSamples();
         }
 
         private void InitializeResampler(WaveStream reader)
         {
-            int unityChannelCount = (_speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
+            // Always fetch the CURRENT sample rate, in case it changed or was wrong at init
+            int currentRate = AudioSettings.outputSampleRate;
+            int unityChannelCount = (AudioSettings.speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
 
-            // Create an output format that EXACTLY matches Unity's configuration (16-bit PCM)
-            var outputFormat = new WaveFormat(_sampleRate, 16, unityChannelCount);
+            var outputFormat = new WaveFormat(currentRate, 16, unityChannelCount);
 
             _resampler = new MediaFoundationResampler(reader, outputFormat)
             {
-                ResamplerQuality = 60 // Optional: Set quality (1-60)
+                ResamplerQuality = 60
             };
         }
 
@@ -196,8 +195,13 @@ namespace TimShaw.VoiceBox.Components
 
         private StreamingAudioDecoder _audioDecoder;
 
+        private AudioClip _streamingClip;
+
+        private int SampleRate;
+        private int Channels;
+
         /// <summary>
-        /// Invoked when an audio sample is played during <see cref="OnAudioFilterRead(float[], int)"/>
+        /// Invoked when an audio sample is played during <see cref="OnAudioRead(float[])"/>
         /// </summary>
         public EventHandler<float[]> OnAudioSamplePlayed;
 
@@ -215,8 +219,36 @@ namespace TimShaw.VoiceBox.Components
         /// </summary>
         private void Awake()
         {
+            SampleRate = AudioSettings.outputSampleRate;
+            Channels = (AudioSettings.speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
+
             _audioSource = GetComponent<AudioSource>();
             _audioSource.playOnAwake = false;
+
+            _streamingClip = AudioClip.Create("VoiceBoxAudioStream", SampleRate, Channels, SampleRate, true, OnAudioRead);
+
+            _audioSource.clip = _streamingClip;
+            _audioSource.loop = true;
+        }
+
+        private void OnAudioRead(float[] data)
+        {
+            if (_audioDecoder == null) return;
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (_audioDecoder.TryGetSample(out float sample))
+                {
+                    data[i] = sample;
+                }
+                else
+                {
+                    // Fill with silence to avoid noise/glitches.
+                    data[i] = 0f;
+                }
+            }
+
+            OnAudioSamplePlayed?.Invoke(this, data);
         }
 
         /// <summary>
@@ -294,35 +326,6 @@ namespace TimShaw.VoiceBox.Components
             {
                 Debug.LogError($"WebSocket Error: {e.Message}");
             }
-        }
-
-        /// <summary>
-        /// This method is called by Unity on the audio thread to request audio data.
-        /// It fills the buffer with decoded audio samples.
-        /// </summary>
-        /// <param name="data">The array to fill with audio data.</param>
-        /// <param name="channels">The number of channels in the audio data.</param>
-        void OnAudioFilterRead(float[] data, int channels)
-        {
-            if (_audioDecoder == null) return;
-            //if (!_mp3Decoder.HasSamples) return;
-
-            // The decoder provides a perfectly formatted stream (correct sample rate AND channel count),
-            // so we just copy it directly into Unity's buffer.
-            for (int i = 0; i < data.Length; i++)
-            {
-                if (_audioDecoder.TryGetSample(out float sample))
-                {
-                    data[i] = sample;
-                }
-                else
-                {
-                    // If the buffer runs out of samples, fill the rest with silence.
-                    data[i] = 0.0f;
-                }
-            }
-
-            OnAudioSamplePlayed?.Invoke(this, data);
         }
 
         /// <summary>

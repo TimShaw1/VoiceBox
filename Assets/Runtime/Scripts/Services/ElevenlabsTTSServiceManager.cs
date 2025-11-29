@@ -331,7 +331,7 @@ namespace TimShaw.VoiceBox.Core
         {
             if (webSocket.State == WebSocketState.Closed) // Reconnect WebSocket if it was closed
             {
-                Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id=eleven_multilingual_v2");
+                Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id={_config.modelID}");
                 Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
                 if (_recieveAudioTask != null)
                     _recieveAudioTask.Dispose();
@@ -341,7 +341,7 @@ namespace TimShaw.VoiceBox.Core
             else if (webSocket.State != WebSocketState.Open && webSocket.State != WebSocketState.Connecting) // Initialize WebSocket
             {
                 webSocket.Options.SetRequestHeader("xi-api-key", _config.apiKey);
-                Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id=eleven_multilingual_v2");
+                Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id={_config.modelID}");
                 Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
                 if (_recieveAudioTask != null)
                     _recieveAudioTask.Dispose();

@@ -213,7 +213,7 @@ public class APITester : MonoBehaviour
         waitingForTTS = true;
         float clipLength = 0f;
         AIManager.Instance.GenerateSpeechAudioClipFromText(
-            "Hello World!",
+            "Hello World 2!",
             audioClip =>
             {
                 Debug.Log("[Test: Text To Speech 2] Generated audioclip and playing...");

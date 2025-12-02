@@ -252,7 +252,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="_audioDecoder">The audio decoder to process the audio stream.</param>
         /// <param name="token">A cancellation token to stop the operation.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task ReceiveAudioData(WebSocket _webSocket, StreamingAudioDecoder _audioDecoder, CancellationToken token)
+        private async Task ReceiveAudioData(ClientWebSocket _webSocket, StreamingAudioDecoder _audioDecoder, CancellationToken token)
         {
             var receiveBuffer = new byte[8192];
             var messageBuilder = new StringBuilder();
@@ -300,7 +300,7 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
         /// <param name="token">A cancellation token to stop the streaming.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task ConnectAndStream(string text, WebSocket _webSocket, CancellationToken token)
+        public async Task ConnectAndStream(string text, ClientWebSocket _webSocket, CancellationToken token)
         {
             var initialMessage = new { text = " " };
             string jsonMessage = JsonConvert.SerializeObject(initialMessage);
@@ -353,6 +353,13 @@ namespace TimShaw.VoiceBox.Core
                 Debug.LogWarning("Websocket already initialized!");
                 return;
             }
+        }
+
+        public async void StopStreamingAndDisconnect(ClientWebSocket webSocket, CancellationToken token = default)
+        {
+            var eosMessage = new { text = "" };
+            var jsonMessage = JsonConvert.SerializeObject(eosMessage);
+            await SendSocketMessage(jsonMessage, webSocket, token);
         }
     }
 }

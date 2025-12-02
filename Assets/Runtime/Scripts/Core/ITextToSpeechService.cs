@@ -53,6 +53,13 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
         /// <param name="token">A cancellation token to stop the streaming.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public Task ConnectAndStream(string text, WebSocket _webSocket, CancellationToken token);
+        public Task ConnectAndStream(string text, ClientWebSocket _webSocket, CancellationToken token);
+
+        /// <summary>
+        /// Sends the End Of Sequence (EOS) message to the TTS service
+        /// </summary>
+        /// <param name="websocket">The websocket to send the EOS message to</param>
+        /// <param name="token"></param>
+        public void StopStreamingAndDisconnect(ClientWebSocket websocket, CancellationToken token = default);
     }
 }

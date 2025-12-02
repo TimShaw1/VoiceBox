@@ -290,9 +290,15 @@ namespace TimShaw.VoiceBox.Components
         /// <summary>
         /// Stops the current audio stream.
         /// </summary>
-        public void StopStreaming()
+        public void StopStreaming(ITextToSpeechService service)
         {
+            // Tell service to cancel gracefully
+            service?.StopStreamingAndDisconnect(_webSocket);
+
+            // Send cancel command
             _cancellationSource?.Cancel();
+
+            // Clean up websocket
             if (_webSocket != null)
             {
                 if (_webSocket.State == WebSocketState.Open)
@@ -302,6 +308,9 @@ namespace TimShaw.VoiceBox.Components
                 _webSocket.Dispose();
                 _webSocket = null;
             }
+
+            // Reset CancellationTokenSource
+            _cancellationSource = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -333,7 +342,7 @@ namespace TimShaw.VoiceBox.Components
         /// </summary>
         private void OnDestroy()
         {
-            StopStreaming();
+            StopStreaming(null);
         }
     }
 }

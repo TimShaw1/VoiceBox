@@ -61,5 +61,10 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="websocket">The websocket to send the EOS message to</param>
         /// <param name="token"></param>
         public void StopStreamingAndDisconnect(ClientWebSocket websocket, CancellationToken token = default);
+
+        /// <summary>
+        /// Ocurrs when the TTS service recieved audio data
+        /// </summary>
+        public event System.EventHandler<byte[]> OnAudioDataRecieved;
     }
 }

@@ -154,7 +154,7 @@ MonoBehaviour:
   testSpawnManager: 0
   testGUI: 0
   testSTT: 0
-  testTTS: 1
+  testTTS: 0
   testChat: 0
   audioSource: {fileID: 2085286909}
 --- !u!4 &897424585
@@ -448,7 +448,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1493601811}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01a5aabf7bb06bc44a509392d6d4c719, type: 3}
   m_Name: 

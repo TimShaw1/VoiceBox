@@ -2,6 +2,7 @@ using NAudio.Wave;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
@@ -22,6 +23,10 @@ namespace TimShaw.VoiceBox.Core
     /// </summary>
     public class ElevenLabsTTSServiceManager : ITextToSpeechService
     {
+        /// <summary>
+        /// Ocurrs when the TTS service recieved audio data
+        /// </summary>
+        public event System.EventHandler<byte[]> OnAudioDataRecieved;
 
         private HttpClient client;
         /// <summary>
@@ -278,6 +283,7 @@ namespace TimShaw.VoiceBox.Core
                                 byte[] audioBytes = Convert.FromBase64String(response.audio);
 
                                 _audioDecoder.Feed(audioBytes, true);
+                                OnAudioDataRecieved?.Invoke(this, audioBytes.ToArray());
                             }
                         }
 

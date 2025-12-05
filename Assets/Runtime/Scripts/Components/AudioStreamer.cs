@@ -25,7 +25,7 @@ namespace TimShaw.VoiceBox.Components
 
         // Buffers
         private readonly byte[] _conversionBuffer;
-        private const int BufferSize = 4096;
+        private const int BufferSize = 32768;
 
         // Unity Settings
         private readonly int _sampleRate = AudioSettings.outputSampleRate;

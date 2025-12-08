@@ -530,7 +530,8 @@ namespace TimShaw.VoiceBox.Core
             _client.Client.AddCancellationToken(token);
             _client.Client.OnTranscription += (text, segs) =>
             {
-                OnRecognized.Invoke(this, new VoiceBoxSpeechRecognitionEventArgs(ResultReason.RecognizedSpeech, text));
+                // TODO: implement duration and offset
+                OnRecognized.Invoke(this, new VoiceBoxSpeechRecognitionEventArgs(ResultReason.RecognizedSpeech, text, TimeSpan.Zero, -1));
             };
 
             _client.RunMic();

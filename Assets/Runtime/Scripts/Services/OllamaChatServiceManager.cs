@@ -59,7 +59,7 @@ namespace TimShaw.VoiceBox.Core
                 return;
             }
 
-            if (options.Tools?.Count > 0)
+            if (options?.Tools?.Count > 0)
             {
                 UnityEngine.Debug.LogWarning("OllamaChatServiceManager: Tool calling with Ollama models is currently unsupported may and cause unexpected behaviour.");
             }
@@ -97,7 +97,7 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
-                if (options.Tools?.Count > 0)
+                if (options?.Tools?.Count > 0)
                 {
                     UnityEngine.Debug.LogWarning("OllamaChatServiceManager: Tool calling with Ollama models is currently unsupported may and cause unexpected behaviour.");
                 }
@@ -106,7 +106,7 @@ namespace TimShaw.VoiceBox.Core
                     onChunkReceived?.Invoke(item);
                 }
 
-                onComplete.Invoke();
+                onComplete?.Invoke();
             }
             catch (Exception ex)
             {

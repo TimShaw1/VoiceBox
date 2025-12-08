@@ -90,6 +90,8 @@ namespace TimShaw.VoiceBox.Core
             }
             var speechConfig = SpeechConfig.FromSubscription(speechServiceObjectDerived.apiKey, speechServiceObjectDerived.region);
             speechConfig.SpeechRecognitionLanguage = speechServiceObjectDerived.language;
+            if (speechServiceObjectDerived.requestWordLevelTimestamps)
+                speechConfig.RequestWordLevelTimestamps();
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
             InitSpeechRecognizer();
         }

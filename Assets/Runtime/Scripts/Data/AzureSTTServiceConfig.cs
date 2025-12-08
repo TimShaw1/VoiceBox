@@ -50,6 +50,11 @@ namespace TimShaw.VoiceBox.Data
         public string[] audioInputEndpointNames = { "Default" };
 
         /// <summary>
+        /// Whether to request timestamps when recognizing speech
+        /// </summary>
+        public bool requestWordLevelTimestamps = false;
+
+        /// <summary>
         /// Called when the script is loaded or a value is changed in the Inspector.
         /// Populates the list of available audio input devices.
         /// </summary>

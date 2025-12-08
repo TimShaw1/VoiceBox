@@ -3,6 +3,7 @@
 using Microsoft.CognitiveServices.Speech;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,6 +28,16 @@ namespace TimShaw.VoiceBox.Core
             /// The recognized text provided by the STT service
             /// </summary>
             public string Text { get; set; }
+
+            /// <summary>
+            /// The duration of the result in ticks
+            /// </summary>
+            public TimeSpan Duration { get; set; }
+
+            /// <summary>
+            /// The offset of the result in ticks
+            /// </summary>
+            public long OffsetInTicks {  get; set; }
         }
 
         /// <summary>
@@ -57,18 +68,20 @@ namespace TimShaw.VoiceBox.Core
             /// </summary>
             /// <param name="reason"></param>
             /// <param name="text"></param>
-            public VoiceBoxSpeechRecognitionEventArgs(ResultReason reason, string text)
+            public VoiceBoxSpeechRecognitionEventArgs(ResultReason reason, string text, TimeSpan duration, long offsetInTicks)
             {
                 Result = new RecognitionResult();
                 Result.Reason = reason;
                 Result.Text = text;
+                Result.Duration = duration;
+                Result.OffsetInTicks = offsetInTicks;
             }
 
             /// <summary>
             /// Enables conversion from <see cref="SpeechRecognitionEventArgs"/> to <see cref="VoiceBoxSpeechRecognitionEventArgs"/> for usage with Azure STT
             /// </summary>
             /// <param name="args"></param>
-            public static explicit operator VoiceBoxSpeechRecognitionEventArgs(SpeechRecognitionEventArgs args) => new VoiceBoxSpeechRecognitionEventArgs(args.Result.Reason, args.Result.Text);
+            public static explicit operator VoiceBoxSpeechRecognitionEventArgs(SpeechRecognitionEventArgs args) => new VoiceBoxSpeechRecognitionEventArgs(args.Result.Reason, args.Result.Text, args.Result.Duration, args.Result.OffsetInTicks);
         }
 
         /// <summary>

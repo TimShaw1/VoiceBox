@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>OllamaSharp</id>
+    <version>5.4.12</version>
+    <title>OllamaSharp</title>
+    <authors>Andreas Wäscher, Milkey Tan, Jerrett Davis</authors>
+    <license type="file">LICENSE</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <icon>Ollama.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/awaescher/OllamaSharp</projectUrl>
+    <description>The easiest way to use the Ollama API in .NET</description>
+    <copyright>Andreas Wäscher</copyright>
+    <tags>ollama ollama-api api llm openai ai localllama llama streaming gpt llamacpp ichatclient</tags>
+    <repository type="git" url="https://github.com/awaescher/OllamaSharp" commit="2d1a46ad0a3dffa6362cf217d6774f365b3f7ee8" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.0.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.0.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.0.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Microsoft.Bcl.AsyncInterfaces" version="10.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.0.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.1">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.0.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

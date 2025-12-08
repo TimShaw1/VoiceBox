@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKey: 
   apiKeyJSONString: OLLAMA_API_KEY
-  modelName: qwen3-coder:480b-cloud
+  modelName: gemma3:1b
+  useFunctionInvokation: 0
   serviceEndpoint: http://localhost:11434/

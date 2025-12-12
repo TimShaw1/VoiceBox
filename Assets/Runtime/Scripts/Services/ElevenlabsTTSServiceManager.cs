@@ -1,6 +1,8 @@
 using NAudio.Wave;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -366,6 +368,124 @@ namespace TimShaw.VoiceBox.Core
             var eosMessage = new { text = "" };
             var jsonMessage = JsonConvert.SerializeObject(eosMessage);
             await SendSocketMessage(jsonMessage, webSocket, token);
+        }
+
+        /// <summary>
+        /// Creates a voice clone named <paramref name="voiceName"/> given a provided list of audio files.
+        /// </summary>
+        /// <param name="filePaths">List of file paths to upload.</param>
+        /// <param name="voiceName">The name of the voice.</param>
+        /// <param name="description">Optional description for the voice.</param>
+        /// <param name="removeBackgroundNoise">If true, the API will attempt to clean up audio artifacts.</param>
+        /// <returns>The VoiceID of the cloned voice.</returns>
+        public async Task<string> CloneVoiceAndGetVoiceIDAsync(
+            IEnumerable<string> filePaths,
+            string voiceName,
+            string description = "",
+            bool removeBackgroundNoise = false)
+        {
+            var pathList = filePaths.ToList();
+
+            if (pathList.Count == 0)
+                throw new ArgumentException("File path list cannot be empty.", nameof(filePaths));
+
+            // 1. Get the extension of the first file to set the standard
+            string expectedExtension = Path.GetExtension(pathList[0]).TrimStart('.').ToLower();
+
+            foreach (var path in pathList)
+            {
+                if (!File.Exists(path))
+                    throw new FileNotFoundException($"File not found: {path}");
+
+                // 2. CHECK: Ensure every file matches the first file's extension
+                string currentExtension = Path.GetExtension(path).TrimStart('.').ToLower();
+                if (currentExtension != expectedExtension)
+                {
+                    throw new ArgumentException($"All files must be the same type. Found mixed '{expectedExtension}' and '{currentExtension}'.");
+                }
+            }
+
+            // 3. Load all files
+            var audioDataTasks = pathList.Select(path => File.ReadAllBytesAsync(path));
+            byte[][] audioDataArray = await Task.WhenAll(audioDataTasks);
+
+            // 4. Handle the "mp3" -> "mpeg" mapping
+            if (expectedExtension == "mp3") expectedExtension = "mpeg";
+
+            // 5. Pass new parameters down to the core method
+            return await CloneVoiceAndGetVoiceIDAsync(audioDataArray, voiceName, description, removeBackgroundNoise, expectedExtension);
+        }
+
+        /// <summary>
+        /// Creates a voice clone named <paramref name="voiceName"/> given a provided <paramref name="audioDataList"/>.
+        /// </summary>
+        /// <param name="audioDataList">List of raw audio byte arrays.</param>
+        /// <param name="voiceName">The name of the voice.</param>
+        /// <param name="description">Optional description for the voice.</param>
+        /// <param name="removeBackgroundNoise">If true, the API will attempt to clean up audio artifacts.</param>
+        /// <param name="mediaType">The media type the audioData is (e.g., mpeg, wav).</param>
+        /// <returns>The VoiceID of the cloned voice.</returns>
+        public async Task<string> CloneVoiceAndGetVoiceIDAsync(
+            IEnumerable<byte[]> audioDataList,
+            string voiceName,
+            string description = "",
+            bool removeBackgroundNoise = false,
+            string mediaType = "mpeg")
+        {
+            // Validate inputs
+            if (audioDataList == null || !audioDataList.Any())
+                throw new ArgumentException("Audio data list cannot be empty.", nameof(audioDataList));
+
+            using (var client = new HttpClient())
+            {
+                using (var formData = new MultipartFormDataContent())
+                {
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Add("xi-api-key", _config.apiKey);
+
+                    // Add standard fields
+                    formData.Add(new StringContent(voiceName), "name");
+
+                    // Handle Description (ensure it's not null)
+                    formData.Add(new StringContent(description ?? ""), "description");
+
+                    // Handle Remove Background Noise (convert bool to lowercase string "true"/"false")
+                    // Note: Use ToLower() because some APIs are strict about casing for boolean strings
+                    formData.Add(new StringContent(removeBackgroundNoise.ToString().ToLower()), "remove_background_noise");
+
+                    // Loop through the list and add every sample as a separate "files" entry
+                    int counter = 0;
+                    string extension = mediaType == "mpeg" ? "mp3" : mediaType; // cosmetic filename extension
+
+                    foreach (var audioBytes in audioDataList)
+                    {
+                        var audioContent = new ByteArrayContent(audioBytes);
+                        audioContent.Headers.ContentType = MediaTypeHeaderValue.Parse($"audio/{mediaType}");
+
+                        // Each file needs a unique filename in the form data
+                        string fileName = $"sample_{counter}.{extension}";
+
+                        // Add to form: content, field name ("files"), filename
+                        formData.Add(audioContent, "files", fileName);
+
+                        counter++;
+                    }
+
+                    // Send POST Request
+                    HttpResponseMessage response = await client.PostAsync("https://api.elevenlabs.io/v1/voices/add", formData);
+                    string responseBody = await response.Content.ReadAsStringAsync();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = JObject.Parse(responseBody);
+                        return json["voice_id"]?.ToString();
+                    }
+                    else
+                    {
+                        throw new Exception($"Error {response.StatusCode}: {responseBody}");
+                    }
+                }
+            }
         }
     }
 }

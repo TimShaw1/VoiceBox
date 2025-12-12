@@ -367,30 +367,39 @@ namespace TimShaw.VoiceBox.Core
         }
 
         /// <summary>
-        /// TODO
+        /// Creates a voice clone named <paramref name="voiceName"/> given a provided list of audio files.
         /// </summary>
-        /// <param name="audioSource"></param>
-        public void StartVoiceAgentPipeline(AudioSource audioSource)
+        /// <param name="filePaths">List of file paths to upload.</param>
+        /// <param name="voiceName">The name of the voice.</param>
+        /// <param name="description">Optional description for the voice.</param>
+        /// <param name="removeBackgroundNoise">If true, the API will attempt to clean up audio artifacts.</param>
+        /// <returns>The VoiceID of the cloned voice.</returns>
+        public async Task<string> CloneVoiceAndGetVoiceIDAsync(
+            AudioFileSource filePaths,
+            string voiceName,
+            string description = "",
+            bool removeBackgroundNoise = false)
         {
-            throw new NotImplementedException();
+            return await TextToSpeechService.CloneVoiceAndGetVoiceIDAsync(filePaths.Paths, voiceName, description, removeBackgroundNoise);
+        }
 
-            // Sample of what I want it to work like:
-            /*
-            StartSpeechTranscription();
-            List<ChatMessage> messages = new();
-            SpeechToTextService.OnRecognized += (object s, SpeechRecognitionEventArgs e) =>
-            {
-                messages.Add(new ChatMessage(ChatRole.User, e.Result.Text));
-                StreamChatMessage(
-                    messages,
-                    null,
-                    (chunk) => RequestAudioAndStream(chunk, audioSource),
-                    null,
-                    (error) => Debug.LogError(error)
-
-                );
-            };
-            */
+        /// <summary>
+        /// Creates a voice clone named <paramref name="voiceName"/> given a provided <paramref name="audioDataList"/>.
+        /// </summary>
+        /// <param name="audioDataList">List of raw audio byte arrays.</param>
+        /// <param name="voiceName">The name of the voice.</param>
+        /// <param name="description">Optional description for the voice.</param>
+        /// <param name="removeBackgroundNoise">If true, the API will attempt to clean up audio artifacts.</param>
+        /// <param name="mediaType">The media type the audioData is (e.g., mpeg, wav).</param>
+        /// <returns>The VoiceID of the cloned voice.</returns>
+        public async Task<string> CloneVoiceAndGetVoiceIDAsync(
+            AudioDataSource audioDataList,
+            string voiceName,
+            string description = "",
+            bool removeBackgroundNoise = false,
+            string mediaType = "mpeg")
+        {
+            return await TextToSpeechService.CloneVoiceAndGetVoiceIDAsync(audioDataList.Data, voiceName, description, removeBackgroundNoise, mediaType);
         }
     }
 }

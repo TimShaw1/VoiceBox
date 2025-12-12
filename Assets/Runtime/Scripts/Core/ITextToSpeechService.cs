@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using TimShaw.VoiceBox.Generics;
 using TimShaw.VoiceBox.Components;
+using TimShaw.VoiceBox.Generics;
 using UnityEngine;
 
 namespace TimShaw.VoiceBox.Core
@@ -61,6 +62,36 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="websocket">The websocket to send the EOS message to</param>
         /// <param name="token"></param>
         public void StopStreamingAndDisconnect(ClientWebSocket websocket, CancellationToken token = default);
+
+        /// <summary>
+        /// Creates a voice clone named <paramref name="voiceName"/> given a provided <paramref name="audioDataList"/>.
+        /// </summary>
+        /// <param name="audioDataList">List of raw audio byte arrays.</param>
+        /// <param name="voiceName">The name of the voice.</param>
+        /// <param name="description">Optional description for the voice.</param>
+        /// <param name="removeBackgroundNoise">If true, the API will attempt to clean up audio artifacts.</param>
+        /// <param name="mediaType">The media type the audioData is (e.g., mpeg, wav).</param>
+        /// <returns>The VoiceID of the cloned voice.</returns>
+        public Task<string> CloneVoiceAndGetVoiceIDAsync(
+            IEnumerable<byte[]> audioDataList,
+            string voiceName,
+            string description = "Cloned via HttpClient",
+            bool removeBackgroundNoise = false,
+            string mediaType = "mpeg");
+
+        /// <summary>
+        /// Creates a voice clone named <paramref name="voiceName"/> given a provided list of audio files.
+        /// </summary>
+        /// <param name="filePaths">List of file paths to upload.</param>
+        /// <param name="voiceName">The name of the voice.</param>
+        /// <param name="description">Optional description for the voice.</param>
+        /// <param name="removeBackgroundNoise">If true, the API will attempt to clean up audio artifacts.</param>
+        /// <returns>The VoiceID of the cloned voice.</returns>
+        public Task<string> CloneVoiceAndGetVoiceIDAsync(
+            IEnumerable<string> filePaths,
+            string voiceName,
+            string description = "",
+            bool removeBackgroundNoise = false);
 
         /// <summary>
         /// Ocurrs when the TTS service recieved audio data

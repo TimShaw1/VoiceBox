@@ -310,7 +310,11 @@ namespace TimShaw.VoiceBox.Core
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ConnectAndStream(string text, ClientWebSocket _webSocket, CancellationToken token)
         {
-            var initialMessage = new { text = " " };
+            var initialMessage = new
+            {
+                text = " ",
+                voice_settings = _config.voiceSettings
+            };
             string jsonMessage = JsonConvert.SerializeObject(initialMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 

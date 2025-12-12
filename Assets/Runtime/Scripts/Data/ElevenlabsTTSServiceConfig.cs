@@ -18,7 +18,7 @@ namespace TimShaw.VoiceBox.Data
         /// </summary>
         [Tooltip("A float between 0 and 1. Higher values result in more stable speech, but may sound monotonous. Lower values are more expressive, but may be unstable.")]
         [Range(0f, 1f)]
-        public float stability;
+        public float stability = 0.5f;
 
         /// <summary>
         /// A float between 0 and 1. Higher values boost the similarity to the original voice, but may introduce artifacts.
@@ -26,20 +26,27 @@ namespace TimShaw.VoiceBox.Data
         /// </summary>
         [Tooltip("A float between 0 and 1. Higher values boost the similarity to the original voice, but may introduce artifacts. Lower values are more generic, but cleaner.")]
         [Range(0f, 1f)]
-        public float similarity_boost;
+        public float similarity_boost = 0.75f;
 
         /// <summary>
         /// A float between 0 and 1. A higher value will exaggerate the style of the voice.
         /// </summary>
         [Tooltip("A float between 0 and 1. A higher value will exaggerate the style of the voice.")]
         [Range(0f, 1f)]
-        public float style;
+        public float style = 0f;
 
         /// <summary>
         /// Whether to use the speaker boost feature, which can enhance voice clarity.
         /// </summary>
         [Tooltip("Whether to use the speaker boost feature, which can enhance voice clarity.")]
-        public bool use_speaker_boost;
+        public bool use_speaker_boost = true;
+
+        /// <summary>
+        /// A float between 0.7 and 1.2. A higher value will exaggerate the speed of the voice.
+        /// </summary>
+        [Tooltip("A float between 0.7 and 1.2. A higher value will exaggerate the speed of the voice.")]
+        [Range(0.7f, 1.2f)]
+        public float speed = 1.0f;
     }
 
     /// <summary>

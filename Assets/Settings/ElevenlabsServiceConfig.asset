@@ -18,8 +18,9 @@ MonoBehaviour:
   voiceId: JBFqnCBsd6RMkjVDRZzb
   modelID: eleven_multilingual_v2
   voiceSettings:
-    stability: 0
-    similarity_boost: 0
+    stability: 0.5
+    similarity_boost: 0.75
     style: 0
-    use_speaker_boost: 0
+    use_speaker_boost: 1
+    speed: 1
   output_format: mp3_44100_128

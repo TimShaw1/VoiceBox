@@ -20,7 +20,7 @@ namespace TimShaw.VoiceBox.Components
     /// </summary>
     public class ChatManager : MonoBehaviour
     {
-        private readonly CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Path to the api keys json file.
@@ -161,6 +161,9 @@ namespace TimShaw.VoiceBox.Components
                 return;
             }
 
+            if (internalCancellationTokenSource.IsCancellationRequested)
+                internalCancellationTokenSource = new CancellationTokenSource();
+
             token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
             Task.Run(() => ChatService.SendMessage(messageHistory, onSuccess, onError, options, token));
@@ -190,6 +193,8 @@ namespace TimShaw.VoiceBox.Components
                 return;
             }
 
+            if (internalCancellationTokenSource.IsCancellationRequested)
+                internalCancellationTokenSource = new CancellationTokenSource();
             token = CancellationTokenSource.CreateLinkedTokenSource(token, internalCancellationTokenSource.Token).Token;
 
             Task.Run(() => ChatService.SendMessageStream(messageHistory, onChunkReceived, onComplete, onError, options, token));

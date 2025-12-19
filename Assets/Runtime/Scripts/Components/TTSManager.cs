@@ -20,6 +20,8 @@ namespace TimShaw.VoiceBox.Components
     [RequireComponent(typeof(AudioStreamer))]
     public class TTSManager : MonoBehaviour
     {
+        private CancellationTokenSource internalCancellationTokenSource = new CancellationTokenSource();
+
         /// <summary>
         /// Path to the api keys json file.
         /// </summary>
@@ -64,6 +66,7 @@ namespace TimShaw.VoiceBox.Components
         private void OnDestroy()
         {
             textToSpeechConfig.apiKey = "";
+            internalCancellationTokenSource.Cancel();
         }
 
         /// <summary>
@@ -183,7 +186,7 @@ namespace TimShaw.VoiceBox.Components
             if (audioStreamer)
             {
                 audioStreamer.InitStreaming(TextToSpeechService);
-                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, destroyCancellationToken);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, internalCancellationTokenSource.Token);
             }
             else
                 Debug.LogError("TTS Manager object does not have an AudioStreamer attached to it!");
@@ -200,7 +203,7 @@ namespace TimShaw.VoiceBox.Components
             if (audioStreamer)
             {
                 audioStreamer.InitStreaming(TextToSpeechService);
-                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, destroyCancellationToken);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, internalCancellationTokenSource.Token);
             }
             else
                 Debug.LogError("Audio Streamer is null");

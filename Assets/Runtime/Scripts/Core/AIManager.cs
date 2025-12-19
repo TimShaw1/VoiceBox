@@ -32,6 +32,7 @@ namespace TimShaw.VoiceBox.Core
 
         private CancellationTokenSource internalChatCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource internalSttCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource internalTtsCancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Path to an api keys json file.
@@ -219,7 +220,9 @@ namespace TimShaw.VoiceBox.Core
         {
             internalChatCancellationTokenSource.Cancel();
             internalSttCancellationTokenSource.Cancel();
+            internalTtsCancellationTokenSource.Cancel();
             UnloadAPIKeys();
+            Instance = null;
         }
 
         /// <summary>
@@ -360,7 +363,9 @@ namespace TimShaw.VoiceBox.Core
             if (audioStreamer)
             {
                 audioStreamer.InitStreaming(TextToSpeechService);
-                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, destroyCancellationToken);
+                if (internalTtsCancellationTokenSource.IsCancellationRequested)
+                    internalTtsCancellationTokenSource = new CancellationTokenSource();
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, internalTtsCancellationTokenSource.Token);
             }
             else
                 Debug.LogError("Audio Streamer is null.");

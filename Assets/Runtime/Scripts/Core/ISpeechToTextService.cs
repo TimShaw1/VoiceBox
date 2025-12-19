@@ -37,7 +37,7 @@ namespace TimShaw.VoiceBox.Core
         /// <summary>
         /// Occurs when the speech recognizer has been canceled.
         /// </summary>
-        public event System.EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
+        public event System.EventHandler<VoiceBoxSpeechRecognitionCanceledEventArgs> OnCanceled;
         /// <summary>
         /// Occurs when a recognition session has started.
         /// </summary>

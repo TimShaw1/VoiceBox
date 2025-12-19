@@ -6,6 +6,7 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
 {
@@ -84,6 +85,63 @@ namespace TimShaw.VoiceBox.Core
             public static explicit operator VoiceBoxSpeechRecognitionEventArgs(SpeechRecognitionEventArgs args) => new VoiceBoxSpeechRecognitionEventArgs(args.Result.Reason, args.Result.Text, args.Result.Duration, args.Result.OffsetInTicks);
         }
 
+        public class VoiceBoxSpeechRecognitionCanceledEventArgs : EventArgs
+        {
+            /// <summary>
+            /// The high-level reason why the recognition was canceled.
+            /// </summary>
+            public CancellationReason Reason { get; private set; }
+
+            /// <summary>
+            /// The specific error code provided by the service (e.g. "auth_error", "quota_exceeded", "401").
+            /// </summary>
+            public string ErrorCode { get; private set; }
+
+            /// <summary>
+            /// A human-readable message describing the error or cancellation details.
+            /// </summary>
+            public string ErrorDetails { get; private set; }
+
+            public VoiceBoxSpeechRecognitionCanceledEventArgs(CancellationReason reason, string errorCode, string errorDetails)
+            {
+                Reason = reason;
+                ErrorCode = errorCode;
+                ErrorDetails = errorDetails;
+            }
+
+            public static explicit operator VoiceBoxSpeechRecognitionCanceledEventArgs(SpeechRecognitionCanceledEventArgs args)
+            {
+                if (args == null) return null;
+
+                // 1. Map the Reason Enum
+                CancellationReason customReason = CancellationReason.Error; // Default
+                switch (args.Reason)
+                {
+                    case Microsoft.CognitiveServices.Speech.CancellationReason.Error:
+                        customReason = CancellationReason.Error;
+                        break;
+                    case Microsoft.CognitiveServices.Speech.CancellationReason.EndOfStream:
+                        customReason = CancellationReason.EndOfStream;
+                        break;
+                    case Microsoft.CognitiveServices.Speech.CancellationReason.CancelledByUser:
+                        customReason = CancellationReason.User;
+                        break;
+                }
+
+                // 2. Map Error Code and Details
+                // The Microsoft args.ErrorCode is an Enum, so we convert it to string.
+                string errorCodeStr = args.ErrorCode.ToString();
+
+                return new VoiceBoxSpeechRecognitionCanceledEventArgs(
+                    customReason,
+                    errorCodeStr,
+                    args.ErrorDetails
+                );
+            }
+        }
+
+
+
         /// <summary>
         /// Gets a dictionary of available audio input endpoints.
         /// </summary>
@@ -102,6 +160,27 @@ namespace TimShaw.VoiceBox.Core
             }
 
             return deviceList;
+        }
+
+        /// <summary>
+        /// Defines why the recognition result was canceled.
+        /// </summary>
+        public enum CancellationReason
+        {
+            /// <summary>
+            /// The service encountered an error (network, auth, timeout, etc.).
+            /// </summary>
+            Error,
+
+            /// <summary>
+            /// The user or client application manually requested cancellation.
+            /// </summary>
+            EndOfStream,
+
+            /// <summary>
+            /// The operation was canceled by the user explicitly.
+            /// </summary>
+            User
         }
 
         /// <summary>

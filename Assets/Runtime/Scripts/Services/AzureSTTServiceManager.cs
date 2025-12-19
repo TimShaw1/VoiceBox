@@ -28,7 +28,7 @@ namespace TimShaw.VoiceBox.Core
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
-        public event EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
+        public event EventHandler<VoiceBoxSpeechRecognitionCanceledEventArgs> OnCanceled;
         public event EventHandler<SessionEventArgs> OnSessionStarted;
         public event EventHandler<SessionEventArgs> OnSessionStopped;
         public event EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
@@ -123,7 +123,7 @@ namespace TimShaw.VoiceBox.Core
             speechRecognizer.Canceled += (s, e) =>
             {
                 Debug.Log($"Azure Service Manager: CANCELED: Reason={e.Reason} Details={e.ErrorDetails}");
-                OnCanceled?.Invoke(this, e);
+                OnCanceled?.Invoke(this, (VoiceBoxSpeechRecognitionCanceledEventArgs)e);
             };
 
             speechRecognizer.SessionStarted += (s, e) =>

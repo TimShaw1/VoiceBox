@@ -498,7 +498,7 @@ namespace TimShaw.VoiceBox.Core
 #pragma warning disable CS0067 // Event is never used
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
-        public event EventHandler<SpeechRecognitionCanceledEventArgs> OnCanceled;
+        public event EventHandler<VoiceBoxSpeechRecognitionCanceledEventArgs> OnCanceled;
         public event EventHandler<SessionEventArgs> OnSessionStarted;
         public event EventHandler<SessionEventArgs> OnSessionStopped;
         public event EventHandler<RecognitionEventArgs> OnSpeechStartDetected;

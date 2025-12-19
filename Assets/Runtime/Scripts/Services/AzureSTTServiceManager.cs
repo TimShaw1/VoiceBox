@@ -122,7 +122,7 @@ namespace TimShaw.VoiceBox.Core
 
             speechRecognizer.Canceled += (s, e) =>
             {
-                Debug.Log($"Azure Service Manager: CANCELED: Reason={e.Reason}");
+                Debug.Log($"Azure Service Manager: CANCELED: Reason={e.Reason} Details={e.ErrorDetails}");
                 OnCanceled?.Invoke(this, e);
             };
 

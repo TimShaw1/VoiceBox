@@ -51,6 +51,16 @@ namespace TimShaw.VoiceBox.Data
         public bool include_timestamps = false;
 
         /// <summary>
+        /// Silence threshold in seconds for VAD.
+        /// </summary>
+        public double vad_silence_threshold_secs = 1.5;
+
+        /// <summary>
+        /// Threshold for voice activity detection.
+        /// </summary>
+        public double vad_threshold = 0.4;
+
+        /// <summary>
         /// Called when the script is loaded or a value is changed in the Inspector.
         /// Populates the list of available audio input devices.
         /// </summary>

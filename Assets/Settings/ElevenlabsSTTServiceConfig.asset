@@ -30,3 +30,5 @@ MonoBehaviour:
   - Microphone (Voicemod Virtual Audio Device (WDM))
   - Microphone (2- Antlion Wireless Microphone)
   include_timestamps: 1
+  vad_silence_threshold_secs: 0.6
+  vad_threshold: 0.4

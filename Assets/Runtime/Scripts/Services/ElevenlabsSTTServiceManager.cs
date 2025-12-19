@@ -69,7 +69,7 @@ namespace TimShaw.VoiceBox.Core
             _webSocket.Options.SetRequestHeader("xi-api-key", _apiKey);
             var uriBuilder = new UriBuilder("wss://api.elevenlabs.io/v1/speech-to-text/realtime");
             // Ensure format matches NAudio settings (pcm_16000)
-            uriBuilder.Query = $"model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code={_config.language}&commit_strategy=vad";
+            uriBuilder.Query = $"model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code={_config.language}&commit_strategy=vad&vad_silence_threshold_secs={_config.vad_silence_threshold_secs}&vad_threshold={_config.vad_threshold}";
 
             try
             {

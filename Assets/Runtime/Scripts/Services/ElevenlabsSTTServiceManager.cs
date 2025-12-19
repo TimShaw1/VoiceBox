@@ -294,7 +294,6 @@ namespace TimShaw.VoiceBox.Core
             // -------------------------------------------------------------------------
             // 2. TRANSCRIPT HANDLING (Existing Logic)
             // -------------------------------------------------------------------------
-            Debug.Log(response.message_type);
             ResultReason reason;
             if (response.message_type == "committed_transcript" || response.is_final)
             {

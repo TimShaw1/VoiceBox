@@ -15,7 +15,7 @@ MonoBehaviour:
   apiKey: 
   apiKeyJSONString: ELEVENLABS_API_KEY
   language: eng
-  audioInputDeviceName: Microphone (2- Shure MV7+)
+  audioInputDeviceName: Default
   audioInputEndpointNames:
   - Default
   - Microphone (Steam Streaming Microphone)

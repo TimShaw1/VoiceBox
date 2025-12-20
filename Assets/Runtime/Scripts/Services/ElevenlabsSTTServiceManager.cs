@@ -1,7 +1,9 @@
 using Microsoft.CognitiveServices.Speech;
 using NAudio.Wave; // Requires NAudio library
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -69,7 +71,7 @@ namespace TimShaw.VoiceBox.Core
             _webSocket.Options.SetRequestHeader("xi-api-key", _apiKey);
             var uriBuilder = new UriBuilder("wss://api.elevenlabs.io/v1/speech-to-text/realtime");
             // Ensure format matches NAudio settings (pcm_16000)
-            uriBuilder.Query = $"model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code={_config.language}&commit_strategy=vad&vad_silence_threshold_secs={_config.vad_silence_threshold_secs}&vad_threshold={_config.vad_threshold}";
+            uriBuilder.Query = $"model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code={_config.language}&commit_strategy=vad&vad_silence_threshold_secs={_config.vad_silence_threshold_secs}&vad_threshold={_config.vad_threshold}&include_timestamps={_config.include_timestamps}";
 
             try
             {
@@ -241,7 +243,7 @@ namespace TimShaw.VoiceBox.Core
                     string responseJson = Encoding.UTF8.GetString(ms.ToArray());
                     try
                     {
-                        var responseObj = JsonUtility.FromJson<ElevenLabsResponse>(responseJson);
+                        var responseObj = JsonConvert.DeserializeObject<ElevenLabsResponse>(responseJson);
                         if (responseObj != null) ParseAndDispatchEvent(responseObj);
                     }
                     catch (Exception ex) { Debug.LogWarning($"JSON Parse Error: {ex.Message}"); }
@@ -295,7 +297,7 @@ namespace TimShaw.VoiceBox.Core
             // 2. TRANSCRIPT HANDLING (Existing Logic)
             // -------------------------------------------------------------------------
             ResultReason reason;
-            if (response.message_type == "committed_transcript" || response.is_final)
+            if (response.message_type == "committed_transcript_with_timestamps")
             {
                 reason = ResultReason.RecognizedSpeech;
             }
@@ -311,18 +313,18 @@ namespace TimShaw.VoiceBox.Core
 
             if (string.IsNullOrEmpty(response.text)) return;
 
-            double durationSec = response.duration;
-            double startSec = response.start_timestamp;
-
-            // Fallback timing calculation
-            if ((durationSec <= 0 || startSec <= 0) && response.words != null && response.words.Length > 0)
+            double startSec = -1;
+            double durationSec = -1;
+            TimeSpan duration = TimeSpan.Zero;
+            long offsetInTicks = -1;
+            if (response.words != null)
             {
                 startSec = response.words[0].start;
                 durationSec = response.words[response.words.Length - 1].end - response.words[0].start;
-            }
 
-            TimeSpan duration = TimeSpan.FromSeconds(durationSec);
-            long offsetInTicks = (long)(startSec * TimeSpan.TicksPerSecond);
+                duration = TimeSpan.FromSeconds(durationSec);
+                offsetInTicks = (long)(startSec * TimeSpan.TicksPerSecond);
+            }
 
             var args = new STTUtils.VoiceBoxSpeechRecognitionEventArgs(
                 reason,
@@ -353,7 +355,6 @@ namespace TimShaw.VoiceBox.Core
 
             // Transcript fields
             public string text;
-            public bool is_final;
             public double start_timestamp;
             public double duration;
             public WordAlignment[] words;
@@ -369,6 +370,8 @@ namespace TimShaw.VoiceBox.Core
             public string text;
             public double start;
             public double end;
+            public string type;
+            public double logprob;
         }
     }
 }

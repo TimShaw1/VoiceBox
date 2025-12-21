@@ -74,13 +74,13 @@ namespace TimShaw.VoiceBox.Core
             _config = config as ElevenlabsTTSServiceConfig;
             if (_config.apiKey.Length == 0)
             {
-                Debug.LogError("No Elevenlabs API key found.");
+                Debug.LogError("[ElevenLabsTTSServiceManager] No Elevenlabs API key found.");
                 return;
             }
 
             if (_config.voiceId.Length == 0)
             {
-                Debug.LogError("No Elevenlabs Voice ID found.");
+                Debug.LogError("[ElevenLabsTTSServiceManager] No Elevenlabs Voice ID found.");
                 return;
             }
 

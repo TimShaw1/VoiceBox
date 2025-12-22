@@ -14,21 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKey: 
   apiKeyJSONString: ELEVENLABS_API_KEY
-  language: eng
+  language_code: eng
   audioInputDeviceName: Default
   audioInputEndpointNames:
   - Default
   - Microphone (Steam Streaming Microphone)
   - Microphone (2- Shure MV7+)
-  - Microphone (Virtual Desktop Audio)
+  - Microphone (2- Antlion Wireless Microphone)
   - Headset Microphone (Oculus Virtual Audio Device)
   - MOTIV Mix Virtual Output (Shure Virtual Audio)
   - Microphone (Realtek High Definition Audio)
   - Microphone (Bigscreen Audio Stream 1.2)
   - Microphone (DroidCam Virtual Audio)
+  - Microphone (Virtual Desktop Audio)
   - Microphone (Logi C615 HD WebCam)
   - Microphone (Voicemod Virtual Audio Device (WDM))
-  - Microphone (2- Antlion Wireless Microphone)
   include_timestamps: 1
+  include_language_detection: 0
   vad_silence_threshold_secs: 0.6
   vad_threshold: 0.4
+  min_speech_duration_ms: 250
+  min_silence_duration_ms: 550

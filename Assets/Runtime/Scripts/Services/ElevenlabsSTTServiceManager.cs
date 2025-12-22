@@ -70,8 +70,26 @@ namespace TimShaw.VoiceBox.Core
             // 1. Prepare WebSocket Connection
             _webSocket.Options.SetRequestHeader("xi-api-key", _apiKey);
             var uriBuilder = new UriBuilder("wss://api.elevenlabs.io/v1/speech-to-text/realtime");
-            // Ensure format matches NAudio settings (pcm_16000)
-            uriBuilder.Query = $"model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code={_config.language}&commit_strategy=vad&vad_silence_threshold_secs={_config.vad_silence_threshold_secs}&vad_threshold={_config.vad_threshold}&include_timestamps={_config.include_timestamps}";
+            var queryParams = new System.Collections.Generic.List<string>
+            {
+                "model_id=scribe_v2_realtime",  // TODO
+                "audio_format=pcm_16000",   // TODO
+                $"language_code={_config.language_code}",
+                $"commit_strategy={(_config.commit_strategy == ElevenlabsSTTCommitStrategy.Manual ? "manual" : "vad")}", // "manual" or "vad"
+                $"include_timestamps={_config.include_timestamps}"
+            };
+
+            // Only append specific VAD settings if using VAD strategy to keep URL clean, 
+            // though API accepts them regardless.
+            if (_config.commit_strategy == ElevenlabsSTTCommitStrategy.Vad)
+            {
+                queryParams.Add($"vad_silence_threshold_secs={_config.vad_silence_threshold_secs}");
+                queryParams.Add($"vad_threshold={_config.vad_threshold}");
+                queryParams.Add($"min_speech_duration_ms={_config.min_speech_duration_ms}");
+                queryParams.Add($"min_silence_duration_ms={_config.min_silence_duration_ms}");
+            }
+
+            uriBuilder.Query = string.Join("&", queryParams);
 
             try
             {

@@ -298,7 +298,6 @@ namespace TimShaw.VoiceBox.Core
             byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonMessage);
             previousMessageSendTime = DateTime.Now;
             await _webSocket.SendAsync(new ArraySegment<byte>(bytesToSend), WebSocketMessageType.Text, true, token);
-            Debug.Log("Sent audio data");
         }
 
         // -------------------------------------------------------------------------

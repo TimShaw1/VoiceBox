@@ -31,6 +31,7 @@ MonoBehaviour:
   - Microphone (Voicemod Virtual Audio Device (WDM))
   include_timestamps: 1
   include_language_detection: 0
+  commit_strategy: 1
   vad_silence_threshold_secs: 0.6
   vad_threshold: 0.4
   min_speech_duration_ms: 250

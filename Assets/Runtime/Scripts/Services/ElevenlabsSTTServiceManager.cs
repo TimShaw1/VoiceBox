@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using TimShaw.VoiceBox.Data;
 using TimShaw.VoiceBox.Generics;
 using UnityEngine;
+using UnityEngine.Rendering;
 using static TimShaw.VoiceBox.Core.STTUtils;
 
 namespace TimShaw.VoiceBox.Core
@@ -42,7 +43,13 @@ namespace TimShaw.VoiceBox.Core
         private const int SAMPLE_RATE = 16000;
         private const int BITS_PER_SAMPLE = 16;
         private const int CHANNELS = 1;
-        private const int BUFFER_MILLISECONDS = 100; // Approx 100ms chunks
+        private const int BUFFER_MILLISECONDS = 200; // Approx 200ms chunks
+
+        // Local VAD for limiting amount of silent chunks sent
+        private DateTime previousSilence = DateTime.Now;
+        private DateTime previousMessageSendTime = DateTime.Now;
+        private bool isCurrentlySilent = false;
+        byte[] previousSkippedSilenceChunk;
 
         public void Initialize(GenericSTTServiceConfig config)
         {
@@ -207,6 +214,32 @@ namespace TimShaw.VoiceBox.Core
             return 0;
         }
 
+        public bool IsSilence(byte[] pcmData, float threshold = 0.01f)
+        {
+            // 16-bit PCM = 2 bytes per sample
+            int sampleCount = pcmData.Length / 2;
+            double sum = 0;
+
+            for (int i = 0; i < pcmData.Length; i += 2)
+            {
+                // Convert 2 bytes to a 16-bit signed integer (short)
+                // Bit-shifting is faster than BitConverter.ToInt16
+                short sample = (short)((pcmData[i + 1] << 8) | pcmData[i]);
+
+                // Normalize to -1.0 to 1.0 range (32768 is the max value for short)
+                float normalizedSample = sample / 32768f;
+
+                // Accumulate sum of squares
+                sum += normalizedSample * normalizedSample;
+            }
+
+            // Calculate RMS
+            double rms = Math.Sqrt(sum / sampleCount);
+
+            // Return true if RMS is below the threshold
+            return rms < threshold;
+        }
+
         /// <summary>
         /// Consumes the BlockingCollection queue and sends chunks to WebSocket.
         /// </summary>
@@ -217,18 +250,55 @@ namespace TimShaw.VoiceBox.Core
             foreach (var pcmData in _audioSendQueue.GetConsumingEnumerable(token))
             {
                 if (_webSocket.State != WebSocketState.Open) break;
+                if (IsSilence(pcmData))
+                {
+                    if (!isCurrentlySilent)
+                        previousSilence = DateTime.Now;
 
-                // 1. Base64 Encode (NAudio already provides PCM16 byte[], no float conversion needed!)
-                string base64Audio = Convert.ToBase64String(pcmData);
+                    isCurrentlySilent = true;
 
-                // 2. Construct JSON
-                // { "message_type": "input_audio_chunk", "audio_base_64": "...", "commit": false }
-                string jsonMessage = $"{{\"message_type\": \"input_audio_chunk\", \"audio_base_64\": \"{base64Audio}\"}}";
+                    // Skip this chunk if total silence duration > silence threshold + buffer*4 + buffer error padding
+                    if ((DateTime.Now - previousSilence).TotalSeconds > _config.vad_silence_threshold_secs + (BUFFER_MILLISECONDS / 250) + 2f)
+                    {
+                        if ((DateTime.Now - previousMessageSendTime).TotalSeconds > 8)
+                        {
+                            await SendAudioChunk(pcmData, token);
+                            previousSkippedSilenceChunk = null;
+                        }
+                        else
+                            previousSkippedSilenceChunk = pcmData;
+                        continue; 
+                    }
+                }
+                else
+                {
+                    isCurrentlySilent = false;
+                }
 
-                // 3. Send
-                byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonMessage);
-                await _webSocket.SendAsync(new ArraySegment<byte>(bytesToSend), WebSocketMessageType.Text, true, token);
+                if (previousSkippedSilenceChunk != null)
+                {
+                    await SendAudioChunk(previousSkippedSilenceChunk, token);
+                    previousSkippedSilenceChunk = null;
+                }
+
+                await SendAudioChunk(pcmData, token);
             }
+        }
+
+        private async Task SendAudioChunk(byte[] pcmData, CancellationToken token)
+        {
+            // 1. Base64 Encode (NAudio already provides PCM16 byte[], no float conversion needed!)
+            string base64Audio = Convert.ToBase64String(pcmData);
+
+            // 2. Construct JSON
+            // { "message_type": "input_audio_chunk", "audio_base_64": "...", "commit": false }
+            string jsonMessage = $"{{\"message_type\": \"input_audio_chunk\", \"audio_base_64\": \"{base64Audio}\"}}";
+
+            // 3. Send
+            byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonMessage);
+            previousMessageSendTime = DateTime.Now;
+            await _webSocket.SendAsync(new ArraySegment<byte>(bytesToSend), WebSocketMessageType.Text, true, token);
+            Debug.Log("Sent audio data");
         }
 
         // -------------------------------------------------------------------------
@@ -274,17 +344,18 @@ namespace TimShaw.VoiceBox.Core
             // -------------------------------------------------------------------------
             // 1. ERROR HANDLING
             // -------------------------------------------------------------------------
-            if (response.message_type == "error")
+            Debug.Log(response);
+            if (ElevenlabsErrorCodes.Contains(response.message_type))
             {
-                string errorDetails = $"ElevenLabs Error [{response.code}]: {response.message}";
+                string errorDetails = $"ElevenLabs Error [{response.message_type}]";
 
                 // Log generic error to console
                 Debug.LogError(errorDetails);
 
                 // Handle specific codes if custom logic is needed (e.g., specific UI feedback)
-                switch (response.code)
+                switch (response.message_type)
                 {
-                    case "invalid_request":
+                    case "input_error":
                         // Usually bad parameters (sample rate, format)
                         errorDetails = "Invalid Request: Please check audio format and model parameters.";
                         break;
@@ -296,7 +367,7 @@ namespace TimShaw.VoiceBox.Core
                         // Character limit reached
                         errorDetails = "Quota Exceeded: You have run out of ElevenLabs credits.";
                         break;
-                    case "rate_limit_exceeded":
+                    case "rate_limited":
                         // Too many concurrent connections
                         errorDetails = "Rate Limit Exceeded: Please try again later.";
                         break;
@@ -306,7 +377,7 @@ namespace TimShaw.VoiceBox.Core
                 }
 
                 // Dispatch Cancellation Event
-                OnCanceled?.Invoke(this, new VoiceBoxSpeechRecognitionCanceledEventArgs(STTUtils.CancellationReason.Error, response.code, errorDetails));
+                OnCanceled?.Invoke(this, new VoiceBoxSpeechRecognitionCanceledEventArgs(STTUtils.CancellationReason.Error, response.message_type, errorDetails));
 
                 return; // Stop processing this message
             }
@@ -373,13 +444,12 @@ namespace TimShaw.VoiceBox.Core
 
             // Transcript fields
             public string text;
-            public double start_timestamp;
-            public double duration;
             public WordAlignment[] words;
 
-            // Error fields (populated when type == "error")
-            public string message;
-            public string code;
+            public override string ToString()
+            {
+                return $"message_type:{message_type}\ntext: {text}";
+            }
         }
 
         [Serializable]
@@ -391,5 +461,10 @@ namespace TimShaw.VoiceBox.Core
             public string type;
             public double logprob;
         }
+
+        private string[] ElevenlabsErrorCodes = { 
+            "error", "auth_error", "quota_exceeded", "commit_throttled", "unaccepted_terms", "rate_limited", "queue_overflow", "resource_exhausted", 
+            "session_time_limit_exceeded", "input_error", "chunk_size_exceeded", "insufficient_audio_activity", "transcriber_error"
+        };
     }
 }

@@ -343,7 +343,6 @@ namespace TimShaw.VoiceBox.Core
             // -------------------------------------------------------------------------
             // 1. ERROR HANDLING
             // -------------------------------------------------------------------------
-            Debug.Log(response);
             if (ElevenlabsErrorCodes.Contains(response.message_type))
             {
                 string errorDetails = $"ElevenLabs Error [{response.message_type}]";

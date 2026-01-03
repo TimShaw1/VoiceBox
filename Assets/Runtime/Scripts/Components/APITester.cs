@@ -72,6 +72,10 @@ public class APITester : MonoBehaviour
         {
             if (e.Result.Text.Length > 0) Debug.Log("API Tester: Recognized: " + e.Result.Text);
         }
+        else if (e.Result.Reason == VoiceBoxResultReason.RecognizedSpeechWithTimestamps)
+        {
+            if (e.Result.Text.Length > 0) Debug.Log("API Tester: Recognized with timestamps: " + e.Result.Text);
+        }
     }
 
     /// <summary>

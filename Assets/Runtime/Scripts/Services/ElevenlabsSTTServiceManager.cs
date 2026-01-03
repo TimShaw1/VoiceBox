@@ -24,6 +24,7 @@ namespace TimShaw.VoiceBox.Core
         public event EventHandler<STTUtils.VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
         public event EventHandler<STTUtils.VoiceBoxSpeechRecognitionEventArgs> OnRecognized;
         public event EventHandler<VoiceBoxSpeechRecognitionCanceledEventArgs> OnCanceled;
+#pragma warning disable CS0067
         public event EventHandler<SessionEventArgs> OnSessionStarted;
         public event EventHandler<SessionEventArgs> OnSessionStopped;
         public event EventHandler<RecognitionEventArgs> OnSpeechStartDetected;
@@ -456,5 +457,6 @@ namespace TimShaw.VoiceBox.Core
             "error", "auth_error", "quota_exceeded", "commit_throttled", "unaccepted_terms", "rate_limited", "queue_overflow", "resource_exhausted", 
             "session_time_limit_exceeded", "input_error", "chunk_size_exceeded", "insufficient_audio_activity", "transcriber_error"
         };
+#pragma warning restore CS0067
     }
 }

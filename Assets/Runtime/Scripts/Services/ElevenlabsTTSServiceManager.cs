@@ -26,9 +26,9 @@ namespace TimShaw.VoiceBox.Core
     public class ElevenLabsTTSServiceManager : ITextToSpeechService
     {
         /// <summary>
-        /// Ocurrs when the TTS service recieved audio data
+        /// Ocurrs when the TTS service received audio data
         /// </summary>
-        public event System.EventHandler<byte[]> OnAudioDataRecieved;
+        public event System.EventHandler<byte[]> OnAudioDataReceived;
 
         private HttpClient client;
         /// <summary>
@@ -37,7 +37,7 @@ namespace TimShaw.VoiceBox.Core
         private ElevenlabsTTSServiceConfig _config;
         private string fileExtension;
 
-        private Task _recieveAudioTask;
+        private Task _receiveAudioTask;
 
         /// <summary>
         /// Represents the request body for the ElevenLabs TTS API.
@@ -285,7 +285,7 @@ namespace TimShaw.VoiceBox.Core
                                 byte[] audioBytes = Convert.FromBase64String(response.audio);
 
                                 _audioDecoder.Feed(audioBytes, true);
-                                OnAudioDataRecieved?.Invoke(this, audioBytes.ToArray());
+                                OnAudioDataReceived?.Invoke(this, audioBytes.ToArray());
                             }
                         }
 
@@ -334,7 +334,7 @@ namespace TimShaw.VoiceBox.Core
         }
 
         /// <summary>
-        /// Sets the xi-api-key header and starts the <see cref="ReceiveAudioData(WebSocket, StreamingAudioDecoder, CancellationToken)"/> loop
+        /// Sets the xi-api-key header and starts the <see cref="ReceiveAudioData(ClientWebSocket, StreamingAudioDecoder, CancellationToken)"/> loop
         /// </summary>
         /// <param name="webSocket">The websocket that should connect to Elevenlabs</param>
         /// <param name="audioDecoder">The MP3 decoder to process the audio stream.</param>
@@ -345,9 +345,9 @@ namespace TimShaw.VoiceBox.Core
             {
                 Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id={_config.modelID}");
                 Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
-                if (_recieveAudioTask != null)
-                    _recieveAudioTask.Dispose();
-                _recieveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
+                if (_receiveAudioTask != null)
+                    _receiveAudioTask.Dispose();
+                _receiveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
                 return;
             }
             else if (webSocket.State != WebSocketState.Open && webSocket.State != WebSocketState.Connecting) // Initialize WebSocket
@@ -355,9 +355,9 @@ namespace TimShaw.VoiceBox.Core
                 webSocket.Options.SetRequestHeader("xi-api-key", _config.apiKey);
                 Uri uri = new Uri($"wss://api.elevenlabs.io/v1/text-to-speech/{_config.voiceId}/stream-input?model_id={_config.modelID}");
                 Task.Run(() => webSocket.ConnectAsync(uri, token)).Wait();
-                if (_recieveAudioTask != null)
-                    _recieveAudioTask.Dispose();
-                _recieveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
+                if (_receiveAudioTask != null)
+                    _receiveAudioTask.Dispose();
+                _receiveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
                 return;
             }
             else

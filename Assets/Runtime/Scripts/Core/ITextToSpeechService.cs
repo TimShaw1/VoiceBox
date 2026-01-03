@@ -94,8 +94,8 @@ namespace TimShaw.VoiceBox.Core
             bool removeBackgroundNoise = false);
 
         /// <summary>
-        /// Ocurrs when the TTS service recieved audio data
+        /// Ocurrs when the TTS service received audio data
         /// </summary>
-        public event System.EventHandler<byte[]> OnAudioDataRecieved;
+        public event System.EventHandler<byte[]> OnAudioDataReceived;
     }
 }

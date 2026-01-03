@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TimShaw.VoiceBox.Components;  // Import useful components from VoiceBox
 using TimShaw.VoiceBox.Core;        // Import core classes from VoiceBox
 using UnityEngine;
@@ -31,5 +32,7 @@ public class TestTTSManager : MonoBehaviour
 
         /// Request audio and stream it through the TTS Manager's AudioStreamer
         ttsManager.RequestAudioAndStream("Hello World!");
+
+        string voiceId = ttsManager.CloneVoiceAndGetVoiceIDAsync(Application.dataPath, "/speechSample.mp3", "VoiceBoxTestVoice").Result;
     }
 }

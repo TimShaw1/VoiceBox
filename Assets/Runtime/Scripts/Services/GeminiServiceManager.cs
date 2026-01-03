@@ -16,13 +16,13 @@ namespace TimShaw.VoiceBox.Core
     public class GeminiServiceManager : IChatService
     {
         private IChatClient _client;
-        private GeminiServiceConfig _config;
+        private GeminiServiceConfig _config; // If implementing a custom service, replace GeminiServiceConfig with your custom service config
 
         /// <summary>
         /// Initializes the Gemini service with the provided configuration.
         /// </summary>
         /// <param name="config">The ScriptableObject configuration for the Gemini service.</param>
-        public void Initialize(GenericChatServiceConfig config)
+        public void Initialize(GenericChatServiceConfig config) // If implementing a custom service, replace GeminiServiceConfig with your custom service config
         {
             if (config is GeminiServiceConfig geminiConfig)
             {
@@ -36,8 +36,8 @@ namespace TimShaw.VoiceBox.Core
                 if (_config.useFunctionInvokation)
                 {
                     _client = new ChatClientBuilder(
-                        new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gemini-2.5-flash").AsIChatClient()
-                    ).UseFunctionInvocation().Build();
+                        new OpenAIClient(new System.ClientModel.ApiKeyCredential(config.apiKey), options).GetChatClient(config.modelName ?? "gemini-2.5-flash").AsIChatClient() // If implementing a custom service, replace "gemini-2.5-flash" with a model from the service
+                    ).UseFunctionInvocation().Build(); // UseFunctionInvocation() enables tool calling
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace TimShaw.VoiceBox.Core
         {
             if (_client == null || _config == null)
             {
-                onError?.Invoke("GeminiChatService is not initialized.");
+                onError?.Invoke("GeminiChatService is not initialized."); // Any errors should be thrown through the onError callback
                 return;
             }
 
@@ -79,7 +79,7 @@ namespace TimShaw.VoiceBox.Core
             {
                 var response = await _client.GetResponseAsync(messageHistory, options, token);
 
-                onSuccess?.Invoke(new ChatUtils.VoiceBoxChatMessage(response.Messages[0]));
+                onSuccess?.Invoke(new ChatUtils.VoiceBoxChatMessage(response.Messages[0])); // Return the resulting chat message via the onSuccess callback
             }
             catch (Exception e)
             {
@@ -108,12 +108,13 @@ namespace TimShaw.VoiceBox.Core
         {
             try
             {
+                // Send updates as chunks to the onChunkReceived callback
                 await foreach (ChatResponseUpdate item in _client.GetStreamingResponseAsync(messageHistory, options, token))
                 {
                     onChunkReceived?.Invoke(item);
                 }
 
-                onComplete?.Invoke();
+                onComplete?.Invoke();   // When streaming is finished, invoke the onComplete callback
             }
             catch (Exception ex)
             {

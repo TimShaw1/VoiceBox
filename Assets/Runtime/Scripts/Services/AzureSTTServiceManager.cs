@@ -120,9 +120,11 @@ namespace TimShaw.VoiceBox.Core
                 }
 
                 VoiceBoxSpeechRecognitionEventArgs args = (VoiceBoxSpeechRecognitionEventArgs)e;
-                if (_config.requestWordLevelTimestamps && args.Result.Reason == VoiceBoxResultReason.RecognizedSpeech) 
+                if (_config.requestWordLevelTimestamps && args.Result.Reason == VoiceBoxResultReason.RecognizedSpeech)
+                {
                     args.Result.Reason = VoiceBoxResultReason.RecognizedSpeechWithTimestamps;
-                OnRecognized?.Invoke(this, (VoiceBoxSpeechRecognitionEventArgs)e);
+                }
+                OnRecognized?.Invoke(this, args);
             };
 
             speechRecognizer.Canceled += (s, e) =>

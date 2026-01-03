@@ -24,6 +24,7 @@ namespace TimShaw.VoiceBox.Core
         /// </summary>
         public SpeechRecognizer speechRecognizer;
         private Dictionary<string, string> audioEndpoints;
+        private AzureSTTServiceConfig _config;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public event EventHandler<VoiceBoxSpeechRecognitionEventArgs> OnRecognizing;
@@ -68,8 +69,8 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="config">The ScriptableObject configuration for the Azure STT service.</param>
         public void Initialize(GenericSTTServiceConfig config)
         {
-            var speechServiceObjectDerived = config as AzureSTTServiceConfig;
-            if (speechServiceObjectDerived.apiKey.Length == 0)
+            _config = config as AzureSTTServiceConfig;
+            if (_config.apiKey.Length == 0)
             {
                 Debug.Log("No API key. STT disabled.");
                 return;
@@ -80,17 +81,17 @@ namespace TimShaw.VoiceBox.Core
             AudioConfig audioConfig;
             try
             {
-                audioConfig = (speechServiceObjectDerived.audioInputDeviceName == "Default") ?
-                    AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(audioEndpoints[speechServiceObjectDerived.audioInputDeviceName]);
+                audioConfig = (_config.audioInputDeviceName == "Default") ?
+                    AudioConfig.FromDefaultMicrophoneInput() : AudioConfig.FromMicrophoneInput(audioEndpoints[_config.audioInputDeviceName]);
             }
             catch (Exception ex)
             {
                 Debug.LogWarning("Azure Service Manager: AudioConfig error: " + ex.Message + " -- Using default microphone.");
                 audioConfig = AudioConfig.FromDefaultMicrophoneInput();
             }
-            var speechConfig = SpeechConfig.FromSubscription(speechServiceObjectDerived.apiKey, speechServiceObjectDerived.region);
-            speechConfig.SpeechRecognitionLanguage = speechServiceObjectDerived.language;
-            if (speechServiceObjectDerived.requestWordLevelTimestamps)
+            var speechConfig = SpeechConfig.FromSubscription(_config.apiKey, _config.region);
+            speechConfig.SpeechRecognitionLanguage = _config.language;
+            if (_config.requestWordLevelTimestamps)
                 speechConfig.RequestWordLevelTimestamps();
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
             InitSpeechRecognizer();
@@ -117,6 +118,10 @@ namespace TimShaw.VoiceBox.Core
                 {
                     Debug.Log($"Azure Service Manager: No match.");
                 }
+
+                VoiceBoxSpeechRecognitionEventArgs args = (VoiceBoxSpeechRecognitionEventArgs)e;
+                if (_config.requestWordLevelTimestamps && args.Result.Reason == VoiceBoxResultReason.RecognizedSpeech) 
+                    args.Result.Reason = VoiceBoxResultReason.RecognizedSpeechWithTimestamps;
                 OnRecognized?.Invoke(this, (VoiceBoxSpeechRecognitionEventArgs)e);
             };
 

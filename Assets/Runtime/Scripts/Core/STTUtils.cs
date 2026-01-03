@@ -15,15 +15,44 @@ namespace TimShaw.VoiceBox.Core
     /// </summary>
     public class STTUtils
     {
+        public enum VoiceBoxResultReason
+        {
+            NoMatch,
+            Canceled,
+            RecognizingSpeech,
+            RecognizedSpeech,
+            RecognizingIntent,
+            RecognizedIntent,
+            TranslatingSpeech,
+            TranslatedSpeech,
+            SynthesizingAudio,
+            SynthesizingAudioCompleted,
+            RecognizingKeyword,
+            RecognizedKeyword,
+            SynthesizingAudioStarted,
+            TranslatingParticipantSpeech,
+            TranslatedParticipantSpeech,
+            TranslatedInstantMessage,
+            TranslatedParticipantInstantMessage,
+            EnrollingVoiceProfile,
+            EnrolledVoiceProfile,
+            RecognizedSpeakers,
+            RecognizedSpeaker,
+            ResetVoiceProfile,
+            DeletedVoiceProfile,
+            VoicesListRetrieved,
+            RecognizedSpeechWithTimestamps
+        }
+
         /// <summary>
-        /// Represents a speech recognition with a <see cref="ResultReason"/> and text
+        /// Represents a speech recognition with a <see cref="VoiceBoxResultReason"/> and text
         /// </summary>
         public class RecognitionResult
         {
             /// <summary>
             /// Describes a recognition result
             /// </summary>
-            public ResultReason Reason { get; set; }
+            public VoiceBoxResultReason Reason { get; set; }
             
             /// <summary>
             /// The recognized text provided by the STT service
@@ -47,7 +76,7 @@ namespace TimShaw.VoiceBox.Core
         public class VoiceBoxSpeechRecognitionEventArgs
         {
             /// <summary>
-            /// The recognition result. Provides a <see cref="ResultReason"/> and the recognized text
+            /// The recognition result. Provides a <see cref="VoiceBoxResultReason"/> and the recognized text
             /// </summary>
             public RecognitionResult Result { get; set; }
 
@@ -69,7 +98,7 @@ namespace TimShaw.VoiceBox.Core
             /// </summary>
             /// <param name="reason"></param>
             /// <param name="text"></param>
-            public VoiceBoxSpeechRecognitionEventArgs(ResultReason reason, string text, TimeSpan duration, long offsetInTicks)
+            public VoiceBoxSpeechRecognitionEventArgs(VoiceBoxResultReason reason, string text, TimeSpan duration, long offsetInTicks)
             {
                 Result = new RecognitionResult();
                 Result.Reason = reason;
@@ -82,7 +111,7 @@ namespace TimShaw.VoiceBox.Core
             /// Enables conversion from <see cref="SpeechRecognitionEventArgs"/> to <see cref="VoiceBoxSpeechRecognitionEventArgs"/> for usage with Azure STT
             /// </summary>
             /// <param name="args"></param>
-            public static explicit operator VoiceBoxSpeechRecognitionEventArgs(SpeechRecognitionEventArgs args) => new VoiceBoxSpeechRecognitionEventArgs(args.Result.Reason, args.Result.Text, args.Result.Duration, args.Result.OffsetInTicks);
+            public static explicit operator VoiceBoxSpeechRecognitionEventArgs(SpeechRecognitionEventArgs args) => new VoiceBoxSpeechRecognitionEventArgs((VoiceBoxResultReason)args.Result.Reason, args.Result.Text, args.Result.Duration, args.Result.OffsetInTicks);
         }
 
         public class VoiceBoxSpeechRecognitionCanceledEventArgs : EventArgs

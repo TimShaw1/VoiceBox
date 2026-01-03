@@ -55,7 +55,7 @@ namespace TimShaw.VoiceBox.Data
         /// <summary>
         /// Whether to request timestamps when recognizing speech
         /// </summary>
-        public bool include_timestamps = false;
+        public bool include_timestamps = true;
 
         /// <summary>
         /// Whether to include the detected language code in the committed_transcript_with_timestamps event.
@@ -65,12 +65,12 @@ namespace TimShaw.VoiceBox.Data
         /// <summary>
         /// Strategy for committing transcriptions.
         /// </summary>
-        public ElevenlabsSTTCommitStrategy commit_strategy = ElevenlabsSTTCommitStrategy.Manual;
+        public ElevenlabsSTTCommitStrategy commit_strategy = ElevenlabsSTTCommitStrategy.Vad;
 
         /// <summary>
         /// Silence threshold in seconds for VAD.
         /// </summary>
-        public double vad_silence_threshold_secs = 1.5;
+        public double vad_silence_threshold_secs = 0.65;
 
         /// <summary>
         /// Threshold for voice activity detection.
@@ -85,7 +85,7 @@ namespace TimShaw.VoiceBox.Data
         /// <summary>
         /// Minimum silence duration in milliseconds.
         /// </summary>
-        public int min_silence_duration_ms = 2500;
+        public int min_silence_duration_ms = 550;
 
         /// <summary>
         /// Called when the script is loaded or a value is changed in the Inspector.

@@ -19,3 +19,15 @@ MonoBehaviour:
   audioInputDeviceName: Default
   audioInputEndpointNames:
   - Default
+  - Microphone (Steam Streaming Microphone)
+  - Microphone (2- Shure MV7+)
+  - Microphone (2- Antlion Wireless Microphone)
+  - Headset Microphone (Oculus Virtual Audio Device)
+  - MOTIV Mix Virtual Output (Shure Virtual Audio)
+  - Microphone (Realtek High Definition Audio)
+  - Microphone (Bigscreen Audio Stream 1.2)
+  - Microphone (DroidCam Virtual Audio)
+  - Microphone (Virtual Desktop Audio)
+  - Microphone (Logi C615 HD WebCam)
+  - Microphone (Voicemod Virtual Audio Device (WDM))
+  requestWordLevelTimestamps: 1

@@ -68,7 +68,7 @@ public class APITester : MonoBehaviour
     /// <param name="e">The event arguments containing the recognition result.</param>
     void LogRecognizedSpeech(object s, VoiceBoxSpeechRecognitionEventArgs e)
     {
-        if (e.Result.Reason == ResultReason.RecognizedSpeech)
+        if (e.Result.Reason == VoiceBoxResultReason.RecognizedSpeech)
         {
             if (e.Result.Text.Length > 0) Debug.Log("API Tester: Recognized: " + e.Result.Text);
         }

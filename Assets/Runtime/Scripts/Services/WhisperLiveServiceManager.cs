@@ -531,7 +531,7 @@ namespace TimShaw.VoiceBox.Core
             _client.Client.OnTranscription += (text, segs) =>
             {
                 // TODO: implement duration and offset
-                OnRecognized.Invoke(this, new VoiceBoxSpeechRecognitionEventArgs(ResultReason.RecognizedSpeech, text, TimeSpan.Zero, -1));
+                OnRecognized.Invoke(this, new VoiceBoxSpeechRecognitionEventArgs(VoiceBoxResultReason.RecognizedSpeech, text, TimeSpan.Zero, -1));
             };
 
             _client.RunMic();

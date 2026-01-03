@@ -300,9 +300,6 @@ namespace TimShaw.VoiceBox.Core
             await _webSocket.SendAsync(new ArraySegment<byte>(bytesToSend), WebSocketMessageType.Text, true, token);
         }
 
-        // -------------------------------------------------------------------------
-        // RECEIVE LOGIC (Same as previous step, included for completeness)
-        // -------------------------------------------------------------------------
 
         private async Task ReceiveMessagesLoop(CancellationToken token)
         {
@@ -340,9 +337,6 @@ namespace TimShaw.VoiceBox.Core
 
         private void ParseAndDispatchEvent(ElevenLabsResponse response)
         {
-            // -------------------------------------------------------------------------
-            // 1. ERROR HANDLING
-            // -------------------------------------------------------------------------
             if (ElevenlabsErrorCodes.Contains(response.message_type))
             {
                 string errorDetails = $"ElevenLabs Error [{response.message_type}]";
@@ -380,17 +374,18 @@ namespace TimShaw.VoiceBox.Core
                 return; // Stop processing this message
             }
 
-            // -------------------------------------------------------------------------
-            // 2. TRANSCRIPT HANDLING (Existing Logic)
-            // -------------------------------------------------------------------------
-            ResultReason reason;
+            VoiceBoxResultReason reason;
             if (response.message_type == "committed_transcript_with_timestamps")
             {
-                reason = ResultReason.RecognizedSpeech;
+                reason = VoiceBoxResultReason.RecognizedSpeechWithTimestamps;
+            }
+            else if (response.message_type == "committed_transcript")
+            {
+                reason = VoiceBoxResultReason.RecognizedSpeech;
             }
             else if (response.message_type == "partial_transcript")
             {
-                reason = ResultReason.RecognizingSpeech;
+                reason = VoiceBoxResultReason.RecognizingSpeech;
             }
             else
             {
@@ -404,7 +399,7 @@ namespace TimShaw.VoiceBox.Core
             double durationSec = -1;
             TimeSpan duration = TimeSpan.Zero;
             long offsetInTicks = -1;
-            if (response.words != null)
+            if (response.words != null && reason == VoiceBoxResultReason.RecognizedSpeechWithTimestamps)
             {
                 startSec = response.words[0].start;
                 durationSec = response.words[response.words.Length - 1].end - response.words[0].start;
@@ -420,7 +415,7 @@ namespace TimShaw.VoiceBox.Core
                 offsetInTicks
             );
 
-            if (reason == ResultReason.RecognizingSpeech)
+            if (reason == VoiceBoxResultReason.RecognizingSpeech)
             {
                 OnRecognizing?.Invoke(this, args);
             }
@@ -430,15 +425,12 @@ namespace TimShaw.VoiceBox.Core
             }
         }
 
-        // -------------------------------------------------------------------------
-        // DATA CLASSES
-        // -------------------------------------------------------------------------
 
         [Serializable]
         private class ElevenLabsResponse
         {
             // Common fields
-            public string message_type;              // "partial_transcript", "committed_transcript", or "error"
+            public string message_type;
 
             // Transcript fields
             public string text;

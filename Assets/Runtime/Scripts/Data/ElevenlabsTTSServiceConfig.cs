@@ -101,10 +101,10 @@ namespace TimShaw.VoiceBox.Data
         public string voiceId = "JBFqnCBsd6RMkjVDRZzb";
 
         /// <summary>
-        /// The ID of the model to be used. Defaults to eleven_multilingual_v2.
+        /// The ID of the model to be used. Defaults to eleven_flash_v2_5.
         /// </summary>
-        [Tooltip("The ID of the model to be used. Defaults to eleven_multilingual_v2.")]
-        public string modelID = "eleven_multilingual_v2";
+        [Tooltip("The ID of the model to be used. Defaults to eleven_flash_v2_5.")]
+        public string modelID = "eleven_flash_v2_5";
 
 #if UNITY_EDITOR
         [Header("Voice Settings")]

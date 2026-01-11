@@ -27,12 +27,13 @@ namespace TimShaw.VoiceBox.Components
         private readonly byte[] _conversionBuffer;
         private const int BufferSize = 32768;
 
-        // Unity Settings
-        private readonly int _sampleRate = AudioSettings.outputSampleRate;
-        private readonly AudioSpeakerMode _speakerMode = AudioSettings.speakerMode;
+        private int _sampleRate;
+        private int _channelCount;
 
-        public StreamingAudioDecoder()
+        public StreamingAudioDecoder(int sampleRate, int channelCount)
         {
+            _sampleRate = sampleRate;
+            _channelCount = channelCount;
             _conversionBuffer = new byte[BufferSize];
         }
 
@@ -123,11 +124,7 @@ namespace TimShaw.VoiceBox.Components
 
         private void InitializeResampler(WaveStream reader)
         {
-            // Always fetch the CURRENT sample rate, in case it changed or was wrong at init
-            int currentRate = AudioSettings.outputSampleRate;
-            int unityChannelCount = (AudioSettings.speakerMode == AudioSpeakerMode.Mono) ? 1 : 2;
-
-            var outputFormat = new WaveFormat(currentRate, 16, unityChannelCount);
+            var outputFormat = new WaveFormat(_sampleRate, 16, _channelCount);
 
             _resampler = new MediaFoundationResampler(reader, outputFormat)
             {
@@ -191,14 +188,14 @@ namespace TimShaw.VoiceBox.Components
         private ClientWebSocket _webSocket;
         private CancellationTokenSource _cancellationSource;
 
-        private ConcurrentQueue<float> _audioBuffer = new ConcurrentQueue<float>();
-
         private StreamingAudioDecoder _audioDecoder;
 
         private AudioClip _streamingClip;
 
         private int SampleRate;
         private int Channels;
+
+        private bool playing = false;
 
         /// <summary>
         /// Invoked when an audio sample is played during <see cref="OnAudioRead(float[])"/>
@@ -229,6 +226,12 @@ namespace TimShaw.VoiceBox.Components
 
             _audioSource.clip = _streamingClip;
             _audioSource.loop = true;
+        }
+
+        private void Update()
+        {
+            if (playing && !_audioSource.isPlaying)
+                _audioSource.Play();
         }
 
         private void OnAudioRead(float[] data)
@@ -265,12 +268,10 @@ namespace TimShaw.VoiceBox.Components
             }
 
             if (_audioDecoder == null)
-                _audioDecoder = new StreamingAudioDecoder();
+                _audioDecoder = new StreamingAudioDecoder(SampleRate, Channels);
 
             if (_cancellationSource == null)
                 _cancellationSource = new CancellationTokenSource();
-
-            while (_audioBuffer.TryDequeue(out _)) { }
 
             if (_webSocket == null)
                 _webSocket = new ClientWebSocket();
@@ -319,13 +320,14 @@ namespace TimShaw.VoiceBox.Components
         /// <param name="text">The text to be streamed.</param>
         /// <param name="service">The text-to-speech service.</param>
         /// <param name="token">The cancellation token.</param>
+        /// <param name="isFinalSegment">Indicates whether this text is the last segment to generate.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async void ConnectAndStream(string text, ITextToSpeechService service, CancellationToken token)
+        public async void ConnectAndStream(string text, ITextToSpeechService service, bool isFinalSegment, CancellationToken token)
         {
             try
             {
-                _audioSource.Play();
-                await service.ConnectAndStream(text, _webSocket, token);
+                playing = true;
+                await service.ConnectAndStream(text, _webSocket, isFinalSegment, token);
             }
             catch (OperationCanceledException)
             {

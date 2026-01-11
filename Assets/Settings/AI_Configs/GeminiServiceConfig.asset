@@ -15,19 +15,5 @@ MonoBehaviour:
   apiKey: 
   apiKeyJSONString: GEMINI_API_KEY
   modelName: gemini-2.5-flash
+  useFunctionInvokation: 0
   serviceEndpoint: https://generativelanguage.googleapis.com/v1beta/openai/
-  useTools: 1
-  safetySettings: []
-  useSafetySettings: 0
-  systemInstruction:
-    role: System
-    parts:
-    - text: You are an AI assistant that answers a user's questions.
-  generationConfig:
-    stopSequences: []
-    candidateCount: 1
-    maxOutputTokens: 100
-    temperature: 1
-    topP: 1
-    topK: 1
-  useGenerationConfig: 0

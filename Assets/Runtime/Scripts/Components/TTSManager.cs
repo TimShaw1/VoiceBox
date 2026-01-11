@@ -87,7 +87,7 @@ namespace TimShaw.VoiceBox.Components
             {
                 textToSpeechConfig.apiKey = GetApiKey(ttsKey, textToSpeechConfig.apiKeyJSONString, textToSpeechConfig.apiKeyJSONString, apiKeysFromFile);
                 if (string.IsNullOrEmpty(textToSpeechConfig.apiKey))
-                    Debug.LogWarning("TTS service API key not found.");
+                    Debug.LogWarning("[TTS Manager] TTS service API key not found.");
             }
         }
 
@@ -186,10 +186,27 @@ namespace TimShaw.VoiceBox.Components
             if (audioStreamer)
             {
                 audioStreamer.InitStreaming(TextToSpeechService);
-                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, internalCancellationTokenSource.Token);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, true, internalCancellationTokenSource.Token);
             }
             else
-                Debug.LogError("TTS Manager object does not have an AudioStreamer attached to it!");
+                Debug.LogError("[TTS Manager] Manager object does not have an AudioStreamer attached to it!");
+
+        }
+
+        /// <summary>
+        /// Requests and streams audio from a text prompt to an attached AudioSource.
+        /// </summary>
+        /// <param name="prompt">The text to be converted to speech.</param>
+        public void RequestAudioAndStream(string promptChunk, bool isFinalSegment)
+        {
+            AudioStreamer audioStreamer = GetComponent<AudioStreamer>();
+            if (audioStreamer)
+            {
+                audioStreamer.InitStreaming(TextToSpeechService);
+                audioStreamer.ConnectAndStream(promptChunk, TextToSpeechService, isFinalSegment, internalCancellationTokenSource.Token);
+            }
+            else
+                Debug.LogError("[TTS Manager] Manager object does not have an AudioStreamer attached to it!");
 
         }
 
@@ -203,10 +220,26 @@ namespace TimShaw.VoiceBox.Components
             if (audioStreamer)
             {
                 audioStreamer.InitStreaming(TextToSpeechService);
-                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, internalCancellationTokenSource.Token);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, true, internalCancellationTokenSource.Token);
             }
             else
-                Debug.LogError("Audio Streamer is null");
+                Debug.LogError("[TTS Manager] Audio Streamer is null");
+        }
+
+        /// <summary>
+        /// Requests and streams audio from a text prompt to an attached AudioSource.
+        /// </summary>
+        /// <param name="prompt">The text to be converted to speech.</param>
+        public void RequestAudioAndStream(string promptChunk, bool isFinalSegment, AudioStreamer audioStreamer)
+        {
+            if (audioStreamer)
+            {
+                audioStreamer.InitStreaming(TextToSpeechService);
+                audioStreamer.ConnectAndStream(promptChunk, TextToSpeechService, isFinalSegment, internalCancellationTokenSource.Token);
+            }
+            else
+                Debug.LogError("[TTS Manager] Audio Streamer is null");
+
         }
 
         /// <summary>

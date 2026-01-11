@@ -53,8 +53,9 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="text">The text to be streamed as audio.</param>
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
         /// <param name="token">A cancellation token to stop the streaming.</param>
+        /// <param name="isFinalSegment">Indicates whether this text is the last segment to generate.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public Task ConnectAndStream(string text, ClientWebSocket _webSocket, CancellationToken token);
+        public Task ConnectAndStream(string text, ClientWebSocket _webSocket, bool isFinalSegment, CancellationToken token);
 
         /// <summary>
         /// Sends the End Of Sequence (EOS) message to the TTS service
@@ -75,7 +76,7 @@ namespace TimShaw.VoiceBox.Core
         public Task<string> CloneVoiceAndGetVoiceIDAsync(
             IEnumerable<byte[]> audioDataList,
             string voiceName,
-            string description = "Cloned via HttpClient",
+            string description = "",
             bool removeBackgroundNoise = false,
             string mediaType = "mpeg");
 

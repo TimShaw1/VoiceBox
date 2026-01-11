@@ -300,6 +300,13 @@ namespace TimShaw.VoiceBox.Core
             }
         }
 
+        private async void SendFlushMessage(ClientWebSocket _webSocket, CancellationToken token)
+        {
+            var flushMessage = new { text = " ", flush = true };
+            string jsonMessage = JsonConvert.SerializeObject(flushMessage);
+            await SendSocketMessage(jsonMessage, _webSocket, token);
+        }
+
         /// <summary>
         /// Connects to a WebSocket and streams audio data.
         /// TODO: add support for <c>previous_text</c> and <c>next_text</c> chunks in Elevenlabs request
@@ -307,24 +314,16 @@ namespace TimShaw.VoiceBox.Core
         /// <param name="text">The text to be streamed as audio.</param>
         /// <param name="_webSocket">The WebSocket to use for the connection.</param>
         /// <param name="token">A cancellation token to stop the streaming.</param>
+        /// <param name="isFinalSegment">Indicates whether this text is the last segment to generate.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task ConnectAndStream(string text, ClientWebSocket _webSocket, CancellationToken token)
+        public async Task ConnectAndStream(string text, ClientWebSocket _webSocket, bool isFinalSegment, CancellationToken token)
         {
-            var initialMessage = new
-            {
-                text = " ",
-                voice_settings = _config.voiceSettings
-            };
-            string jsonMessage = JsonConvert.SerializeObject(initialMessage);
+            var textMessage = new { text = text };
+            string jsonMessage = JsonConvert.SerializeObject(textMessage);
             await SendSocketMessage(jsonMessage, _webSocket, token);
 
-            var textMessage = new { text = text, try_trigger_generation = true };
-            jsonMessage = JsonConvert.SerializeObject(textMessage);
-            await SendSocketMessage(jsonMessage, _webSocket, token);
-
-            var flushMessage = new { text = " ", flush = true };
-            jsonMessage = JsonConvert.SerializeObject(flushMessage);
-            await SendSocketMessage(jsonMessage, _webSocket, token);
+            if (isFinalSegment)
+                SendFlushMessage(_webSocket, token);
 
             //var eosMessage = new { text = "" };
             //jsonMessage = JsonConvert.SerializeObject(eosMessage);
@@ -348,6 +347,13 @@ namespace TimShaw.VoiceBox.Core
                 if (_receiveAudioTask != null)
                     _receiveAudioTask.Dispose();
                 _receiveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
+                var initialMessage = new
+                {
+                    text = " ",
+                    voice_settings = _config.voiceSettings
+                };
+                string jsonMessage = JsonConvert.SerializeObject(initialMessage);
+                SendSocketMessage(jsonMessage, webSocket, token);
                 return;
             }
             else if (webSocket.State != WebSocketState.Open && webSocket.State != WebSocketState.Connecting) // Initialize WebSocket
@@ -358,6 +364,13 @@ namespace TimShaw.VoiceBox.Core
                 if (_receiveAudioTask != null)
                     _receiveAudioTask.Dispose();
                 _receiveAudioTask = ReceiveAudioData(webSocket, audioDecoder, token);
+                var initialMessage = new
+                {
+                    text = " ",
+                    voice_settings = _config.voiceSettings
+                };
+                string jsonMessage = JsonConvert.SerializeObject(initialMessage);
+                SendSocketMessage(jsonMessage, webSocket, token);
                 return;
             }
             else

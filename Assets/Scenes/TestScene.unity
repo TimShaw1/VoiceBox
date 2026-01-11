@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testSpawnManager: 0
   testGUI: 0
-  testSTT: 1
+  testSTT: 0
   testTTS: 0
   testChat: 0
   audioSource: {fileID: 2085286909}
@@ -255,7 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   apiKeysJsonPath: 
-  chatServiceConfig: {fileID: 11400000, guid: 0878669a9df1cbe4da2d2e3be0424723, type: 2}
+  chatServiceConfig: {fileID: 11400000, guid: 53d397a345776c445ab503c0ebbe61d2, type: 2}
 --- !u!4 &1374051559
 Transform:
   m_ObjectHideFlags: 0
@@ -454,6 +454,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ttsManager: {fileID: 1493601812}
+  chatManager: {fileID: 1374051558}
 --- !u!1 &1519555949
 GameObject:
   m_ObjectHideFlags: 0
@@ -671,7 +672,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   apiKeysJsonPath: Assets/keys.json
   chatServiceConfig: {fileID: 11400000, guid: 53d397a345776c445ab503c0ebbe61d2, type: 2}
-  speechToTextConfig: {fileID: 11400000, guid: a02c458165ed3b144862581f8e8e3c7e, type: 2}
+  speechToTextConfig: {fileID: 11400000, guid: 9c1579caf3fb71448b3d7882db4435ce, type: 2}
   textToSpeechConfig: {fileID: 11400000, guid: 989c424a9b8380844a4adebcdfea0254, type: 2}
 --- !u!4 &1681442662
 Transform:

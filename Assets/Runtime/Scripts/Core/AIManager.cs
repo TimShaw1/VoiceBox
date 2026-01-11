@@ -304,7 +304,7 @@ namespace TimShaw.VoiceBox.Core
                 return;
             }
             token = CancellationTokenSource.CreateLinkedTokenSource(token, internalSttCancellationTokenSource.Token).Token;
-            Debug.Log("VoiceBox: Starting speech recognition.");
+            Debug.Log("[AI Manager] Starting speech recognition.");
             Task.Run(() => SpeechToTextService.TranscribeAudioFromMic(token));
         }
 
@@ -365,10 +365,30 @@ namespace TimShaw.VoiceBox.Core
                 audioStreamer.InitStreaming(TextToSpeechService);
                 if (internalTtsCancellationTokenSource.IsCancellationRequested)
                     internalTtsCancellationTokenSource = new CancellationTokenSource();
-                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, internalTtsCancellationTokenSource.Token);
+                audioStreamer.ConnectAndStream(prompt, TextToSpeechService, true, internalTtsCancellationTokenSource.Token);
             }
             else
-                Debug.LogError("Audio Streamer is null.");
+                Debug.LogError("[AI Manager] Audio Streamer is null.");
+        }
+
+        /// <summary>
+        /// Requests and streams audio from a text prompt to an AudioSource.
+        /// </summary>
+        /// <param name="promptChunk">The text chunk to be converted to speech.</param>
+        /// <param name="isFinalSegment">Indicates whether this text is the last segment to generate.</param>
+        /// <param name="audioStreamer">The AudioSource to stream the audio to.</param>
+        /// <param name="token"></param>
+        public void RequestAudioAndStream(string promptChunk, bool isFinalSegment, AudioStreamer audioStreamer, CancellationToken token = default)
+        {
+            if (audioStreamer)
+            {
+                audioStreamer.InitStreaming(TextToSpeechService);
+                if (internalTtsCancellationTokenSource.IsCancellationRequested)
+                    internalTtsCancellationTokenSource = new CancellationTokenSource();
+                audioStreamer.ConnectAndStream(promptChunk, TextToSpeechService, isFinalSegment, internalTtsCancellationTokenSource.Token);
+            }
+            else
+                Debug.LogError("[AI Manager] Audio Streamer is null.");
         }
 
         /// <summary>

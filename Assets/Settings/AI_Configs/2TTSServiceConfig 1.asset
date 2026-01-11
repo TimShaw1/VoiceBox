@@ -16,11 +16,11 @@ MonoBehaviour:
   apiKeyJSONString: ELEVENLABS_API_KEY
   serviceEndpoint: https://api.elevenlabs.io/v1/text-to-speech/
   voiceId: Se2Vw1WbHmGbBbyWTuu4
-  modelID: eleven_multilingual_v2
+  modelID: eleven_flash_v2_5
   voiceSettings:
     stability: 0.5
     similarity_boost: 0.75
-    style: 0
+    style: 0.314
     use_speaker_boost: 1
-    speed: 1
+    speed: 1.106
   output_format: mp3_44100_128

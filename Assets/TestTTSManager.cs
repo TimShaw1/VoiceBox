@@ -51,7 +51,7 @@ public class TestTTSManager : MonoBehaviour
         chatManager.StreamChatMessage(
             chats,
             chunk => { ttsManager.RequestAudioAndStream(chunk.Text, false, audioStreamer); Debug.Log(chunk); },
-            () => ttsManager.RequestAudioAndStream("", true, audioStreamer),
+            () => ttsManager.RequestAudioAndStream(" ", true, audioStreamer),
             err => Debug.LogError(err)
         );
     }

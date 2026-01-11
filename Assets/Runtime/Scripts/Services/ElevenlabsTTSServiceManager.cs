@@ -375,7 +375,7 @@ namespace TimShaw.VoiceBox.Core
             }
             else
             {
-                Debug.LogWarning("Websocket already initialized!");
+                Debug.Log("[ElevenLabsTTSServiceManager] Websocket already initialized!");
                 return;
             }
         }

@@ -91,8 +91,8 @@ namespace TimShaw.VoiceBox.Core
             // though API accepts them regardless.
             if (_config.commit_strategy == ElevenlabsSTTCommitStrategy.Vad)
             {
-                queryParams.Add($"vad_silence_threshold_secs={_config.vad_silence_threshold_secs}");
-                queryParams.Add($"vad_threshold={_config.vad_threshold}");
+                queryParams.Add($"vad_silence_threshold_secs={_config.vad_silence_threshold_secs.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+                queryParams.Add($"vad_threshold={_config.vad_threshold.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
                 queryParams.Add($"min_speech_duration_ms={_config.min_speech_duration_ms}");
                 queryParams.Add($"min_silence_duration_ms={_config.min_silence_duration_ms}");
             }
@@ -315,6 +315,7 @@ namespace TimShaw.VoiceBox.Core
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
+                    Debug.LogWarning($"[ElevenLabs STT] WebSocket closed by server. Status: {result.CloseStatus}, Description: {result.CloseStatusDescription}");
                     await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
                     break;
                 }
@@ -329,6 +330,7 @@ namespace TimShaw.VoiceBox.Core
                     }
 
                     string responseJson = Encoding.UTF8.GetString(ms.ToArray());
+                    Debug.Log($"[ElevenLabs STT] Raw response: {responseJson}"); // Temporary
                     try
                     {
                         var responseObj = JsonConvert.DeserializeObject<ElevenLabsResponse>(responseJson);

@@ -277,7 +277,7 @@ namespace TimShaw.VoiceBox.Components
                 _webSocket = new ClientWebSocket();
 
             // Aborted websockets cannot be reused, so we create a new one
-            if (_webSocket.State == WebSocketState.Aborted)
+            if (_webSocket.State == WebSocketState.Aborted || _webSocket.State == WebSocketState.Closed)
             {
                 _webSocket.Dispose();
                 _webSocket = new ClientWebSocket();

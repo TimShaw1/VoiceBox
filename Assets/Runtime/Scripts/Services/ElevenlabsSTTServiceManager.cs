@@ -204,14 +204,17 @@ namespace TimShaw.VoiceBox.Core
             for (int i = 0; i < deviceCount; i++)
             {
                 var capabilities = WaveIn.GetCapabilities(i);
-                // Case-insensitive containment check
-                if (capabilities.ProductName.IndexOf(deviceName, StringComparison.OrdinalIgnoreCase) >= 0)
+                string winmmName = capabilities.ProductName; // May be truncated at 31 chars
+
+                // Check both directions to handle WinMM truncation
+                if (winmmName.IndexOf(deviceName, StringComparison.OrdinalIgnoreCase) >= 0
+                    || deviceName.IndexOf(winmmName, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     return i;
                 }
             }
 
-            Debug.LogWarning($"Device '{deviceName}' not found. Defaulting to device 0.");
+            Debug.LogWarning($"[ElevenLabs STT] Device '{deviceName}' not found. Defaulting to device 0.");
             return 0;
         }
 
